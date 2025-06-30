@@ -15,6 +15,8 @@ An advanced AI-powered system for automatically classifying legal deed documents
 - ⚡ **Early Stopping**: Intelligent page-by-page analysis that stops when reservations are found
 - 📊 **Confidence Scoring**: Machine learning-based confidence assessment
 - 📈 **Comprehensive Evaluation**: Detailed accuracy metrics and performance analysis
+- 📁 **Batch Processing**: Upload and analyze multiple documents simultaneously
+- 📋 **CSV Export**: Detailed results exported to CSV for further analysis
 - 🎮 **Interactive Demo**: Easy-to-use demonstration system
 
 ## 🏗️ System Architecture
@@ -62,6 +64,141 @@ pip install -r requirements.txt
    ```bash
    python -c "import anthropic, fitz, PIL; print('✅ All dependencies installed')"
    ```
+
+## 🌐 Streamlit Web Application
+
+The system includes a beautiful, professional web interface built with Streamlit for easy document analysis with **batch processing capabilities**.
+
+### 🚀 Launch the Web App
+
+```bash
+# Start the Streamlit application
+streamlit run streamlit_app.py
+
+# Or with custom port
+streamlit run streamlit_app.py --server.port 8502
+```
+
+The app will be available at: **http://localhost:8501** (or your custom port)
+
+### ✨ Web App Features
+
+- **🎨 Professional UI**: Modern, responsive design with mineral rights theming
+- **📁 Multiple File Upload**: Drag & drop multiple PDF files for batch processing
+- **📋 CSV Export**: Download comprehensive analysis results as CSV files
+- **⚡ Real-time Processing**: Live document analysis with progress indicators
+- **📊 Batch Analytics**: Summary statistics across multiple documents
+- **🔍 Processing Details**: Shows pages processed, samples used, and processing time
+- **💡 Smart Recommendations**: Actionable insights based on classification results
+- **📱 Mobile Friendly**: Responsive design that works on all devices
+- **🔐 Secure**: API key management with environment variable support
+
+### 🖥️ Web App Interface
+
+The Streamlit app provides:
+
+1. **Header Section**: 
+   - Professional branding with animated elements
+   - Clear description of the system's purpose
+
+2. **Batch Upload Area**:
+   - Multiple PDF file upload with drag and drop
+   - File format validation and size display
+   - Visual upload feedback with file summary
+
+3. **Processing Display**:
+   - Real-time batch processing status
+   - Progress bars for multiple documents
+   - Processing time tracking per document
+
+4. **Results Dashboard**:
+   - Summary statistics (total documents, success rate, reservations found)
+   - Preview table of all results
+   - Comprehensive CSV download with detailed analysis
+
+5. **CSV Export Features**:
+   - **Complete Analysis Data**: All classification results and confidence scores
+   - **Detailed Explanations**: LLM reasoning for each classification decision
+   - **Processing Metadata**: Pages analyzed, samples used, processing timestamps
+   - **Voting Information**: Detailed breakdown of AI voting patterns
+   - **Error Handling**: Clear status for any processing failures
+
+### 📋 CSV Output Format
+
+The exported CSV contains comprehensive information for each analyzed document:
+
+**Basic Information:**
+- `filename` - Original filename
+- `file_size_bytes` - File size in bytes  
+- `processing_timestamp` - Analysis timestamp
+
+**Classification Results:**
+- `classification` - Human-readable result ("Has/No Mineral Rights Reservations")
+- `classification_numeric` - Binary classification (0=No, 1=Has reservations)
+- `confidence_score` - AI confidence (0.0 to 1.0)
+- `confidence_level` - HIGH/MEDIUM/LOW classification
+
+**Analysis Details:**
+- `recommendation` - Professional recommendation based on results
+- `llm_explanation` - Detailed AI reasoning for the classification
+- `pages_processed` - Number of document pages analyzed
+- `samples_used` - Number of AI samples in the analysis
+
+**Voting Information:**
+- `total_votes` - Total classification votes
+- `no_reservation_votes` - Votes for "no reservations"
+- `has_reservation_votes` - Votes for "has reservations"  
+- `vote_ratio_reservations` - Ratio of reservation votes
+
+**Technical Details:**
+- `early_stopped` - Whether analysis stopped early due to high confidence
+- `text_characters_analyzed` - Number of text characters processed
+- `processing_status` - Success or detailed error information
+
+### 🔄 Batch Processing Workflow
+
+1. **Upload Multiple Files**: Select multiple PDF documents (up to system limits)
+2. **Automatic Processing**: Each document is analyzed sequentially with progress tracking
+3. **Real-time Results**: View summary statistics as processing completes
+4. **Download Results**: Export comprehensive CSV with all analysis data
+5. **Review & Action**: Use the detailed results for decision-making
+
+### ⚙️ Web App Configuration
+
+The Streamlit app supports several configuration options:
+
+```python
+# In streamlit_app.py, you can modify:
+- Upload file size limits
+- Processing parameters (max_samples, confidence_threshold)
+- UI styling and colors
+- Page layout and components
+```
+
+### 🔑 API Key Setup for Web App
+
+**Option 1: Environment Variable (Recommended)**
+```bash
+export ANTHROPIC_API_KEY="your-key-here"
+streamlit run streamlit_app.py
+```
+
+**Option 2: Streamlit Secrets (For Streamlit Cloud)**
+Create `.streamlit/secrets.toml`:
+```toml
+ANTHROPIC_API_KEY = "your-key-here"
+```
+
+**Option 3: Direct Configuration**
+Edit the API key in `document_classifier.py` (line 18)
+
+### 🚀 Deploy to Streamlit Cloud
+
+1. Push your code to GitHub
+2. Go to [share.streamlit.io](https://share.streamlit.io)
+3. Connect your repository
+4. Set `streamlit_app.py` as the main file
+5. Add your `ANTHROPIC_API_KEY` in the secrets section
 
 ### 🎮 Interactive Demo
 
@@ -115,6 +252,7 @@ results = process_batch(['data/reservs', 'data/no-reservs'])
 
 ```
 mineral-rights/
+├── 🌐 streamlit_app.py          # Streamlit web application
 ├── 📄 demo.py                    # Interactive demonstration script
 ├── 🔧 run_demo.sh               # Demo runner with menu options
 ├── 🤖 document_classifier.py    # Core classification engine
@@ -123,8 +261,12 @@ mineral-rights/
 ├── 📈 evaluate_full_dataset.py  # Comprehensive evaluation
 ├── 🔍 test_false_positive.py    # False positive analysis
 ├── ⚙️  config.py                # Configuration settings
+├── 🖥️  run_webapp.py           # Web app launcher (legacy Flask)
 ├── 📋 requirements.txt          # Python dependencies
 ├── 📚 README.md                 # This file
+├── 📂 .streamlit/               # Streamlit configuration (optional)
+│   └── secrets.toml            # API keys and secrets
+├── 📂 uploads/                  # Streamlit file uploads
 ├── 📂 data/                     # Document datasets
 │   ├── reservs/                 # Documents WITH reservations
 │   ├── no-reservs/             # Documents WITHOUT reservations
@@ -136,6 +278,8 @@ mineral-rights/
 ├── 📂 outputs/                  # Processing results
 ├── 📂 batch_results/           # Batch processing outputs
 ├── 📂 demo_results/            # Demo outputs
+├── 📂 .devcontainer/           # Development container config
+│   └── devcontainer.json      # Streamlit dev environment
 └── 📂 experiments/             # Research and testing
 ```
 
@@ -289,6 +433,7 @@ result = processor.process_document(
 
 ## 🛠️ Technology Stack
 
+- **🌐 Web Interface**: Streamlit (interactive web app)
 - **🤖 AI/ML**: Anthropic Claude, scikit-learn, NumPy
 - **📄 Document Processing**: PyMuPDF, Pillow, pdf2image
 - **📊 Data Analysis**: pandas, NumPy
@@ -320,6 +465,26 @@ result = processor.process_document(
        "large_doc.pdf", 
        max_tokens_per_page=4000
    )
+   ```
+
+4. **Streamlit App Issues**:
+   ```bash
+   # Port already in use
+   streamlit run streamlit_app.py --server.port 8502
+   
+   # Clear Streamlit cache
+   streamlit cache clear
+   
+   # API key not found in Streamlit
+   # Create .streamlit/secrets.toml with your API key
+   ```
+
+5. **File Upload Issues in Streamlit**:
+   ```bash
+   # Increase upload limit in Streamlit
+   # Add to .streamlit/config.toml:
+   [server]
+   maxUploadSize = 200
    ```
 
 ### Debug Mode

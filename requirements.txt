@@ -3,7 +3,6 @@ anthropic==0.40.0
 PyMuPDF
 Pillow
 scikit-learn>=1.3.0
-Flask==3.0.3
 requests
 pandas
 numpy 

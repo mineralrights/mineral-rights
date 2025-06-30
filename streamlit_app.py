@@ -1,6 +1,9 @@
 import streamlit as st
 import os
 import tempfile
+import pandas as pd
+import csv
+from datetime import datetime
 from document_classifier import DocumentProcessor
 
 # Page config
@@ -592,6 +595,7 @@ st.markdown("""
 if 'processor' not in st.session_state:
     st.session_state.processor = None
     st.session_state.processing_error = None
+    st.session_state.results_df = None
 
 def initialize_processor():
     """Initialize the document processor"""
@@ -660,6 +664,121 @@ def get_recommendation(classification, confidence):
         else:
             return "Potential mineral rights reservations detected, but with moderate confidence. Professional legal review is essential to determine the exact nature and scope of any reservations."
 
+def process_multiple_documents(uploaded_files):
+    """Process multiple uploaded documents and return results as DataFrame"""
+    results = []
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    for i, uploaded_file in enumerate(uploaded_files):
+        tmp_path = None
+        try:
+            status_text.text(f'Processing {uploaded_file.name} ({i+1}/{len(uploaded_files)})...')
+            
+            # Save uploaded file to temporary location
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                tmp_file.write(uploaded_file.getvalue())
+                tmp_path = tmp_file.name
+            
+            # Process document
+            result = st.session_state.processor.process_document(
+                tmp_path,
+                max_samples=5,
+                confidence_threshold=0.7
+            )
+            
+            # Extract detailed information for CSV
+            classification = result['classification']
+            confidence = result['confidence']
+            confidence_level, _ = get_confidence_level(confidence)
+            
+            # Get the best reasoning from detailed samples
+            best_reasoning = ""
+            if 'detailed_samples' in result and result['detailed_samples']:
+                # Get the sample with highest confidence
+                best_sample = max(result['detailed_samples'], key=lambda x: x.get('confidence_score', 0))
+                best_reasoning = best_sample.get('reasoning', '')
+            
+            # Calculate additional metrics
+            votes = result['votes']
+            total_votes = sum(votes.values())
+            no_reservation_votes = votes.get(0, 0)
+            has_reservation_votes = votes.get(1, 0)
+            vote_ratio = has_reservation_votes / total_votes if total_votes > 0 else 0
+            
+            # Prepare result row
+            result_row = {
+                'filename': uploaded_file.name,
+                'file_size_bytes': uploaded_file.size,
+                'processing_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'classification': 'Has Mineral Rights Reservations' if classification == 1 else 'No Mineral Rights Reservations',
+                'classification_numeric': classification,
+                'confidence_score': round(confidence, 4),
+                'confidence_level': confidence_level,
+                'recommendation': get_recommendation(classification, confidence),
+                'llm_explanation': best_reasoning,
+                'pages_processed': result['pages_processed'],
+                'samples_used': result['samples_used'],
+                'total_votes': total_votes,
+                'no_reservation_votes': no_reservation_votes,
+                'has_reservation_votes': has_reservation_votes,
+                'vote_ratio_reservations': round(vote_ratio, 4),
+                'early_stopped': result.get('early_stopped', False),
+                'text_characters_analyzed': len(result.get('ocr_text', '')),
+                'processing_status': 'Success'
+            }
+            
+            results.append(result_row)
+            
+        except Exception as e:
+            # Add error row
+            error_row = {
+                'filename': uploaded_file.name,
+                'file_size_bytes': uploaded_file.size,
+                'processing_timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'classification': 'ERROR',
+                'classification_numeric': -1,
+                'confidence_score': 0.0,
+                'confidence_level': 'ERROR',
+                'recommendation': f'Processing failed: {str(e)}',
+                'llm_explanation': f'Error occurred during processing: {str(e)}',
+                'pages_processed': 0,
+                'samples_used': 0,
+                'total_votes': 0,
+                'no_reservation_votes': 0,
+                'has_reservation_votes': 0,
+                'vote_ratio_reservations': 0.0,
+                'early_stopped': False,
+                'text_characters_analyzed': 0,
+                'processing_status': f'Error: {str(e)}'
+            }
+            results.append(error_row)
+            
+        finally:
+            # Clean up temp file
+            if tmp_path and os.path.exists(tmp_path):
+                try:
+                    os.unlink(tmp_path)
+                except:
+                    pass
+        
+        # Update progress
+        progress_bar.progress((i + 1) / len(uploaded_files))
+    
+    status_text.text('Processing complete!')
+    return pd.DataFrame(results)
+
+def create_csv_download(df):
+    """Create CSV download with proper formatting"""
+    # Create CSV string
+    csv_buffer = df.to_csv(index=False, quoting=csv.QUOTE_ALL)
+    
+    # Generate filename with timestamp
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    filename = f'mineral_rights_analysis_{timestamp}.csv'
+    
+    return csv_buffer, filename
+
 # Main app
 def main():
     # Create main container
@@ -670,7 +789,7 @@ def main():
     <div class="header-section">
         <div class="header-icon">🏛️</div>
         <h1 class="header-title">Mineral Rights Document Analyzer</h1>
-        <p class="header-subtitle">AI-powered analysis of deed documents to identify mineral rights reservations with detailed confidence scoring and expert recommendations.</p>
+        <p class="header-subtitle">AI-powered batch analysis of deed documents to identify mineral rights reservations with detailed confidence scoring and expert recommendations.</p>
     </div>
     ''', unsafe_allow_html=True)
     
@@ -701,112 +820,128 @@ def main():
     # Document Upload Section
     st.markdown('<h2 class="section-title">Document Upload</h2>', unsafe_allow_html=True)
     
-    # File uploader (we'll style this to integrate with our custom design)
-    uploaded_file = st.file_uploader(
-        "📄 Choose a PDF file",
+    st.info("📋 **Batch Processing Mode**: Upload multiple PDF files to analyze them all at once. Results will be provided as a downloadable CSV file with detailed analysis for each document.")
+    
+    # File uploader for multiple files
+    uploaded_files = st.file_uploader(
+        "📄 Choose PDF files",
         type=['pdf'],
-        help="Upload a legal document to analyze for mineral rights reservations"
+        accept_multiple_files=True,
+        help="Upload one or more legal documents to analyze for mineral rights reservations"
     )
     
-    if uploaded_file is not None:
+    if uploaded_files:
         # Show file info
-        st.success(f"✅ File uploaded: {uploaded_file.name} ({uploaded_file.size:,} bytes)")
+        st.success(f"✅ {len(uploaded_files)} file(s) uploaded:")
+        
+        # Display file summary
+        total_size = sum(file.size for file in uploaded_files)
+        for file in uploaded_files:
+            st.write(f"• {file.name} ({file.size:,} bytes)")
+        st.write(f"**Total size:** {total_size:,} bytes")
         
         # Process button
-        if st.button("🔍 Analyze Document", type="primary"):
+        if st.button("🔍 Analyze All Documents", type="primary"):
             try:
-                result = process_document(uploaded_file)
+                # Process all documents
+                results_df = process_multiple_documents(uploaded_files)
+                st.session_state.results_df = results_df
                 
-                # Display results
-                classification = result['classification']
-                confidence = result['confidence']
-                confidence_level, confidence_class = get_confidence_level(confidence)
+                # Show summary statistics
+                st.markdown("### 📊 Analysis Summary")
                 
-                # Main result card using Streamlit components
-                result_icon = "⚠️" if classification == 1 else "✅"
-                result_title = "MINERAL RIGHTS RESERVATIONS DETECTED" if classification == 1 else "NO MINERAL RIGHTS RESERVATIONS DETECTED"
-                
-                # Create result container
-                with st.container():
-                    st.markdown(f'<div class="result-card">', unsafe_allow_html=True)
-                    
-                    # Result header
-                    col1, col2, col3 = st.columns([1, 6, 2])
-                    with col1:
-                        st.markdown(f'<div class="result-icon">{result_icon}</div>', unsafe_allow_html=True)
-                    with col2:
-                        st.markdown(f'<div class="result-title">{result_title}</div>', unsafe_allow_html=True)
-                    with col3:
-                        st.markdown(f'''
-                        <div class="confidence-badge {confidence_class}">
-                            {confidence_level} Confidence<br>
-                            <small>{confidence:.1%}</small>
-                        </div>
-                        ''', unsafe_allow_html=True)
-                    
-                    # Explanation
-                    explanation_text = 'This document contains language that may reserve mineral rights to the grantor or previous parties.' if classification == 1 else 'This document appears to be a clean transfer without mineral rights reservations.'
-                    st.markdown(f'<div class="explanation">{explanation_text}</div>', unsafe_allow_html=True)
-                    
-                    # Recommendation
-                    recommendation_text = get_recommendation(classification, confidence)
-                    st.markdown(f'''
-                    <div class="recommendation">
-                        <strong>🎯 Professional Recommendation</strong>
-                        <div class="recommendation-text">{recommendation_text}</div>
-                    </div>
-                    ''', unsafe_allow_html=True)
-                    
-                    # Analysis Details
-                    st.markdown('<h4 style="color: #1b5e20; margin: 35px 0 25px 0; font-size: 1.5em;">📊 Analysis Details</h4>', unsafe_allow_html=True)
-                    
-                    # Use Streamlit metrics for clean display
-                    col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("📄 Document", uploaded_file.name)
-                        st.metric("📑 Pages", result['pages_processed'])
-                    with col2:
-                        st.metric("🤖 AI Samples", result['samples_used'])
-                        st.metric("📝 Text Chars", f"{len(result['ocr_text']):,}")
-                    with col3:
-                        st.metric("⚡ Early Stop", 'Yes' if result.get('early_stopped') else 'No')
-                    
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Vote distribution
-                st.markdown("### 🗳️ Vote Distribution")
-                votes = result['votes']
-                col1, col2 = st.columns(2)
+                col1, col2, col3, col4 = st.columns(4)
                 
                 with col1:
-                    no_res_votes = votes.get(0, 0)
-                    total_votes = sum(votes.values())
-                    no_res_pct = (no_res_votes / total_votes * 100) if total_votes > 0 else 0
-                    st.metric("No Reservations", f"{no_res_pct:.1f}%")
+                    total_docs = len(results_df)
+                    st.metric("Total Documents", total_docs)
                 
                 with col2:
-                    has_res_votes = votes.get(1, 0)
-                    has_res_pct = (has_res_votes / total_votes * 100) if total_votes > 0 else 0
-                    st.metric("Has Reservations", f"{has_res_pct:.1f}%")
+                    successful = len(results_df[results_df['processing_status'] == 'Success'])
+                    st.metric("Successfully Processed", successful)
                 
-                # Show reasoning if available
-                if 'detailed_samples' in result and result['detailed_samples']:
-                    with st.expander("🔍 Detailed Reasoning"):
-                        for i, sample in enumerate(result['detailed_samples'][:3]):  # Show top 3
-                            st.markdown(f"**Sample {i+1} (Confidence: {sample['confidence_score']:.1%})**")
-                            st.write(sample['reasoning'])
-                            if i < len(result['detailed_samples'][:3]) - 1:
-                                st.markdown("---")
+                with col3:
+                    has_reservations = len(results_df[results_df['classification_numeric'] == 1])
+                    st.metric("With Reservations", has_reservations)
                 
-                # New analysis button
-                st.markdown('<div style="text-align: center; margin-top: 50px;">', unsafe_allow_html=True)
-                if st.button("📄 Analyze New Document"):
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+                with col4:
+                    high_confidence = len(results_df[results_df['confidence_level'] == 'HIGH'])
+                    st.metric("High Confidence", high_confidence)
+                
+                # Show results preview
+                st.markdown("### 📋 Results Preview")
+                st.dataframe(
+                    results_df[['filename', 'classification', 'confidence_level', 'confidence_score', 'processing_status']],
+                    use_container_width=True
+                )
+                
+                # Create download button
+                csv_data, csv_filename = create_csv_download(results_df)
+                
+                st.download_button(
+                    label="📥 Download Complete Results (CSV)",
+                    data=csv_data,
+                    file_name=csv_filename,
+                    mime="text/csv",
+                    type="primary"
+                )
+                
+                st.markdown("### 📄 CSV File Contents")
+                st.info("""
+                The CSV file contains the following columns for each analyzed document:
+                
+                **Basic Information:**
+                • `filename` - Original filename
+                • `file_size_bytes` - File size in bytes
+                • `processing_timestamp` - When the analysis was performed
+                
+                **Classification Results:**
+                • `classification` - Human-readable classification result
+                • `classification_numeric` - Numeric classification (0=No Reservations, 1=Has Reservations)
+                • `confidence_score` - AI confidence score (0.0 to 1.0)
+                • `confidence_level` - HIGH/MEDIUM/LOW confidence classification
+                
+                **Analysis Details:**
+                • `recommendation` - Professional recommendation based on results
+                • `llm_explanation` - Detailed AI reasoning for the classification
+                • `pages_processed` - Number of document pages analyzed
+                • `samples_used` - Number of AI samples used in analysis
+                
+                **Voting Information:**
+                • `total_votes` - Total number of classification votes
+                • `no_reservation_votes` - Votes for "no reservations"
+                • `has_reservation_votes` - Votes for "has reservations"
+                • `vote_ratio_reservations` - Ratio of reservation votes to total votes
+                
+                **Technical Details:**
+                • `early_stopped` - Whether analysis stopped early due to high confidence
+                • `text_characters_analyzed` - Number of text characters processed
+                • `processing_status` - Success or error information
+                """)
                 
             except Exception as e:
-                st.error(f"❌ Error processing document: {str(e)}")
-                st.info("💡 Try uploading a different PDF or check if the file is corrupted.")
+                st.error(f"❌ Error processing documents: {str(e)}")
+                st.info("💡 Try uploading different PDFs or check if any files are corrupted.")
+    
+    # Show previous results if available
+    if st.session_state.results_df is not None and not uploaded_files:
+        st.markdown("### 📋 Previous Analysis Results")
+        st.dataframe(
+            st.session_state.results_df[['filename', 'classification', 'confidence_level', 'confidence_score', 'processing_status']],
+            use_container_width=True
+        )
+        
+        csv_data, csv_filename = create_csv_download(st.session_state.results_df)
+        st.download_button(
+            label="📥 Download Previous Results (CSV)",
+            data=csv_data,
+            file_name=csv_filename,
+            mime="text/csv"
+        )
+        
+        if st.button("🔄 Start New Analysis"):
+            st.session_state.results_df = None
+            st.rerun()
     
     # Close content section and main container
     st.markdown('</div></div>', unsafe_allow_html=True)

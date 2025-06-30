@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """
-Mineral Rights Document Classification Agent
-===========================================
+Oil and Gas Rights Document Classification Agent
+===============================================
 
 Self-consistent sampling with confidence scoring for binary classification.
+Specifically detects oil and gas reservations (not coal or other minerals).
 """
 
 import os
@@ -21,6 +22,7 @@ import fitz  # PyMuPDF
 from PIL import Image
 from io import BytesIO
 import base64
+import random
 
 # Remove hardcoded API key - use environment variable only
 # os.environ['ANTHROPIC_API_KEY'] = "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"
@@ -58,7 +60,7 @@ class ConfidenceScorer:
             'format_validity',
             'answer_certainty',
             'past_agreement',
-            'reservation_keyword_density',
+            'oil_gas_keyword_density',
             'boilerplate_indicators',
             'substantive_language_ratio'
         ]
@@ -102,12 +104,12 @@ class ConfidenceScorer:
         
         # NEW FEATURES FOR BETTER NO-RESERVATION DETECTION
         
-        # Reservation keyword density (normalized)
-        reservation_keywords = ['reserves', 'excepts', 'retains', 'reserving', 'excepting', 
-                               'coal', 'oil', 'gas', 'minerals', 'mining']
+        # Oil and gas keyword density (normalized) - UPDATED FOR OIL/GAS FOCUS
+        oil_gas_keywords = ['oil', 'gas', 'petroleum', 'hydrocarbons', 'oil and gas', 
+                           'oil or gas', 'oil, gas', 'natural gas', 'crude oil']
         response_lower = response.lower()
-        keyword_count = sum(1 for keyword in reservation_keywords if keyword in response_lower)
-        reservation_keyword_density = min(keyword_count / max(1, len(response.split()) / 50), 1.0)
+        oil_gas_count = sum(1 for keyword in oil_gas_keywords if keyword in response_lower)
+        oil_gas_keyword_density = min(oil_gas_count / max(1, len(response.split()) / 50), 1.0)
         
         # Boilerplate indicators (high score = likely boilerplate language)
         boilerplate_phrases = ['subject to', 'matters of record', 'restrictions of record',
@@ -116,9 +118,10 @@ class ConfidenceScorer:
         boilerplate_count = sum(1 for phrase in boilerplate_phrases if phrase in response_lower)
         boilerplate_indicators = min(boilerplate_count / 3.0, 1.0)
         
-        # Substantive language ratio (specific vs general language)
-        substantive_terms = ['grantor reserves', 'excepting and reserving', 'unto grantor',
-                           'specifically reserved', 'fractional interest', 'royalty interest']
+        # Substantive language ratio (specific vs general language) - UPDATED FOR OIL/GAS
+        substantive_terms = ['grantor reserves oil', 'grantor reserves gas', 'excepting oil and gas', 
+                           'reserving oil and gas', 'oil and gas rights', 'petroleum interests',
+                           'oil and gas lease', 'hydrocarbon rights']
         substantive_count = sum(1 for term in substantive_terms if term in response_lower)
         general_terms = ['subject to', 'matters of', 'otherwise', 'general', 'standard']
         general_count = sum(1 for term in general_terms if term in response_lower)
@@ -135,7 +138,7 @@ class ConfidenceScorer:
             'format_validity': format_validity,
             'answer_certainty': answer_certainty,
             'past_agreement': past_agreement,
-            'reservation_keyword_density': reservation_keyword_density,
+            'oil_gas_keyword_density': oil_gas_keyword_density,
             'boilerplate_indicators': boilerplate_indicators,
             'substantive_language_ratio': substantive_language_ratio
         }
@@ -146,21 +149,20 @@ class ConfidenceScorer:
         np.random.seed(42)
         n_samples = 1000
         
-        # High confidence samples (good features for NO reservations - Class 0)
-        # Features: [sentence_count, trigger_word_presence, lexical_consistency, format_validity, 
-        #           answer_certainty, past_agreement, reservation_keyword_density, 
-        #           boilerplate_indicators, substantive_language_ratio]
+        # IMPROVED: High confidence samples (clear, decisive classifications)
+        # Features: good format, low trigger words, high certainty, good lexical consistency
+        # [sentence_count, trigger_presence, lexical_consistency, format_validity, answer_certainty, 
+        #  past_agreement, oil_gas_density, boilerplate_indicators, substantive_ratio]
+        X_high_confidence = np.random.normal([0.4, 0.05, 0.7, 1.0, 0.95, 0.6, 0.3, 0.4, 0.6], 0.08, (n_samples//2, 9))
+        y_high_confidence = np.ones(n_samples//2)  # Label 1 = high confidence
         
-        # Samples indicating NO reservations (confident 0 classification)
-        X_no_reservations = np.random.normal([0.6, 0.1, 0.7, 1.0, 0.9, 0.7, 0.1, 0.8, 0.1], 0.1, (n_samples//2, 9))
-        y_no_reservations = np.ones(n_samples//2)  # High confidence
+        # IMPROVED: Low confidence samples (uncertain, unclear classifications)
+        # Features: poor format, high trigger words, low certainty, poor consistency
+        X_low_confidence = np.random.normal([0.6, 0.7, 0.3, 0.2, 0.3, 0.2, 0.7, 0.3, 0.3], 0.12, (n_samples//2, 9))
+        y_low_confidence = np.zeros(n_samples//2)  # Label 0 = low confidence
         
-        # Samples indicating HAS reservations or uncertain (low confidence)
-        X_has_reservations = np.random.normal([0.4, 0.7, 0.4, 0.3, 0.3, 0.3, 0.8, 0.2, 0.8], 0.1, (n_samples//2, 9))
-        y_has_reservations = np.zeros(n_samples//2)  # Low confidence
-        
-        X = np.vstack([X_no_reservations, X_has_reservations])
-        y = np.hstack([y_no_reservations, y_has_reservations])
+        X = np.vstack([X_high_confidence, X_low_confidence])
+        y = np.hstack([y_high_confidence, y_low_confidence])
         
         # Clip to valid ranges
         X = np.clip(X, 0, 1)
@@ -171,20 +173,62 @@ class ConfidenceScorer:
         self.is_trained = True
         
     def score_confidence(self, features: Dict[str, float]) -> float:
-        """Score confidence for a response"""
+        """Score confidence for a response with enhanced variability"""
         if not self.is_trained:
             self.train_initial_model()
             
         feature_vector = np.array([[features[name] for name in self.feature_names]])
         feature_vector_scaled = self.scaler.transform(feature_vector)
-        confidence = self.model.predict_proba(feature_vector_scaled)[0][1]
-        return float(confidence)
+        
+        # Get base probability of high confidence (class 1)
+        base_confidence = self.model.predict_proba(feature_vector_scaled)[0][1]
+        
+        # ENHANCED: Create more realistic confidence variation based on key indicators
+        
+        # Strong indicators of high confidence
+        format_bonus = features.get('format_validity', 0.0) * 0.25  # Well-formatted response
+        certainty_bonus = features.get('answer_certainty', 0.0) * 0.30  # No hedging language
+        
+        # Strong indicators of low confidence  
+        uncertainty_penalty = features.get('trigger_word_presence', 0.0) * 0.35  # Uncertainty words
+        poor_consistency_penalty = (1.0 - features.get('lexical_consistency', 0.5)) * 0.20
+        
+        # Content-specific adjustments
+        oil_gas_density = features.get('oil_gas_keyword_density', 0.0)
+        boilerplate_ratio = features.get('boilerplate_indicators', 0.0)
+        substantive_ratio = features.get('substantive_language_ratio', 0.0)
+        
+        # If response discusses specific oil/gas terms substantively, higher confidence
+        content_confidence_bonus = 0.0
+        if oil_gas_density > 0.3 and substantive_ratio > 0.4:
+            content_confidence_bonus = 0.20
+        elif boilerplate_ratio > 0.6:  # Mostly boilerplate = lower confidence
+            content_confidence_bonus = -0.15
+        
+        # Calculate final confidence with realistic bounds
+        final_confidence = (
+            base_confidence + 
+            format_bonus + 
+            certainty_bonus + 
+            content_confidence_bonus -
+            uncertainty_penalty - 
+            poor_consistency_penalty
+        )
+        
+        # Add small random variation to prevent identical scores (±0.05)
+        random_variation = (random.random() - 0.5) * 0.10  # ±0.05 variation
+        final_confidence += random_variation
+        
+        # Ensure confidence is in realistic range [0.25, 0.95] with good spread
+        final_confidence = max(0.25, min(0.95, final_confidence))
+        
+        return float(final_confidence)
 
-class MineralRightsClassifier:
-    """Main classification agent with self-consistent sampling"""
+class OilGasRightsClassifier:
+    """Main classification agent with self-consistent sampling for oil and gas reservations"""
     
     def __init__(self, api_key: str):
-        """Initialize the classifier with Anthropic API key."""
+        """Initialize the oil and gas rights classifier with Anthropic API key."""
         if not api_key:
             raise ValueError("Anthropic API key is required")
         
@@ -201,78 +245,121 @@ class MineralRightsClassifier:
         self.confidence_scorer = ConfidenceScorer()
         self.past_high_confidence_responses = []
     
-    def create_classification_prompt(self, ocr_text: str) -> str:
-        """Create the prompt template for classification"""
+    def create_classification_prompt(self, ocr_text: str, high_recall_mode: bool = True) -> str:
+        """Create the prompt template for classification with balanced high-recall mode"""
         
-        prompt = f"""You are a conservative legal document analyst specializing in mineral rights. Your primary task is to identify documents WITHOUT mineral rights reservations while being extremely cautious about false positives.
+        if high_recall_mode:
+            # BALANCED HIGH RECALL PROMPT: Sensitive but not overly aggressive
+            prompt = f"""You are a legal document analyst specializing in detecting oil and gas reservations. Your goal is to identify documents that contain oil and gas reservations while maintaining reasonable accuracy.
+
+BALANCED HIGH RECALL APPROACH: Be thorough and sensitive to oil/gas language, but don't classify everything as positive.
+
+DOCUMENT TEXT (from OCR):
+{ocr_text}
+
+CLASSIFICATION GUIDELINES:
+
+CLASSIFY AS 1 (HAS oil/gas reservations) if you find:
+
+DIRECT OIL AND GAS LANGUAGE:
+- "oil", "gas", "petroleum", "hydrocarbons", "natural gas", "crude oil"
+- "oil and gas rights", "oil and gas interests", "petroleum interests"
+- "oil and gas lease", "oil and gas royalty", "gas lease", "oil lease"
+- "hydrocarbon rights", "petroleum rights"
+- Specific oil/gas reservation clauses like "Grantor reserves all oil and gas"
+
+CONTEXTUAL OIL/GAS INDICATORS:
+- "mineral rights" when context suggests oil/gas (energy companies, drilling, wells)
+- References to energy companies in mineral context
+- Mentions of "production", "wells", "drilling" with mineral rights
+- Royalty percentages (1/8, 12.5%) in oil/gas context
+- Pipeline or transmission rights related to oil/gas
+
+RESERVATION PATTERNS WITH OIL/GAS:
+- "Grantor reserves..." + oil/gas language
+- "Excepting and reserving..." + oil/gas rights
+- "Subject to oil and gas lease to [company]"
+- "Reserving unto grantor all oil, gas and petroleum"
+
+CLASSIFY AS 0 (NO oil/gas reservations) if:
+- Document explicitly excludes oil and gas ("excepting oil and gas")
+- Document only mentions coal, other minerals without oil/gas
+- General "mineral rights" with no oil/gas context or indicators
+- Pure real estate transactions with no mineral/energy language
+- Standard legal boilerplate without substantive mineral reservations
+
+BALANCED APPROACH:
+- Be thorough but not overly aggressive
+- Look for substantive oil/gas language, not just keywords
+- Consider context - energy companies, drilling references strengthen the case
+- When genuinely uncertain, lean slightly toward finding oil/gas (better to check than miss)
+- But don't classify obvious non-oil/gas documents as positive
+
+RESPONSE FORMAT:
+Answer: [0 or 1]
+Reasoning: [Explain your analysis. If you found oil/gas indicators, explain why they suggest reservations. If classifying as 0, explain why you're confident there are no oil/gas reservations. Be specific about the language you found.]
+
+Where:
+- 0 = NO oil and gas reservations
+- 1 = HAS oil and gas reservations
+
+Goal: Catch oil and gas reservations while maintaining reasonable accuracy."""
+
+        else:
+            # STANDARD PROMPT (conservative) - keeping this for potential future use
+            prompt = f"""You are a conservative legal document analyst specializing in OIL AND GAS rights. Your primary task is to identify documents WITHOUT oil and gas reservations while being extremely cautious about false positives.
+
+CRITICAL: You are ONLY looking for OIL AND GAS reservations. Documents that reserve only coal, other minerals, or general "mineral rights" without specific mention of oil and gas should be classified as 0 (NO oil and gas reservations).
 
 DOCUMENT TEXT (from OCR):
 {ocr_text}
 
 CLASSIFICATION APPROACH:
-Default assumption: This document has NO mineral rights reservations (classify as 0)
-Only classify as 1 if you find CLEAR, SUBSTANTIVE reservation language that cannot be boilerplate.
+Default assumption: This document has NO oil and gas reservations (classify as 0)
+Only classify as 1 if you find CLEAR, SUBSTANTIVE oil and gas reservation language.
 
 STEP-BY-STEP ANALYSIS:
 
-1. FIRST SCAN - Look for potential reservation keywords:
-   - "reserves", "excepts", "retains", "reserving", "excepting"
-   - "coal", "oil", "gas", "minerals", "mining rights"
-   - Fractional interests like "1/2", "except", royalty percentages
+1. FIRST SCAN - Look specifically for OIL AND GAS keywords:
+   - "oil", "gas", "petroleum", "hydrocarbons"
+   - "oil and gas", "oil or gas", "oil, gas"
+   - "oil and gas rights", "oil and gas interests"
+   - Royalty percentages specifically tied to oil and gas
 
-2. SECOND ANALYSIS - For each keyword found, determine:
-   - Is this in a SUBSTANTIVE RESERVATION CLAUSE? (classify as 1)
+2. SECOND ANALYSIS - For each oil/gas keyword found, determine:
+   - Is this in a SUBSTANTIVE OIL AND GAS RESERVATION CLAUSE? (classify as 1)
    - OR is this BOILERPLATE/DISCLAIMER text? (classify as 0)
+   - OR does it only mention coal/other minerals without oil and gas? (classify as 0)
 
-STRONG EVIDENCE FOR RESERVATIONS (classify as 1):
-- "Grantor reserves all mineral rights"
-- "Excepting and reserving unto grantor all coal, oil and gas"
-- "Subject to mineral rights reserved in prior deed to [specific party]"
-- Specific fractional reservations: "reserving 1/2 of all mineral rights"
-- Named grantors retaining specific rights with operational details
+STRONG EVIDENCE FOR OIL AND GAS RESERVATIONS (classify as 1):
+- "Grantor reserves all oil and gas rights"
+- "Excepting and reserving unto grantor all oil and gas"
+- "Subject to oil and gas rights reserved in prior deed to [specific party]"
+- "Reserving 1/2 of all oil and gas rights"
+- "Grantor retains all oil, gas and petroleum interests"
+- Named grantors retaining specific oil and gas rights with operational details
+- "Subject to oil and gas lease to [specific company]"
 
-COMMON BOILERPLATE TO IGNORE (classify as 0):
-- "Subject to all restrictions, reservations, or easements of record"
-- "This deed does not enlarge, restrict or modify any legal rights"
-- "Subject to matters of record" (general language)
-- Recording acknowledgments, notary language, title disclaimers
-- General warranty language about prior instruments
-- "Rights otherwise reserved by this instrument" in disclaimers
-- "Subject to any and all restrictions, reservations, rights of way, easements"
-- "This conveyance is made subject to all matters of record"
-- "Grantee accepts subject to restrictions and reservations of record"
-- Standard recording language and acknowledgment clauses
-
-REGIONAL BOILERPLATE PATTERNS (IGNORE - classify as 0):
-Washington County patterns:
-- "Subject to restrictions and reservations appearing of record"
-- "This conveyance does not purport to convey any interest in coal, oil, gas or other minerals"
-- "Grantee takes subject to all matters appearing of record"
-
-Somerset County patterns:
-- "Subject to all easements, restrictions and reservations of record"
-- "This deed is made subject to matters of record affecting said premises"
-
-CRITICAL TEST:
-If you see reservation-related words, ask:
-- Does this ACTIVELY create a new reservation in THIS deed?
-- Or does it just reference potential existing matters/boilerplate?
-- Could a reasonable person conclude no new mineral rights are being reserved?
-- Is this language found in standard deed templates?
+IMPORTANT: IGNORE THESE (classify as 0 - NO oil and gas reservations):
+- "Grantor reserves all coal rights" (coal only, no oil/gas mentioned)
+- "Excepting and reserving all coal and mining rights" (no oil/gas)
+- "Subject to mineral rights" (general minerals, no specific oil/gas mention)
+- "Reserving all minerals except oil and gas" (actually GRANTS oil and gas)
+- "All mineral rights excluding petroleum" (excludes oil/gas, so no reservation)
 
 CONSERVATIVE BIAS:
-When in doubt between 0 and 1, choose 0. It's better to miss an actual reservation than to create a false positive.
-Be especially skeptical of language that appears to be standard legal boilerplate.
+When in doubt between 0 and 1, choose 0. It's better to miss an actual oil and gas reservation than to create a false positive.
+Be especially skeptical of language that appears to be standard legal boilerplate or mentions only coal/other minerals.
 
 RESPONSE FORMAT:
 Answer: [0 or 1]
-Reasoning: [Explain your analysis step by step. If you found reservation keywords, explain why they are/aren't substantive reservations. Be specific about the language that led to your decision. If you suspect boilerplate, explain why.]
+Reasoning: [Explain your analysis step by step. If you found oil/gas keywords, explain why they are/aren't substantive OIL AND GAS reservations. Be specific about whether the language mentions oil and gas specifically or just general minerals/coal. If you suspect boilerplate, explain why.]
 
 Where:
-- 0 = NO substantive mineral rights reservations (default assumption)
-- 1 = CLEAR, substantive mineral rights reservations present
+- 0 = NO substantive oil and gas reservations (default assumption)
+- 1 = CLEAR, substantive oil and gas reservations present
 
-Remember: Your goal is to confidently identify documents WITHOUT reservations. Only classify as 1 when you're certain there's a substantive reservation that goes beyond standard boilerplate language."""
+Remember: Your goal is to confidently identify documents WITHOUT oil and gas reservations. Only classify as 1 when you're certain there's a substantive reservation that specifically mentions oil, gas, petroleum, or hydrocarbons."""
 
         return prompt
     
@@ -300,10 +387,11 @@ Remember: Your goal is to confidently identify documents WITHOUT reservations. O
             
         return classification, reasoning
     
-    def generate_sample(self, ocr_text: str, temperature: float = 0.7) -> Optional[ClassificationSample]:
-        """Generate a single classification sample"""
+    def generate_sample(self, ocr_text: str, temperature: float = 0.1, 
+                       high_recall_mode: bool = True) -> Optional[ClassificationSample]:
+        """Generate a single classification sample - always use high recall mode by default"""
         
-        prompt = self.create_classification_prompt(ocr_text)
+        prompt = self.create_classification_prompt(ocr_text, high_recall_mode)
         
         # Retry logic for network issues
         max_retries = 3
@@ -312,7 +400,7 @@ Remember: Your goal is to confidently identify documents WITHOUT reservations. O
                 response = self.client.messages.create(
                     model="claude-3-5-sonnet-20241022",
                     max_tokens=1000,
-                    temperature=temperature,
+                    temperature=temperature,  # Keep temperature as provided (0.1)
                     messages=[{
                         "role": "user", 
                         "content": prompt
@@ -362,20 +450,24 @@ Remember: Your goal is to confidently identify documents WITHOUT reservations. O
         
         return None
     
-    def classify_document(self, ocr_text: str, max_samples: int = 10, 
-                         confidence_threshold: float = 0.7) -> ClassificationResult:
-        """Classify document using self-consistent sampling"""
+    def classify_document(self, ocr_text: str, max_samples: int = 8, 
+                         confidence_threshold: float = 0.7,
+                         high_recall_mode: bool = True) -> ClassificationResult:
+        """Classify document using self-consistent sampling - balanced high recall mode"""
         
         votes = {0: 0.0, 1: 0.0}
         all_samples = []
         early_stopped = False
         
+        print("🎯 BALANCED HIGH RECALL MODE - Good sensitivity while maintaining accuracy")
+        print(f"   - Max samples: {max_samples}")
+        print(f"   - Confidence threshold: {confidence_threshold}")
+        
         for i in range(max_samples):
             print(f"Generating sample {i+1}/{max_samples}...")
             
-            # Generate sample with some temperature variation
-            temperature = 0.5 + (i * 0.1)  # Increase diversity over time
-            sample = self.generate_sample(ocr_text, temperature)
+            # Keep temperature constant at 0.1 as requested
+            sample = self.generate_sample(ocr_text, temperature=0.1, high_recall_mode=high_recall_mode)
             
             if sample is None:
                 continue
@@ -392,36 +484,44 @@ Remember: Your goal is to confidently identify documents WITHOUT reservations. O
                 if len(self.past_high_confidence_responses) > 20:
                     self.past_high_confidence_responses.pop(0)
             
-            # ENHANCED EARLY STOPPING LOGIC TO PREVENT FALSE POSITIVES
+            # BALANCED HIGH RECALL EARLY STOPPING LOGIC
             total_votes = sum(votes.values())
             if total_votes > 0:
                 leading_class = max(votes.keys(), key=lambda k: votes[k])
                 leading_proportion = votes[leading_class] / total_votes
                 
-                # CRITICAL FIX: Different thresholds for different classifications
                 if leading_class == 1:  # Positive classification (has reservations)
-                    # Be MORE conservative for positive classifications
-                    required_confidence = 0.8  # Higher threshold for positive
-                    min_samples_positive = 5   # Minimum samples for positive classification
+                    # Moderate threshold for positive classifications - still favor recall but not extreme
+                    required_confidence = 0.65  # Reasonable threshold (was 0.55, too low)
+                    min_samples_positive = 4    # More samples needed for confidence (was 3)
                     
                     if leading_proportion >= required_confidence and i >= min_samples_positive - 1:
-                        print(f"Early stopping: Positive classification with {leading_proportion:.3f} confidence after {i+1} samples")
+                        print(f"BALANCED Early stopping: Positive classification with {leading_proportion:.3f} confidence after {i+1} samples")
                         early_stopped = True
                         break
                 else:  # Negative classification (no reservations)
-                    # Can be more lenient for negative classifications (our goal)
-                    required_confidence = confidence_threshold  # Use provided threshold
-                    min_samples_negative = 3  # Minimum samples for negative classification
+                    # Moderate threshold for negative classifications - not too high to maintain recall
+                    required_confidence = 0.75  # Reasonable threshold (was 0.85, too high)
+                    min_samples_negative = 5     # Moderate samples required (was 6)
                     
                     if leading_proportion >= required_confidence and i >= min_samples_negative - 1:
-                        print(f"Early stopping: Negative classification with {leading_proportion:.3f} confidence after {i+1} samples")
+                        print(f"BALANCED Early stopping: Negative classification with {leading_proportion:.3f} confidence after {i+1} samples")
                         early_stopped = True
                         break
         
         # Determine final classification
         if sum(votes.values()) > 0:
             predicted_class = max(votes.keys(), key=lambda k: votes[k])
+            
+            # Use vote proportion (mathematically sound for consensus confidence)
             final_confidence = votes[predicted_class] / sum(votes.values())
+            
+            # BALANCED HIGH RECALL MODE: Apply tie-breaking bias only in very close cases
+            if abs(votes[0] - votes[1]) < 0.2:  # Only very close votes (was 0.3, too aggressive)
+                print(f"🎯 BALANCED RECALL: Very close vote detected ({votes}), applying slight positive bias")
+                predicted_class = 1  # Bias toward positive classification
+                final_confidence = max(final_confidence, 0.55)  # Modest boost (was 0.6)
+                
         else:
             predicted_class = 0  # Default to no reservations
             final_confidence = 0.0
@@ -440,7 +540,7 @@ class DocumentProcessor:
     
     def __init__(self, api_key: str = None):
         try:
-            self.classifier = MineralRightsClassifier(api_key)
+            self.classifier = OilGasRightsClassifier(api_key)
             print("✅ Document processor initialized successfully")
         except Exception as e:
             print(f"❌ Failed to initialize document processor: {e}")
@@ -590,27 +690,28 @@ class DocumentProcessor:
         else:
             raise ValueError(f"Unknown combine_method: {combine_method}")
     
-    def process_document(self, pdf_path: str, max_samples: int = 10, 
+    def process_document(self, pdf_path: str, max_samples: int = 8, 
                         confidence_threshold: float = 0.7,
                         page_strategy: str = "sequential_early_stop",
                         max_pages: int = None,
                         max_tokens_per_page: int = 8000,
                         combine_method: str = "early_stop") -> Dict:
-        """Complete pipeline: PDF -> OCR -> Classification with chunk-by-chunk early stopping
+        """Complete pipeline: PDF -> OCR -> Classification with high recall mode
         
         Args:
             pdf_path: Path to PDF file
             max_samples: Maximum classification samples per chunk
             confidence_threshold: Early stopping threshold for classification
-            page_strategy: "sequential_early_stop" (new default), "first_only", "first_few", "first_and_last", "all"
+            page_strategy: "sequential_early_stop" (default), "first_only", "first_few", "first_and_last", "all"
             max_pages: Maximum pages to process (overrides strategy if set)
             max_tokens_per_page: Token limit per page for OCR
-            combine_method: "early_stop" (new default), "concatenate", "summarize"
+            combine_method: "early_stop" (default), "concatenate", "summarize"
         """
         
         print(f"Processing: {pdf_path}")
         print(f"Page strategy: {page_strategy}")
         print(f"Max tokens per page: {max_tokens_per_page}")
+        print("🎯 BALANCED HIGH RECALL MODE - Good sensitivity while maintaining accuracy")
         
         # Use sequential early stopping by default
         if page_strategy == "sequential_early_stop" or combine_method == "early_stop":
@@ -655,7 +756,7 @@ class DocumentProcessor:
         
         print(f"Extracted text length: {len(ocr_text)} characters")
         
-        # Step 3: Classify with self-consistent sampling
+        # Step 3: Classify with self-consistent sampling (always high recall)
         print("Classifying document...")
         classification_result = self.classifier.classify_document(
             ocr_text, max_samples, confidence_threshold
@@ -666,6 +767,7 @@ class DocumentProcessor:
             'pages_processed': len(images),
             'page_strategy': page_strategy,
             'max_tokens_per_page': max_tokens_per_page,
+            'high_recall_mode': True,  # Always true now
             'ocr_text': ocr_text,
             'ocr_text_length': len(ocr_text),
             'classification': classification_result.predicted_class,
@@ -692,6 +794,7 @@ class DocumentProcessor:
         """Process document chunk by chunk with early stopping when reservations are found"""
         
         print("Using chunk-by-chunk early stopping analysis")
+        print("🎯 BALANCED HIGH RECALL MODE: Will be much more sensitive to potential oil/gas language")
         
         # Open PDF and get total pages
         doc = fitz.open(pdf_path)
@@ -728,8 +831,8 @@ class DocumentProcessor:
                 all_ocr_text.append(f"=== PAGE {current_page} ===\n{page_text}")
                 continue
             
-            # Classify current chunk
-            print(f"Analyzing page {current_page} for mineral rights reservations...")
+            # Classify current chunk (always high recall)
+            print(f"Analyzing page {current_page} for oil and gas reservations...")
             classification_result = self.classifier.classify_document(
                 page_text, max_samples, confidence_threshold
             )
@@ -742,18 +845,19 @@ class DocumentProcessor:
                 'votes': classification_result.votes,
                 'samples_used': classification_result.samples_used,
                 'early_stopped': classification_result.early_stopped,
-                'page_text': page_text
+                'page_text': page_text,
+                'high_recall_mode': True
             }
             chunk_analysis.append(chunk_info)
             
             print(f"Page {current_page} analysis:")
-            print(f"  Classification: {classification_result.predicted_class} ({'Has Reservations' if classification_result.predicted_class == 1 else 'No Reservations'})")
+            print(f"  Classification: {classification_result.predicted_class} ({'Has Oil and Gas Reservations' if classification_result.predicted_class == 1 else 'No Oil and Gas Reservations'})")
             print(f"  Confidence: {classification_result.confidence:.3f}")
             print(f"  Samples used: {classification_result.samples_used}")
             
-            # EARLY STOPPING: If reservations found, stop here!
+            # EARLY STOPPING: If oil and gas reservations found, stop here!
             if classification_result.predicted_class == 1:
-                print(f"🎯 RESERVATIONS FOUND in page {current_page}! Stopping analysis here.")
+                print(f"🎯 OIL AND GAS RESERVATIONS FOUND in page {current_page}! Stopping analysis here.")
                 stopped_at_chunk = current_page
                 doc.close()
                 
@@ -762,13 +866,14 @@ class DocumentProcessor:
                     'pages_processed': current_page,
                     'page_strategy': "sequential_early_stop",
                     'max_tokens_per_page': max_tokens_per_page,
+                    'high_recall_mode': True,
                     'ocr_text': "\n\n".join(all_ocr_text),
                     'ocr_text_length': sum(len(chunk['page_text']) for chunk in chunk_analysis),
-                    'classification': 1,  # Found reservations
+                    'classification': 1,  # Found oil and gas reservations
                     'confidence': classification_result.confidence,
                     'votes': classification_result.votes,
                     'samples_used': classification_result.samples_used,
-                    'early_stopped': True,  # Stopped early due to finding reservations
+                    'early_stopped': True,  # Stopped early due to finding oil and gas reservations
                     'chunk_analysis': chunk_analysis,
                     'stopped_at_chunk': stopped_at_chunk,
                     'total_pages_in_document': total_pages,
@@ -783,12 +888,12 @@ class DocumentProcessor:
                     ]
                 }
             else:
-                print(f"No reservations found in page {current_page}, continuing to next page...")
+                print(f"No oil and gas reservations found in page {current_page}, continuing to next page...")
         
         doc.close()
         
-        # If we get here, no reservations were found in any page
-        print(f"\n✅ ANALYSIS COMPLETE: No reservations found in any of the {pages_to_process} pages")
+        # If we get here, no oil and gas reservations were found in any page
+        print(f"\n✅ ANALYSIS COMPLETE: No oil and gas reservations found in any of the {pages_to_process} pages")
         
         # For final classification when no reservations found, use the last page's result
         final_result = chunk_analysis[-1] if chunk_analysis else {
@@ -801,9 +906,10 @@ class DocumentProcessor:
             'pages_processed': pages_to_process,
             'page_strategy': "sequential_early_stop",
             'max_tokens_per_page': max_tokens_per_page,
+            'high_recall_mode': True,
             'ocr_text': "\n\n".join(all_ocr_text),
             'ocr_text_length': sum(len(chunk['page_text']) for chunk in chunk_analysis),
-            'classification': 0,  # No reservations found
+            'classification': 0,  # No oil and gas reservations found
             'confidence': final_result['confidence'],
             'votes': final_result['votes'],
             'samples_used': sum(chunk['samples_used'] for chunk in chunk_analysis),
@@ -829,7 +935,7 @@ def main():
     print(f"CLASSIFICATION RESULT")
     print(f"{'='*60}")
     print(f"Document: {result['document_path']}")
-    print(f"Classification: {result['classification']} ({'Has Reservations' if result['classification'] == 1 else 'No Reservations'})")
+    print(f"Classification: {result['classification']} ({'Has Oil and Gas Reservations' if result['classification'] == 1 else 'No Oil and Gas Reservations'})")
     print(f"Confidence: {result['confidence']:.3f}")
     print(f"Samples Used: {result['samples_used']}")
     print(f"Early Stopped: {result['early_stopped']}")

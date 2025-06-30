@@ -1,0 +1,54 @@
+file_name,category,true_label,predicted_label,confidence,correct,samples_used,pages_processed
+Westmoreland DV 1434_603 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,2
+Greene 677-726 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,2
+Brooke DB 75_88 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,1
+Washington Co PA Inst# 201031651.pdf,reservs,1,1,1.0,True,3,2
+Guernsey OR 392_292 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,2
+Marshall Co WV DB 82_173.pdf,reservs,1,0,1.0,False,9,3
+Washington DB 475_646 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,2
+Greene DB 253_223 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,1
+Potter DB 234_1012.pdf,reservs,1,1,1.0,True,3,1
+Washington Co PA DV 596_69.pdf,reservs,1,1,1.0,True,3,2
+Washington 201408321 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,2
+Washington DBV 604 Page 286 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,2
+Harrison DV 202-635.pdf,reservs,1,0,1.0,False,15,5
+Allegheny DB 2470_179 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,1
+Indiana Co. PA DB 550_322.pdf,reservs,1,1,1.0,True,3,2
+Wetzel Co WV DB 312_378.pdf,reservs,1,1,1.0,True,3,2
+Guernsey Co OH DV 145_283.pdf,reservs,1,1,1.0,True,3,2
+Greene DB 280_311 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,2
+Westmoreland 753-247 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,1
+Washington DB 704_223.pdf,reservs,1,1,1.0,True,3,2
+Guernsey Co OH DV 118_352.pdf,reservs,1,0,1.0,False,3,1
+Monroe Co OH DB 109_330.pdf,reservs,1,1,1.0,True,3,2
+Armstrong DB 5269_327 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,2
+Marion Deed Book 280-449 - 4.23.2025.pdf,reservs,1,1,1.0,True,3,3
+Brooke DB 74_249.pdf,reservs,1,1,1.0,True,3,1
+Belmont Co OH DB 189_408.pdf,reservs,1,1,1.0,True,3,2
+Guernsey DB 290_74.pdf,no-reservs,0,0,1.0,True,3,1
+Allegheny 8277_16 - 4.23.2025.pdf,no-reservs,0,0,1.0,True,12,4
+Somerset DB 2570_102.pdf,no-reservs,0,0,1.0,True,24,8
+Allegheny DB 92_389.pdf,no-reservs,0,0,1.0,True,12,4
+Allegheny 3387-275 - 4.23.2025.pdf,no-reservs,0,0,1.0,True,6,2
+Washington DB 405_547.pdf,no-reservs,0,0,1.0,True,9,3
+Harrison DV 234_357.pdf,no-reservs,0,0,1.0,True,9,3
+Washington DV 677_46.pdf,no-reservs,0,0,1.0,True,6,2
+Brooke DB 176_514.pdf,no-reservs,0,1,1.0,False,3,3
+Westmoreland DV 2483_444.pdf,no-reservs,0,0,1.0,True,18,6
+Carroll DB 130-50.pdf,no-reservs,0,0,1.0,True,3,1
+Allegheny 1910-768.pdf,no-reservs,0,0,1.0,True,9,3
+Allegheny County DB 2759_637 - 4.23.2025.pdf,no-reservs,0,0,1.0,True,3,1
+Somerset DB 1820_349.pdf,no-reservs,0,0,1.0,True,18,6
+Tuscawaras DV 539_793.pdf,no-reservs,0,0,1.0,True,3,1
+Harrison DV 194_5.pdf,no-reservs,0,0,1.0,True,9,3
+Somerset DB 2163_624.pdf,no-reservs,0,1,1.0,False,3,3
+Harrison DV 96_39.pdf,no-reservs,0,0,1.0,True,6,2
+Jefferson DB 397_111.pdf,no-reservs,0,1,1.0,False,3,1
+Greene OR 534_885 - 4.23.2025.pdf,no-reservs,0,0,1.0,True,18,6
+Potter DB 197_879.pdf,no-reservs,0,1,1.0,False,3,2
+Brooke DB 320_798 - 4.23.2025.pdf,no-reservs,0,0,1.0,True,12,4
+Allegheny DB 41_66.pdf,no-reservs,0,0,1.0,True,6,2
+Butler DB 1895_80 - 4.23.2025.pdf,no-reservs,0,0,1.0,True,12,4
+Allegheny 16920-254 - 4.23.2025.pdf,no-reservs,0,0,1.0,True,18,6
+Washington DB 384_583.pdf,no-reservs,0,1,1.0,False,3,1
+Allegheny DB 2759_637 - 4.23.2025.pdf,no-reservs,0,0,1.0,True,3,1

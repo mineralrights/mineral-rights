@@ -1,7 +1,0 @@
-﻿Excepting and reserving, followed by: “oil,” “gas,” “oil and gas,” “petroleum,” “natural gas,” “minerals,” “rentals,” “royalty,” or “royalties.”
-Excepts and reserves, followed by: “oil,” “gas,” “oil and gas,” “petroleum,” “natural gas,” “minerals,” “rentals,” “royalty,” or “royalties.”
-Reserving, followed by: “oil,” “gas,” “oil and gas,” “petroleum,” “natural gas,” “minerals,” “rentals,” “royalty,” or “royalties.”
-Excepting, followed by: “oil,” “gas,” “oil and gas,” “petroleum,” “natural gas,” “minerals,” “rentals,” “royalty,” or “royalties.”
-There is reserved from, followed by: “oil,” “gas,” “oil and gas,” “petroleum,” “natural gas,” “minerals,” “rentals,” “royalty,” or “royalties.”
-There is excepted from, followed by: “oil,” “gas,” “oil and gas,” “petroleum,” “natural gas,” “minerals,” “rentals,” “royalty,” or “royalties.”
-Reserves, followed by: “oil,” “gas,” “oil and gas,” “petroleum,” “natural gas,” “minerals,” “rentals,” “royalty,” or “royalties.”
