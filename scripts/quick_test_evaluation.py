@@ -9,7 +9,7 @@ to verify it's working correctly before running full evaluation.
 
 import os
 from pathlib import Path
-from document_classifier import DocumentProcessor
+from mineral_rights.document_classifier import DocumentProcessor
 
 def quick_test():
     """Test on a few documents to verify functionality"""

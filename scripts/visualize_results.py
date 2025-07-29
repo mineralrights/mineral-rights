@@ -184,13 +184,15 @@ class ClassificationVisualizer:
         
         stats_data = {
             'Avg Time\nper Doc (s)': processing_stats['avg_time_per_doc'],
-            'Avg Samples\nUsed': proc_metrics['avg_samples_used'],
-            'Avg\nConfidence': proc_metrics['avg_confidence'],
-            'Success\nRate': proc_metrics['successful_classifications'] / proc_metrics['total_documents']
+            'Avg Samples\nUsed':     proc_metrics['avg_samples_used'],
+            'Avg\nConfidence':       proc_metrics['avg_confidence'],
+            'Success\nRate':         proc_metrics['successful_classifications'] / proc_metrics['total_documents']
         }
-        
-        bars = ax6.bar(stats_data.keys(), stats_data.values(), 
-                      color=[colors['neutral'], colors['accent'], colors['primary'], colors['success']])
+        x_labels   = list(stats_data.keys())      # ← cast to plain list
+        bar_height = list(stats_data.values())    # ← idem
+        bars = ax6.bar(x_labels, bar_height,
+                       color=[colors['neutral'], colors['accent'],
+                              colors['primary'], colors['success']])
         
         ax6.set_ylabel('Value', fontsize=12, fontweight='bold')
         ax6.set_title('⚡ Processing Statistics', fontsize=14, fontweight='bold', pad=20)

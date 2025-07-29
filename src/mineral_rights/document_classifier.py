@@ -471,10 +471,24 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
         all_samples = []
         early_stopped = False
         
-        mode_label = "BALANCED HIGH RECALL" if high_recall_mode else "CONSERVATIVE (High Specificity)"
-        mode_msg   = "Good sensitivity while maintaining accuracy" \
-                    if high_recall_mode else "Extra-cautious, prioritising specificity"
-        print(f"�� {mode_label} MODE – {mode_msg}")
+        # mode_label = "BALANCED HIGH RECALL" if high_recall_mode else "CONSERVATIVE (High Specificity)"
+        # mode_msg   = "Good sensitivity while maintaining accuracy" \
+        #             if high_recall_mode else "Extra-cautious, prioritising specificity"
+        
+        
+        mode_label = (
+            "BALANCED HIGH RECALL"
+            if high_recall_mode
+            else "CONSERVATIVE (High Specificity)"
+        )
+        mode_msg = (
+            "Good sensitivity while maintaining accuracy"
+            if high_recall_mode
+            else "Extra-cautious, prioritising specificity"
+        )
+
+        
+        print(f"🛈 {mode_label} MODE – {mode_msg}")
         print(f"   - Max samples: {max_samples}")
         print(f"   - Confidence threshold: {confidence_threshold}")
         
@@ -710,7 +724,9 @@ class DocumentProcessor:
                         page_strategy: str = "sequential_early_stop",
                         max_pages: int = None,
                         max_tokens_per_page: int = 8000,
-                        combine_method: str = "early_stop") -> Dict:
+                        combine_method: str = "early_stop",
+                        high_recall_mode: bool = False, ) -> Dict:
+
         """Complete pipeline: PDF -> OCR -> Classification with high recall mode
         
         Args:
@@ -726,13 +742,29 @@ class DocumentProcessor:
         print(f"Processing: {pdf_path}")
         print(f"Page strategy: {page_strategy}")
         print(f"Max tokens per page: {max_tokens_per_page}")
-        print("🎯 BALANCED HIGH RECALL MODE - Good sensitivity while maintaining accuracy")
+        if high_recall_mode:
+            print("🎯 BALANCED HIGH RECALL MODE – Good sensitivity while maintaining accuracy")
+        else:
+            print("🎯 CONSERVATIVE (High Specificity) MODE – Extra-cautious, prioritising specificity")
         
         # Use sequential early stopping by default
         if page_strategy == "sequential_early_stop" or combine_method == "early_stop":
+            # return self._process_with_early_stopping(
+            #     pdf_path, max_samples, confidence_threshold, max_tokens_per_page, max_pages
+            # )
             return self._process_with_early_stopping(
-                pdf_path, max_samples, confidence_threshold, max_tokens_per_page, max_pages
+                pdf_path,
+                max_samples,
+                confidence_threshold,
+                max_tokens_per_page,
+                max_pages,
+                high_recall_mode,                     # pass flag down
             )
+        
+
+
+
+
         
         # Legacy processing for other strategies
         # Step 1: Determine which pages to process
@@ -774,7 +806,7 @@ class DocumentProcessor:
         # Step 3: Classify with self-consistent sampling (always high recall)
         print("Classifying document...")
         classification_result = self.classifier.classify_document(
-            ocr_text, max_samples, confidence_threshold
+            ocr_text, max_samples, confidence_threshold, high_recall_mode=high_recall_mode
         )
         
         return {
@@ -782,7 +814,7 @@ class DocumentProcessor:
             'pages_processed': len(images),
             'page_strategy': page_strategy,
             'max_tokens_per_page': max_tokens_per_page,
-            'high_recall_mode': True,  # Always true now
+            'high_recall_mode': high_recall_mode,
             'ocr_text': ocr_text,
             'ocr_text_length': len(ocr_text),
             'classification': classification_result.predicted_class,
@@ -804,15 +836,24 @@ class DocumentProcessor:
         }
     
     def _process_with_early_stopping(self, pdf_path: str, max_samples: int, 
-                                   confidence_threshold: float, max_tokens_per_page: int,
-                                   max_pages: int = None) -> Dict:
+                                   confidence_threshold: float, max_tokens_per_page: int, 
+                                   max_pages: int = None, high_recall_mode: bool = False, ) -> Dict:
+ 
+
         """Process document chunk by chunk with early stopping when reservations are found"""
         
         print("Using chunk-by-chunk early stopping analysis")
-        mode_label = "BALANCED HIGH RECALL" if True else "CONSERVATIVE (High Specificity)"
-        mode_msg   = "Good sensitivity while maintaining accuracy" \
-                    if True else "Extra-cautious, prioritising specificity"
-        print(f"🎯 {mode_label} MODE – {mode_msg}")
+        mode_label = (
+            "BALANCED HIGH RECALL"
+            if high_recall_mode
+            else "CONSERVATIVE (High Specificity)"
+        )
+        mode_msg = (
+            "Good sensitivity while maintaining accuracy"
+            if high_recall_mode
+            else "Extra-cautious, prioritising specificity"
+        )
+        print(f"🛈 {mode_label} MODE – {mode_msg}")
         
         # Open PDF and get total pages
         doc = fitz.open(pdf_path)
@@ -824,6 +865,7 @@ class DocumentProcessor:
         chunk_analysis = []
         all_ocr_text = []
         stopped_at_chunk = None
+        unread_pages: list[int] = []
         
         # Process page by page with early stopping
         for page_num in range(pages_to_process):
@@ -843,17 +885,41 @@ class DocumentProcessor:
                 page_text = self.extract_text_with_claude(image, max_tokens_per_page)
                 all_ocr_text.append(f"=== PAGE {current_page} ===\n{page_text}")
                 print(f"Extracted {len(page_text)} characters from page {current_page}")
+            
             except Exception as e:
                 print(f"Error extracting text from page {current_page}: {e}")
-                page_text = f"[ERROR: Could not extract text from page {current_page}]"
-                all_ocr_text.append(f"=== PAGE {current_page} ===\n{page_text}")
+                # page_text = f"[ERROR: Could not extract text from page {current_page}]"
+                # all_ocr_text.append(f"=== PAGE {current_page} ===\n{page_text}")
+                
+                # record failure and skip classification for this page
+                unread_pages.append(current_page)
+                chunk_analysis.append({
+                    "page_number": current_page,
+                    "status": "ocr_failed",
+                    "error": str(e),
+                })   
+
                 continue
             
             # Classify current chunk (always high recall)
             print(f"Analyzing page {current_page} for oil and gas reservations...")
+            
+            
+            # classification_result = self.classifier.classify_document(
+            #     page_text, max_samples, confidence_threshold
+            # )
+
             classification_result = self.classifier.classify_document(
-                page_text, max_samples, confidence_threshold
+                page_text,
+                max_samples,
+                confidence_threshold,
+                high_recall_mode=high_recall_mode,    # use flag
             )
+
+
+
+
+
             
             chunk_info = {
                 'page_number': current_page,
@@ -864,8 +930,11 @@ class DocumentProcessor:
                 'samples_used': classification_result.samples_used,
                 'early_stopped': classification_result.early_stopped,
                 'page_text': page_text,
-                'high_recall_mode': True
+                'high_recall_mode': high_recall_mode
             }
+
+    
+        
             chunk_analysis.append(chunk_info)
             
             print(f"Page {current_page} analysis:")
@@ -884,9 +953,9 @@ class DocumentProcessor:
                     'pages_processed': current_page,
                     'page_strategy': "sequential_early_stop",
                     'max_tokens_per_page': max_tokens_per_page,
-                    'high_recall_mode': True,
+                    'high_recall_mode': high_recall_mode,
                     'ocr_text': "\n\n".join(all_ocr_text),
-                    'ocr_text_length': sum(len(chunk['page_text']) for chunk in chunk_analysis),
+                    'ocr_text_length': sum(len(chunk.get('page_text', '')) for chunk in chunk_analysis),
                     'classification': 1,  # Found oil and gas reservations
                     'confidence': classification_result.confidence,
                     'votes': classification_result.votes,
@@ -903,8 +972,12 @@ class DocumentProcessor:
                             'features': s.features
                         }
                         for s in classification_result.all_samples
-                    ]
+                    ],
+                    'ocr_failed_pages': unread_pages,
+                    'requires_manual_review': len(unread_pages) > 0,
                 }
+    
+            
             else:
                 print(f"No oil and gas reservations found in page {current_page}, continuing to next page...")
         
@@ -914,35 +987,45 @@ class DocumentProcessor:
         print(f"\n✅ ANALYSIS COMPLETE: No oil and gas reservations found in any of the {pages_to_process} pages")
         
         # For final classification when no reservations found, use the last page's result
-        final_result = chunk_analysis[-1] if chunk_analysis else {
-            'classification': 0, 'confidence': 1.0, 'votes': {0: 1.0, 1: 0.0}, 
-            'samples_used': 0, 'early_stopped': False
-        }
+        successful_chunks = [c for c in chunk_analysis if 'classification' in c]
+        if successful_chunks:
+            final_result = successful_chunks[-1]
+        else:                          # every page failed OCR
+            final_result = {
+                'classification': 0,
+                'confidence': 0.0,
+                'votes': {0: 0.0, 1: 0.0},
+                'samples_used': 0,
+                'early_stopped': False
+            }
         
         return {
             'document_path': pdf_path,
             'pages_processed': pages_to_process,
             'page_strategy': "sequential_early_stop",
             'max_tokens_per_page': max_tokens_per_page,
-            'high_recall_mode': True,
+            'high_recall_mode': high_recall_mode,
             'ocr_text': "\n\n".join(all_ocr_text),
-            'ocr_text_length': sum(len(chunk['page_text']) for chunk in chunk_analysis),
-            'classification': 0,  # No oil and gas reservations found
+            'ocr_text_length': sum(len(chunk.get('page_text', '')) for chunk in chunk_analysis),
+            'classification': final_result['classification'],
             'confidence': final_result['confidence'],
             'votes': final_result['votes'],
-            'samples_used': sum(chunk['samples_used'] for chunk in chunk_analysis),
-            'early_stopped': False,  # Processed all pages
+            'samples_used': final_result['samples_used'],
+            'early_stopped': final_result['early_stopped'],
             'chunk_analysis': chunk_analysis,
-            'stopped_at_chunk': None,  # Didn't stop early
+            'stopped_at_chunk': stopped_at_chunk,
             'total_pages_in_document': total_pages,
-            'detailed_samples': []  # Could aggregate all samples if needed
+            'detailed_samples': [],  # Could aggregate all samples if needed
+            'ocr_failed_pages': unread_pages,
+            'requires_manual_review': len(unread_pages) > 0,
         }
 
 def main():
     """Example usage"""
     
     # Initialize processor
-    processor = DocumentProcessor()
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    processor = DocumentProcessor(api_key=api_key)
     
     # Process single document
     pdf_path = "data/reservs/Washington DB 405_547.pdf"

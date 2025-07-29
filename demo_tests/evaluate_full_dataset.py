@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import List, Dict
 import pandas as pd
 import numpy as np
-from document_classifier import DocumentProcessor
+from mineral_rights.document_classifier import DocumentProcessor
 
 def evaluate_full_dataset(data_dirs: List[str], output_dir: str = "full_evaluation_results"):
     """Evaluate the pipeline on the complete dataset"""

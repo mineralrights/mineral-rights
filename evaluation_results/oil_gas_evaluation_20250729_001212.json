@@ -1,0 +1,945 @@
+{
+  "timestamp": "2025-07-29T00:12:12.593528",
+  "dataset_info": {
+    "total_documents": 90,
+    "reservs_documents": 41,
+    "no_reservs_documents": 49,
+    "data_directory": "N/A"
+  },
+  "processing_info": {
+    "max_samples_per_doc": "N/A",
+    "confidence_threshold": "N/A",
+    "total_processing_time": "N/A",
+    "avg_time_per_doc": "N/A"
+  },
+  "performance_metrics": {
+    "confusion_matrix": {
+      "true_positives": 38,
+      "false_positives": 5,
+      "true_negatives": 44,
+      "false_negatives": 3
+    },
+    "performance_metrics": {
+      "accuracy": 0.9111111111111111,
+      "precision": 0.8837209302325582,
+      "recall": 0.926829268292683,
+      "f1_score": 0.9047619047619048,
+      "specificity": 0.8979591836734694
+    },
+    "oil_gas_specific_metrics": {
+      "reclassification_rate": 0.07317073170731707,
+      "documents_reclassified": 3,
+      "originally_reservs_count": 41
+    },
+    "processing_stats": {
+      "total_documents": 90,
+      "successful_classifications": 90,
+      "failed_classifications": 0,
+      "avg_confidence": 1.0,
+      "avg_samples_used": NaN,
+      "avg_time_per_doc": NaN
+    }
+  },
+  "detailed_results": [
+    {
+      "file": "Westmoreland DV 1434_603 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Westmoreland DV 1434_603 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Greene 677-726 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Greene 677-726 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Washington Co PA Inst# 201031651.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Washington Co PA Inst# 201031651.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Marshall Co WV DB 82_173.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Marshall Co WV DB 82_173.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 347_434.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 347_434.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Washington DB 475_646 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Greene DB 253_223 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Greene DB 253_223 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "OR 267_3245.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "OR 267_3245.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 593_316.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 593_316.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 800_131.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 800_131.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Potter DB 234_1012.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Potter DB 234_1012.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Washington Co PA DV 596_69.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Washington Co PA DV 596_69.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 605_186.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 605_186.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Washington 201408321 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Washington 201408321 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 557_938.pdf",
+      "folder": "reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 0,
+      "file_name": "DB 557_938.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Washington DBV 604 Page 286 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Washington DBV 604 Page 286 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Harrison DV 202-635.pdf",
+      "folder": "reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 0,
+      "file_name": "Harrison DV 202-635.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 107_12.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 107_12.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DV 192_87.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DV 192_87.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 304_409.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 304_409.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Allegheny DB 2470_179 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Allegheny DB 2470_179 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Indiana Co. PA DB 550_322.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Indiana Co. PA DB 550_322.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "OR 267_4756.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "OR 267_4756.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 257_85.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 257_85.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Wetzel Co WV DB 312_378.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Wetzel Co WV DB 312_378.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Guernsey Co OH DV 145_283.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Guernsey Co OH DV 145_283.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Greene DB 280_311 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Greene DB 280_311 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Westmoreland 753-247 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Westmoreland 753-247 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Washington DB 704_223.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Washington DB 704_223.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "OR 133-299.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "OR 133-299.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Guernsey Co OH DV 118_352.pdf",
+      "folder": "reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 0,
+      "file_name": "Guernsey Co OH DV 118_352.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Monroe Co OH DB 109_330.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Monroe Co OH DB 109_330.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Armstrong DB 5269_327 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Armstrong DB 5269_327 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Brooke DB 74_249.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Brooke DB 74_249.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 360_239.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 360_239.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "DB 536_306.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "DB 536_306.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Belmont Co OH DB 189_408.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "Belmont Co OH DB 189_408.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "OR 133-302.pdf",
+      "folder": "reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 1,
+      "predicted_label": 1,
+      "file_name": "OR 133-302.pdf",
+      "category": "reservs"
+    },
+    {
+      "file": "Guernsey DB 290_74.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Guernsey DB 290_74.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Allegheny 8277_16 - 4.23.2025.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Allegheny 8277_16 - 4.23.2025.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 16_217.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 16_217.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "DV 192_833.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "DV 192_833.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Somerset DB 2570_102.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Somerset DB 2570_102.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Allegheny DB 92_389.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Allegheny DB 92_389.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Allegheny 3387-275 - 4.23.2025.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Allegheny 3387-275 - 4.23.2025.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Washington DB 405_547.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Washington DB 405_547.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Harrison DV 234_357.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Harrison DV 234_357.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 272_5846.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 272_5846.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Washington DV 677_46.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Washington DV 677_46.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Brooke DB 176_514.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Brooke DB 176_514.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 55_194.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 55_194.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Westmoreland DV 2483_444.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Westmoreland DV 2483_444.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Carroll DB 130-50.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Carroll DB 130-50.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Allegheny 1910-768.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Allegheny 1910-768.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "DV 217_352.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "DV 217_352.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Somerset DB 1820_349.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Somerset DB 1820_349.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Tuscawaras DV 539_793.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Tuscawaras DV 539_793.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 568_1267.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 568_1267.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "DB 110_36.pdf",
+      "folder": "no-reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 1,
+      "file_name": "DB 110_36.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Harrison DV 194_5.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Harrison DV 194_5.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Somerset DB 2163_624.pdf",
+      "folder": "no-reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 1,
+      "file_name": "Somerset DB 2163_624.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 55_190.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 55_190.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Harrison DV 96_39.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Harrison DV 96_39.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 137_1211.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 137_1211.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Jefferson DB 397_111.pdf",
+      "folder": "no-reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 1,
+      "file_name": "Jefferson DB 397_111.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 1388_76.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 1388_76.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Greene OR 534_885 - 4.23.2025.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Greene OR 534_885 - 4.23.2025.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "DB 187-594.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "DB 187-594.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 267_4753.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 267_4753.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 11_761.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 11_761.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Potter DB 197_879.pdf",
+      "folder": "no-reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 1,
+      "file_name": "Potter DB 197_879.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 239_2451.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 239_2451.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 178_1073.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 178_1073.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Allegheny DB 41_66.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Allegheny DB 41_66.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "DB 99-241.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "DB 99-241.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 274_678.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 274_678.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 249_8.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 249_8.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 601_3875.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 601_3875.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Butler DB 1895_80 - 4.23.2025.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Butler DB 1895_80 - 4.23.2025.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 178_693.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 178_693.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "DV 226_593.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "DV 226_593.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Allegheny 16920-254 - 4.23.2025.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Allegheny 16920-254 - 4.23.2025.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "OR 276_4740.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "OR 276_4740.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Washington DB 384_583.pdf",
+      "folder": "no-reservs",
+      "prediction": 1,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 1,
+      "file_name": "Washington DB 384_583.pdf",
+      "category": "no-reservs"
+    },
+    {
+      "file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "folder": "no-reservs",
+      "prediction": 0,
+      "confidence": 1.0,
+      "true_label": 0,
+      "predicted_label": 0,
+      "file_name": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "category": "no-reservs"
+    }
+  ]
+}

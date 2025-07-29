@@ -5,7 +5,7 @@ to verify that the new logic correctly detects mineral rights reservations.
 """
 
 import os
-from document_classifier import DocumentProcessor
+from mineral_rights.document_classifier import DocumentProcessor
 
 def test_harrison_document():
     """Test the Harrison document with the updated classification logic"""

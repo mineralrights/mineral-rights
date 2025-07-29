@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+python-multipart   # UploadFile support
+PyMuPDF
+anthropic
+Pillow
+scikit-learn
+numpy
