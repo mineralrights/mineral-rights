@@ -23,9 +23,14 @@ export async function predictBatch(files: File[]): Promise<PredictionRow[]> {
       row.prediction  = data.prediction;
       row.explanation = data.explanation;
       row.status      = "done";
-    } catch (err: any) {
+    } catch (err: unknown) {
       row.status = "error";
-      row.explanation = err.message ?? "Unknown error";
+
+      if (err instanceof Error) {
+        row.explanation = err.message;
+      } else {
+        row.explanation = String(err);
+      }
     }
   }
 
