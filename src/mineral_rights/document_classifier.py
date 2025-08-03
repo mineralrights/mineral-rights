@@ -719,33 +719,31 @@ class DocumentProcessor:
         else:
             raise ValueError(f"Unknown combine_method: {combine_method}")
     
-    def process_document(self, pdf_path: str, max_samples: int = 8, 
-                        confidence_threshold: float = 0.7,
-                        page_strategy: str = "sequential_early_stop",
-                        max_pages: int = None,
-                        max_tokens_per_page: int = 8000,
-                        combine_method: str = "early_stop",
-                        high_recall_mode: bool = False, ) -> Dict:
+    def process_document(
+        self,
+        pdf_path: str,
+        *,
+        log_fn=None,                    # ← NEW
+        max_samples: int = 8,
+        confidence_threshold: float = 0.7,
+        page_strategy: str = "sequential_early_stop",
+        max_pages: int = None,
+        max_tokens_per_page: int = 8000,
+        combine_method: str = "early_stop",
+        high_recall_mode: bool = False,
+    ) -> Dict:
+        # OPTIONAL: simple helper so we don’t have to touch every print
+        def _log(msg: str):
+            print(msg)
+            if log_fn:
+                log_fn(msg)
 
-        """Complete pipeline: PDF -> OCR -> Classification with high recall mode
-        
-        Args:
-            pdf_path: Path to PDF file
-            max_samples: Maximum classification samples per chunk
-            confidence_threshold: Early stopping threshold for classification
-            page_strategy: "sequential_early_stop" (default), "first_only", "first_few", "first_and_last", "all"
-            max_pages: Maximum pages to process (overrides strategy if set)
-            max_tokens_per_page: Token limit per page for OCR
-            combine_method: "early_stop" (default), "concatenate", "summarize"
-        """
-        
-        print(f"Processing: {pdf_path}")
-        print(f"Page strategy: {page_strategy}")
-        print(f"Max tokens per page: {max_tokens_per_page}")
+        _log(f"Processing: {pdf_path}")
+        _log(f"Page strategy: {page_strategy}")
         if high_recall_mode:
-            print("🎯 BALANCED HIGH RECALL MODE – Good sensitivity while maintaining accuracy")
+            _log("🎯 BALANCED HIGH RECALL MODE – Good sensitivity while maintaining accuracy")
         else:
-            print("🎯 CONSERVATIVE (High Specificity) MODE – Extra-cautious, prioritising specificity")
+            _log("🎯 CONSERVATIVE (High Specificity) MODE – Extra-cautious, prioritising specificity")
         
         # Use sequential early stopping by default
         if page_strategy == "sequential_early_stop" or combine_method == "early_stop":
@@ -916,11 +914,12 @@ class DocumentProcessor:
                 high_recall_mode=high_recall_mode,    # use flag
             )
 
+            # ADD reasoning to chunk_info  🚀
+            first_reasoning = (
+                classification_result.all_samples[0].reasoning
+                if classification_result.all_samples else ""
+            )
 
-
-
-
-            
             chunk_info = {
                 'page_number': current_page,
                 'text_length': len(page_text),
@@ -930,7 +929,8 @@ class DocumentProcessor:
                 'samples_used': classification_result.samples_used,
                 'early_stopped': classification_result.early_stopped,
                 'page_text': page_text,
-                'high_recall_mode': high_recall_mode
+                'high_recall_mode': high_recall_mode,
+                'reasoning': first_reasoning,              #  ← new
             }
 
     
@@ -1015,7 +1015,9 @@ class DocumentProcessor:
             'chunk_analysis': chunk_analysis,
             'stopped_at_chunk': stopped_at_chunk,
             'total_pages_in_document': total_pages,
-            'detailed_samples': [],  # Could aggregate all samples if needed
+            'detailed_samples': [
+                { "predicted_class": 0, "reasoning": successful_chunks[-1]["reasoning"] }
+            ] if successful_chunks else [],
             'ocr_failed_pages': unread_pages,
             'requires_manual_review': len(unread_pages) > 0,
         }

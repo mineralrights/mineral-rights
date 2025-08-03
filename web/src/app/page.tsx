@@ -13,8 +13,7 @@ export default function Home() {
 
   const handleFiles = async (files: File[]) => {
     setIsRunning(true);
-    const result = await predictBatch(files);
-    setRows(result);
+    await predictBatch(files, setRows);   // live updates
     setIsRunning(false);
   };
 
@@ -29,25 +28,31 @@ export default function Home() {
   };
 
   return (
-    <main className="max-w-3xl mx-auto py-16 px-4">
-      <h1 className="text-4xl font-semibold mb-10">Mineral-Rights Classifier</h1>
+    <main className="flex justify-center py-16 px-4">
+      <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-10">
+        <h1 className="text-4xl font-semibold mb-10 text-[color:var(--accent)]">
+          Mineral-Rights&nbsp;Classifier
+        </h1>
 
-      <PDFUpload onSelect={handleFiles} />
+        <PDFUpload onSelect={handleFiles} />
 
-      {isRunning && (
-        <p className="mt-4 text-blue-600 animate-pulse">Processing…</p>
-      )}
+        {isRunning && (
+          <p className="mt-4 text-[color:var(--accent)] animate-pulse">
+            Processing…
+          </p>
+        )}
 
-      <ResultsTable rows={rows} />
+        <ResultsTable rows={rows} />
 
-      {rows.length > 0 && (
-        <button
-          onClick={downloadCSV}
-          className="mt-6 inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-        >
-          Download CSV
-        </button>
-      )}
+        {rows.length > 0 && (
+          <button
+            onClick={downloadCSV}
+            className="mt-6 inline-block bg-[color:var(--accent)] text-white px-4 py-2 rounded hover:brightness-110"
+          >
+            Download CSV
+          </button>
+        )}
+      </div>
     </main>
   );
 }

@@ -19,8 +19,11 @@ export default function PDFUpload({ onSelect }: Props) {
   return (
     <div
       {...getRootProps()}
-      className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-8 cursor-pointer
-        ${isDragActive ? "border-blue-400 bg-blue-50" : "border-gray-300"}`}
+      className={`flex flex-col items-center justify-center border-2 rounded-lg
+        p-8 cursor-pointer transition-colors
+        ${isDragActive
+          ? "border-[color:var(--accent)] bg-emerald-50/40"
+          : "border-gray-300 hover:border-[color:var(--accent)]"}`}
     >
       <input {...getInputProps()} multiple />
       <p className="text-gray-600">
