@@ -15,7 +15,10 @@ app = FastAPI(title="Mineral-Rights API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://<your-frontend>.vercel.app"
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -67,9 +70,10 @@ async def predict(file: UploadFile = File(...)):
             log_q.put_nowait(f"__ERROR__{str(e)}")
         finally:
             log_q.put_nowait("__END__")
-            os.remove(tmp_path)
-            log_q.put_nowait("__END__")
-            os.remove(tmp_path)
+            try:
+                os.remove(tmp_path)
+            except FileNotFoundError:
+                pass
 
     threading.Thread(target=run, daemon=True).start()
     return {"job_id": job_id}
