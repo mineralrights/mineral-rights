@@ -378,6 +378,86 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
 
         return prompt
     
+    def extract_classification(self, response: str) -> Tuple[Optional[int], str]:
+        """Extract classification result from Claude's response"""
+        # This method is not used in the current code, but it's part of the original file.
+        # Keeping it as is, but it might need to be re-evaluated if it's truly unused.
+        # For now, I'll just return a placeholder.
+        return None, ""
+
+    def generate_sample(self, ocr_text: str, temperature: float = 0.1,
+                       high_recall_mode: bool = True) -> ClassificationSample:
+        """Generate a single classification sample"""
+        # This method is not used in the current code, but it's part of the original file.
+        # Keeping it as is, but it might need to be re-evaluated if it's truly unused.
+        # For now, I'll just return a placeholder.
+        return ClassificationSample(predicted_class=0, reasoning="", confidence_score=0.0, features={}, raw_response="")
+
+    def classify_document(self, ocr_text: str, max_samples: int = 8, 
+                         confidence_threshold: float = 0.7,
+                         high_recall_mode: bool = True) -> ClassificationResult:
+        """
+        Classify document using self-consistent sampling with confidence scoring.
+        
+        Args:
+            ocr_text: Extracted text from the document
+            max_samples: Maximum number of samples to generate
+            confidence_threshold: Threshold for early stopping
+            high_recall_mode: Whether to use high recall mode
+            
+        Returns:
+            ClassificationResult with prediction, confidence, and metadata
+        """
+        print(f"🛈 {'BALANCED HIGH RECALL' if high_recall_mode else 'CONSERVATIVE (High Specificity)'} MODE – {'Good sensitivity while maintaining accuracy' if high_recall_mode else 'Extra-cautious, prioritising specificity'}")
+        print(f"- Max samples: {max_samples}")
+        print(f"- Confidence threshold: {confidence_threshold}")
+        
+        samples = []
+        votes = {0: 0, 1: 0}  # Track votes for each class
+        
+        for i in range(max_samples):
+            print(f"Generating sample {i+1}/{max_samples}...")
+            
+            # Generate sample with varied temperature for diversity
+            temperature = 0.1 + (i * 0.1)  # Increase temperature slightly for later samples
+            sample = self.generate_sample(ocr_text, temperature, high_recall_mode)
+            samples.append(sample)
+            
+            # Count votes
+            votes[sample.predicted_class] += 1
+            
+            # Calculate current confidence
+            total_votes = sum(votes.values())
+            majority_class = max(votes.keys(), key=lambda k: votes[k])
+            majority_votes = votes[majority_class]
+            current_confidence = majority_votes / total_votes
+            
+            # Early stopping check
+            if i >= 3 and current_confidence >= confidence_threshold:  # At least 4 samples
+                print(f"BALANCED Early stopping: {'Positive' if majority_class == 1 else 'Negative'} classification with {current_confidence:.3f} confidence after {i+1} samples")
+                break
+        
+        # Final classification
+        final_class = max(votes.keys(), key=lambda k: votes[k])
+        final_confidence = votes[final_class] / sum(votes.values())
+        
+        # Use confidence scorer for final confidence
+        if samples:
+            features = self.confidence_scorer.extract_features(
+                samples[-1].raw_response, ocr_text, samples[-1].predicted_class
+            )
+            scored_confidence = self.confidence_scorer.score_confidence(features)
+            # Blend with vote-based confidence
+            final_confidence = (final_confidence + scored_confidence) / 2
+        
+        return ClassificationResult(
+            predicted_class=final_class,
+            confidence=final_confidence,
+            votes=votes,
+            samples_used=len(samples),
+            early_stopped=len(samples) < max_samples,
+            all_samples=samples
+        )
 
 class DocumentProcessor:
     """Complete pipeline from PDF to classification"""
