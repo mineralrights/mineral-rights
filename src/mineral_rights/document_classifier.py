@@ -576,8 +576,34 @@ class DocumentProcessor:
         
         for page_num in range(sample_pages):
             page = doc.load_page(page_num)
+            
+            # Try text extraction first
             page_text = page.get_text()
+            
+            # If no text, try OCR
+            if len(page_text.strip()) < 50:  # Very little text extracted
+                print(f"🔍 Page {page_num + 1}: Using OCR (text extraction failed)")
+                # Convert page to image and use Claude OCR
+                mat = fitz.Matrix(2, 2)  # 2x zoom for quality
+                pix = page.get_pixmap(matrix=mat)
+                img_data = pix.tobytes("png")
+                image = Image.open(BytesIO(img_data))
+                
+                # Use existing OCR method
+                page_text = self.extract_text_with_claude(image, max_tokens=4000)
+            else:
+                print(f"🔍 Page {page_num + 1}: {len(page_text)} characters extracted")
+                
             sample_text += f"\n=== PAGE {page_num + 1} ===\n{page_text[:2000]}"  # Limit per page for token efficiency
+        
+        # Check total sample text
+        print(f"🔍 Total sample text length: {len(sample_text)} characters")
+        
+        # If no text extracted, fall back immediately
+        if len(sample_text.strip()) < 100:  # Less than 100 characters total
+            print("🤖 Insufficient text extracted from PDF, falling back to smart detection")
+            doc.close()
+            return self._split_by_deed_boundaries(pdf_path)
         
         # Use Claude to analyze document structure
         try:
@@ -604,6 +630,9 @@ Total pages in document: {total_pages}
 Sample text from first {sample_pages} pages:
 {sample_text}
 """
+            
+            # DEBUG: Show what we're sending to Claude (first 500 chars)
+            print(f"🔍 Sending to Claude (first 500 chars): {boundary_prompt[:500]}...")
             
             response = self.classifier.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
