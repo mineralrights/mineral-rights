@@ -16,10 +16,8 @@ app = FastAPI(title="Mineral-Rights API")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
-        "http://localhost:3000",                         # local dev
+        "http://localhost:3000",
         "https://mineral-rights-njqe5k6ve-lauragomezjurados-projects.vercel.app",
-        # add custom domain here later, e.g.
-        # "https://minerals.yourdomain.com",
     ],
     allow_methods=["*"],
     allow_headers=["*"],
