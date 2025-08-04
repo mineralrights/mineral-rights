@@ -377,6 +377,18 @@ Where:
 Remember: Your goal is to confidently identify documents WITHOUT oil and gas reservations. Only classify as 1 when you're certain there's a substantive reservation that specifically mentions oil, gas, petroleum, or hydrocarbons."""
 
         return prompt
+    
+
+class DocumentProcessor:
+    """Complete pipeline from PDF to classification"""
+    
+    def __init__(self, api_key: str = None):
+        try:
+            self.classifier = OilGasRightsClassifier(api_key)
+            print("✅ Document processor initialized successfully")
+        except Exception as e:
+            print(f"❌ Failed to initialize document processor: {e}")
+            raise
 
     def _split_by_pages(self, pdf_path: str, pages_per_deed: int = 3) -> List[str]:
         """Fallback: Split PDF by fixed number of pages per deed"""
@@ -502,7 +514,7 @@ Sample text from first {sample_pages} pages:
 {sample_text}
 """
             
-            response = self.client.messages.create(
+            response = self.classifier.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=200,
                 messages=[{
@@ -663,7 +675,7 @@ Sample text from first {sample_pages} pages:
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                response = self.client.messages.create(
+                response = self.classifier.client.messages.create(
                     model="claude-3-5-sonnet-20241022",
                     max_tokens=max_tokens,  # Configurable token limit
                     messages=[{
@@ -844,7 +856,7 @@ Sample text from first {sample_pages} pages:
             #     page_text, max_samples, confidence_threshold
             # )
 
-            classification_result = self.classifier.classify_document(
+            classification_result = self.classifier.classifier.classify_document(
                 page_text,
                 max_samples,
                 confidence_threshold,
