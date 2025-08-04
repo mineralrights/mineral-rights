@@ -17,13 +17,9 @@ app = FastAPI(title="Mineral-Rights API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://*.vercel.app",  # This covers all Vercel domains
-    ],
+    allow_origins=["*"],  # Allow all origins (TEMPORARY for testing)
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_credentials=False,  # Required when using wildcards
 )
 
 # 2️⃣  --- initialise once at startup ----------------------------------------
