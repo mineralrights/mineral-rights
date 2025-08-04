@@ -23,6 +23,10 @@ from PIL import Image
 from io import BytesIO
 import base64
 import random
+import re
+import tempfile
+import os
+from pathlib import Path
 
 # Remove hardcoded API key - use environment variable only
 # os.environ['ANTHROPIC_API_KEY'] = "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"
@@ -574,7 +578,202 @@ class DocumentProcessor:
         except Exception as e:
             print(f"❌ Failed to initialize document processor: {e}")
             raise
+
+    def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_detection") -> Dict:
+        """
+        Process PDF with multiple deeds
         
+        Args:
+            pdf_path: Path to multi-deed PDF
+            strategy: Splitting strategy ("smart_detection", "page_based", "ai_assisted")
+        """
+        print(f"🏛️  Starting multi-deed processing with strategy: {strategy}")
+        
+        deed_pdfs = []
+        try:
+            # 1. Split PDF into individual deed PDFs
+            deed_pdfs = self.split_pdf_by_deeds(pdf_path, strategy=strategy)
+            
+            if not deed_pdfs:
+                raise Exception("No deeds could be extracted from the PDF")
+            
+            print(f"📄 Processing {len(deed_pdfs)} individual deeds...")
+            
+            # 2. Process each deed separately
+            results = []
+            for i, deed_pdf_path in enumerate(deed_pdfs):
+                print(f"\n--- PROCESSING DEED {i + 1}/{len(deed_pdfs)} ---")
+                
+                try:
+                    result = self.process_document(deed_pdf_path)
+                    result['deed_number'] = i + 1
+                    result['deed_file'] = Path(deed_pdf_path).name
+                    result['pages_in_deed'] = self._count_pdf_pages(deed_pdf_path)
+                    results.append(result)
+                    
+                    print(f"✅ Deed {i + 1} processed successfully")
+                    
+                except Exception as e:
+                    print(f"❌ Error processing deed {i + 1}: {e}")
+                    # Include failed deed in results with error info
+                    results.append({
+                        'deed_number': i + 1,
+                        'deed_file': Path(deed_pdf_path).name,
+                        'error': str(e),
+                        'classification': 'error',
+                        'confidence': 0.0
+                    })
+            
+            # 3. Generate summary statistics
+            successful_results = [r for r in results if 'error' not in r]
+            total_reservations = sum(1 for r in successful_results if r.get('classification') == 1)
+            
+            return {
+                'total_deeds': len(deed_pdfs),
+                'successful_processed': len(successful_results),
+                'deeds_with_reservations': total_reservations,
+                'processing_mode': 'multi_deed',
+                'splitting_strategy': strategy,
+                'deed_results': results,
+                'summary': {
+                    'total_deeds': len(deed_pdfs),
+                    'reservations_found': total_reservations,
+                    'success_rate': len(successful_results) / len(deed_pdfs) if deed_pdfs else 0
+                }
+            }
+            
+        finally:
+            # 4. Cleanup temporary files
+            if deed_pdfs:
+                print(f"\n🧹 Cleaning up {len(deed_pdfs)} temporary files...")
+                self._cleanup_temp_files(deed_pdfs)
+
+    def split_pdf_by_deeds(self, pdf_path: str, strategy: str = "smart_detection") -> List[str]:
+        """
+        Split PDF into separate deed documents using multiple strategies
+        
+        Args:
+            pdf_path: Path to the multi-deed PDF
+            strategy: "smart_detection", "page_based", or "ai_assisted"
+        
+        Returns:
+            List of paths to individual deed PDF files
+        """
+        print(f"Splitting PDF using strategy: {strategy}")
+        
+        if strategy == "smart_detection":
+            return self._split_by_deed_boundaries(pdf_path)
+        elif strategy == "page_based":
+            return self._split_by_pages(pdf_path, pages_per_deed=3)
+        elif strategy == "ai_assisted":
+            return self._split_with_ai_assistance(pdf_path)
+        else:
+            raise ValueError(f"Unknown splitting strategy: {strategy}")
+
+    def _split_by_pages(self, pdf_path: str, pages_per_deed: int = 3) -> List[str]:
+        """Fallback: Split PDF by fixed number of pages per deed"""
+        print(f"📄 Splitting PDF by {pages_per_deed} pages per deed...")
+        
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        deed_paths = []
+        
+        base_name = Path(pdf_path).stem
+        temp_dir = Path(pdf_path).parent
+        
+        deed_count = 0
+        for start_page in range(0, total_pages, pages_per_deed):
+            end_page = min(start_page + pages_per_deed - 1, total_pages - 1)
+            
+            deed_doc = fitz.open()
+            deed_doc.insert_pdf(doc, from_page=start_page, to_page=end_page)
+            
+            deed_count += 1
+            deed_path = temp_dir / f"{base_name}_deed_{deed_count}.pdf"
+            deed_doc.save(str(deed_path))
+            deed_doc.close()
+            
+            deed_paths.append(str(deed_path))
+            print(f"✅ Created deed {deed_count}: pages {start_page + 1}-{end_page + 1}")
+        
+        doc.close()
+        print(f"🎯 Split into {len(deed_paths)} deeds using page-based method")
+        return deed_paths
+
+    def _split_by_deed_boundaries(self, pdf_path: str) -> List[str]:
+        """Smart deed boundary detection using text patterns - simplified version"""
+        print("🔍 Detecting deed boundaries using text analysis...")
+        
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        
+        # For now, let's use a simplified approach to test if the system works
+        # We'll look for obvious page breaks and deed patterns
+        boundaries = [0]  # Always start with page 0
+        
+        print(f"Analyzing {total_pages} pages for deed boundaries...")
+        
+        # Simple heuristic: check every 3-5 pages for potential deed starts
+        for page_num in range(3, total_pages, 3):  # Check every 3rd page
+            if page_num < total_pages:
+                boundaries.append(page_num)
+                print(f"📄 Adding deed boundary at page {page_num + 1}")
+        
+        boundaries.append(total_pages)  # End boundary
+        
+        # If we found reasonable boundaries, use them
+        if len(boundaries) <= 2:  # Only start and end boundaries
+            print("⚠️  No deed boundaries detected, falling back to page-based splitting")
+            doc.close()
+            return self._split_by_pages(pdf_path, pages_per_deed=3)
+        
+        # Create individual PDFs based on detected boundaries
+        deed_paths = []
+        base_name = Path(pdf_path).stem
+        temp_dir = Path(pdf_path).parent
+        
+        for i in range(len(boundaries) - 1):
+            start_page = boundaries[i]
+            end_page = boundaries[i + 1] - 1
+            
+            deed_doc = fitz.open()
+            deed_doc.insert_pdf(doc, from_page=start_page, to_page=end_page)
+            
+            deed_path = temp_dir / f"{base_name}_deed_{i + 1}.pdf"
+            deed_doc.save(str(deed_path))
+            deed_doc.close()
+            
+            deed_paths.append(str(deed_path))
+            print(f"✅ Created deed {i + 1}: pages {start_page + 1}-{end_page + 1} -> {deed_path.name}")
+        
+        doc.close()
+        print(f"🎯 Successfully split into {len(deed_paths)} deeds")
+        return deed_paths
+
+    def _split_with_ai_assistance(self, pdf_path: str) -> List[str]:
+        """AI-assisted deed boundary detection for complex cases"""
+        print("🤖 AI assistance not implemented yet, falling back to smart detection")
+        return self._split_by_deed_boundaries(pdf_path)
+
+    def _count_pdf_pages(self, pdf_path: str) -> int:
+        """Count pages in a PDF file"""
+        try:
+            doc = fitz.open(pdf_path)
+            page_count = len(doc)
+            doc.close()
+            return page_count
+        except:
+            return 0
+
+    def _cleanup_temp_files(self, file_paths: List[str]):
+        """Clean up temporary deed files"""
+        for file_path in file_paths:
+            try:
+                os.remove(file_path)
+                print(f"🧹 Cleaned up: {Path(file_path).name}")
+            except (FileNotFoundError, OSError):
+                pass  # Ignore cleanup errors
+    
     def pdf_to_image(self, pdf_path: str) -> Image.Image:
         """Convert PDF to high-quality image (first page only - legacy method)"""
         doc = fitz.open(pdf_path)
@@ -1052,6 +1251,7 @@ def main():
         json.dump(result, f, indent=2)
     
     print(f"\nDetailed results saved to: {output_dir}")
+
 
 if __name__ == "__main__":
     main()

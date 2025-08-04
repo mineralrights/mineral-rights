@@ -59,6 +59,12 @@ async def predict(
     if processor is None:
         raise HTTPException(status_code=500, detail="Model not initialised")
 
+    # DEBUG: Log received parameters
+    print(f"🔍 DEBUG - Received parameters:")
+    print(f"  - processing_mode: {processing_mode}")
+    print(f"  - splitting_strategy: {splitting_strategy}")
+    print(f"  - file: {file.filename}")
+
     # save upload to a temp file
     contents = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
@@ -76,11 +82,15 @@ async def predict(
     def run():
         try:
             with redirect_stdout(QueueWriter(log_q)):
+                print(f"🎯 Processing mode: {processing_mode}")
+                
                 if processing_mode == "single_deed":
+                    print("📄 Using single deed processing")
                     result = processor.process_document(tmp_path)
                     log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
                 
                 elif processing_mode == "multi_deed":
+                    print(f"📑 Using multi-deed processing with strategy: {splitting_strategy}")
                     deed_results = processor.process_multi_deed_document(
                         tmp_path, 
                         strategy=splitting_strategy
@@ -91,6 +101,8 @@ async def predict(
                     
         except Exception as e:
             print(f"Processing error: {e}")  # This will show in Render logs
+            import traceback
+            traceback.print_exc()  # Print full stack trace
             log_q.put_nowait(f"__ERROR__{str(e)}")
         finally:
             log_q.put_nowait("__END__")  # ALWAYS send end signal
