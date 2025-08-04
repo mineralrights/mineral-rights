@@ -17,10 +17,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://mineral-rights-njqe5k6ve-lauragomezjurados-projects.vercel.app",
+        "https://*.vercel.app",  # This covers all Vercel domains
     ],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=False,  # Required when using wildcards
 )
 
 # 2️⃣  --- initialise once at startup ----------------------------------------
