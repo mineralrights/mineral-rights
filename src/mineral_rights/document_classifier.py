@@ -976,7 +976,7 @@ Analyzing pages 1-{sample_pages}:"""
             #     page_text, max_samples, confidence_threshold
             # )
 
-            classification_result = self.classifier.classifier.classify_document(
+            classification_result = self.classifier.classify_document(  # FIXED: removed extra .classifier
                 page_text,
                 max_samples,
                 confidence_threshold,
