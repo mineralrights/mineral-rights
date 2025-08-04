@@ -1,7 +1,7 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile, os, traceback
-from typing import List, Dict
+from typing import List
 import asyncio, threading, uuid, json
 from fastapi.responses import StreamingResponse
 import io, sys
@@ -12,7 +12,7 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 # ---------------------------------------------------------------------------
 
 
-## TETSING NEW DEPLOYMENT 
+## TESTING NEW DEPLOYMENT 
 app = FastAPI(title="Mineral-Rights API")
 
 def is_cors_allowed(origin: str) -> bool:
@@ -53,16 +53,16 @@ jobs: dict[str, asyncio.Queue[str]] = {}        # log lines per job-id
 @app.post("/predict")
 async def predict(
     file: UploadFile = File(...), 
-    processing_mode: str = "single_deed",  # "single_deed" or "multi_deed"
-    splitting_strategy: str = "smart_detection"  # For multi_deed mode
+    processing_mode: str = Form("single_deed"),  # FIXED: Use Form() for FormData
+    splitting_strategy: str = Form("smart_detection")  # FIXED: Use Form() for FormData
 ):
     if processor is None:
         raise HTTPException(status_code=500, detail="Model not initialised")
 
     # DEBUG: Log received parameters
     print(f"🔍 DEBUG - Received parameters:")
-    print(f"  - processing_mode: {processing_mode}")
-    print(f"  - splitting_strategy: {splitting_strategy}")
+    print(f"  - processing_mode: '{processing_mode}'")
+    print(f"  - splitting_strategy: '{splitting_strategy}'")
     print(f"  - file: {file.filename}")
 
     # save upload to a temp file
@@ -82,7 +82,7 @@ async def predict(
     def run():
         try:
             with redirect_stdout(QueueWriter(log_q)):
-                print(f"🎯 Processing mode: {processing_mode}")
+                print(f"🎯 Processing mode: '{processing_mode}'")
                 
                 if processing_mode == "single_deed":
                     print("📄 Using single deed processing")
@@ -90,18 +90,17 @@ async def predict(
                     log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
                 
                 elif processing_mode == "multi_deed":
-                    print(f"📑 Using multi-deed processing with strategy: {splitting_strategy}")
+                    print(f"📑 Using multi-deed processing with strategy: '{splitting_strategy}'")
                     deed_results = processor.process_multi_deed_document(
                         tmp_path, 
                         strategy=splitting_strategy
                     )
                     log_q.put_nowait(f"__RESULT__{json.dumps(deed_results)}")
                 else:
-                    raise ValueError(f"Unknown processing_mode: {processing_mode}")
+                    raise ValueError(f"Unknown processing_mode: '{processing_mode}'")
                     
         except Exception as e:
-            print(f"Processing error: {e}")  # This will show in Render logs
-            import traceback
+            print(f"❌ Processing error: {e}")  # This will show in Render logs
             traceback.print_exc()  # Print full stack trace
             log_q.put_nowait(f"__ERROR__{str(e)}")
         finally:
@@ -140,7 +139,7 @@ async def stream(job_id: str):
 
 
 # ——————————————————————————————————————————————
-# h elper: stream any print() output into our asyncio queue
+# helper: stream any print() output into our asyncio queue
 # ——————————————————————————————————————————————
 class QueueWriter(io.TextIOBase):
     def __init__(self, q: asyncio.Queue[str]):
