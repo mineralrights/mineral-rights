@@ -26,7 +26,9 @@ from PIL import Image
 from io import BytesIO
 
 # Remove hardcoded API key - use environment variable only
-# os.environ['ANTHROPIC_API_KEY'] = "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"
+
+
+
 
 @dataclass
 class ClassificationSample:
@@ -458,7 +460,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
 
     def _split_with_ai_assistance(self, pdf_path: str) -> List[str]:
         """AI-assisted deed boundary detection for complex cases"""
-        print("🤖 Using AI assistance for deed boundary detection...")
+        print("🤖 Using AI assistance for deed boundary detection... [VERSION 2.0]")  # Add version marker
         
         doc = fitz.open(pdf_path)
         total_pages = len(doc)
@@ -500,7 +502,7 @@ Sample text from first {sample_pages} pages:
 {sample_text}
 """
             
-            response = self.classifier.client.messages.create(
+            response = self.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
                 max_tokens=200,
                 messages=[{
@@ -661,7 +663,7 @@ Sample text from first {sample_pages} pages:
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                response = self.classifier.client.messages.create(
+                response = self.client.messages.create(
                     model="claude-3-5-sonnet-20241022",
                     max_tokens=max_tokens,  # Configurable token limit
                     messages=[{
