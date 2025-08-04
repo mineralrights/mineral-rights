@@ -1,19 +1,22 @@
 "use client";
 
 import PDFUpload from "@/components/PDFUpload";
+import ProcessingModeSelector from "@/components/ProcessingModeSelector";
 import ResultsTable from "@/components/ResultsTable";
 import { predictBatch } from "@/lib/api";
 import { rowsToCSV } from "@/lib/csv";
 import { useState } from "react";
-import { PredictionRow } from "@/lib/types";
+import { PredictionRow, ProcessingMode, SplittingStrategy } from "@/lib/types";
 
 export default function Home() {
   const [rows, setRows] = useState<PredictionRow[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const [processingMode, setProcessingMode] = useState<ProcessingMode>("single_deed");
+  const [splittingStrategy, setSplittingStrategy] = useState<SplittingStrategy>("smart_detection");
 
   const handleFiles = async (files: File[]) => {
     setIsRunning(true);
-    await predictBatch(files, setRows);   // live updates
+    await predictBatch(files, processingMode, splittingStrategy, setRows);
     setIsRunning(false);
   };
 
@@ -33,6 +36,13 @@ export default function Home() {
         <h1 className="text-4xl font-semibold mb-10 text-[color:var(--accent)]">
           Mineral-Rights&nbsp;Classifier
         </h1>
+
+        <ProcessingModeSelector
+          processingMode={processingMode}
+          splittingStrategy={splittingStrategy}
+          onProcessingModeChange={setProcessingMode}
+          onSplittingStrategyChange={setSplittingStrategy}
+        />
 
         <PDFUpload onSelect={handleFiles} />
 
