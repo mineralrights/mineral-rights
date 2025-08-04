@@ -7,10 +7,12 @@ from fastapi.responses import StreamingResponse
 import io, sys
 from contextlib import redirect_stdout
 
-# 1️⃣  --- import your pipeline ----------------------------------------------
+#  import your pipeline ----------------------------------------------
 from src.mineral_rights.document_classifier import DocumentProcessor
 # ---------------------------------------------------------------------------
 
+
+## TETSING NEW DEPLOYMENT 
 app = FastAPI(title="Mineral-Rights API")
 
 app.add_middleware(
@@ -105,7 +107,7 @@ async def stream(job_id: str):
 
 
 # ——————————————————————————————————————————————
-# helper: stream any print() output into our asyncio queue
+# h elper: stream any print() output into our asyncio queue
 # ——————————————————————————————————————————————
 class QueueWriter(io.TextIOBase):
     def __init__(self, q: asyncio.Queue[str]):
