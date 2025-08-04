@@ -11,6 +11,9 @@ import os
 import json
 import re
 import time
+import tempfile
+import base64
+import random
 import numpy as np
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
@@ -21,12 +24,6 @@ import anthropic
 import fitz  # PyMuPDF
 from PIL import Image
 from io import BytesIO
-import base64
-import random
-import re
-import tempfile
-import os
-from pathlib import Path
 
 # Remove hardcoded API key - use environment variable only
 # os.environ['ANTHROPIC_API_KEY'] = "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"
@@ -378,297 +375,6 @@ Where:
 Remember: Your goal is to confidently identify documents WITHOUT oil and gas reservations. Only classify as 1 when you're certain there's a substantive reservation that specifically mentions oil, gas, petroleum, or hydrocarbons."""
 
         return prompt
-    
-    def extract_classification(self, response: str) -> Tuple[Optional[int], str]:
-        """Extract classification and reasoning from model response"""
-        
-        # Look for Answer: pattern
-        answer_match = re.search(r'Answer:\s*([01])', response, re.IGNORECASE)
-        if answer_match:
-            classification = int(answer_match.group(1))
-        else:
-            # Fallback: look for standalone 0 or 1
-            number_matches = re.findall(r'\b([01])\b', response)
-            if number_matches:
-                classification = int(number_matches[0])
-            else:
-                return None, response
-        
-        # Extract reasoning
-        reasoning_match = re.search(r'Reasoning:\s*(.*?)(?:\n\n|\Z)', response, re.IGNORECASE | re.DOTALL)
-        if reasoning_match:
-            reasoning = reasoning_match.group(1).strip()
-        else:
-            reasoning = response
-            
-        return classification, reasoning
-    
-    def generate_sample(self, ocr_text: str, temperature: float = 0.1, 
-                       high_recall_mode: bool = True) -> Optional[ClassificationSample]:
-        """Generate a single classification sample - always use high recall mode by default"""
-        
-        prompt = self.create_classification_prompt(ocr_text, high_recall_mode)
-        
-        # Retry logic for network issues
-        max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                response = self.client.messages.create(
-                    model="claude-3-5-sonnet-20241022",
-                    max_tokens=1000,
-                    temperature=temperature,  # Keep temperature as provided (0.1)
-                    messages=[{
-                        "role": "user", 
-                        "content": prompt
-                    }]
-                )
-                
-                raw_response = response.content[0].text
-                predicted_class, reasoning = self.extract_classification(raw_response)
-                
-                if predicted_class is None:
-                    print(f"Warning: Could not extract classification from response (attempt {attempt + 1})")
-                    if attempt < max_retries - 1:
-                        time.sleep(1)  # Brief pause before retry
-                        continue
-                    return None
-                    
-                # Extract features for confidence scoring
-                features = self.confidence_scorer.extract_features(
-                    raw_response, 
-                    ocr_text, 
-                    self.past_high_confidence_responses
-                )
-                
-                # Score confidence
-                confidence_score = self.confidence_scorer.score_confidence(features)
-                
-                return ClassificationSample(
-                    predicted_class=predicted_class,
-                    reasoning=reasoning,
-                    confidence_score=confidence_score,
-                    features=features,
-                    raw_response=raw_response
-                )
-                
-            except anthropic.APIError as e:
-                print(f"Anthropic API error (attempt {attempt + 1}): {e}")
-                if attempt < max_retries - 1:
-                    time.sleep(2 ** attempt)  # Exponential backoff
-                    continue
-                return None
-            except Exception as e:
-                print(f"Unexpected error generating sample (attempt {attempt + 1}): {e}")
-                if attempt < max_retries - 1:
-                    time.sleep(1)
-                    continue
-                return None
-        
-        return None
-    
-    def classify_document(self, ocr_text: str, max_samples: int = 8, 
-                         confidence_threshold: float = 0.7,
-                         high_recall_mode: bool = True) -> ClassificationResult:
-        """Classify document using self-consistent sampling - balanced high recall mode"""
-        
-        votes = {0: 0.0, 1: 0.0}
-        all_samples = []
-        early_stopped = False
-        
-        # mode_label = "BALANCED HIGH RECALL" if high_recall_mode else "CONSERVATIVE (High Specificity)"
-        # mode_msg   = "Good sensitivity while maintaining accuracy" \
-        #             if high_recall_mode else "Extra-cautious, prioritising specificity"
-        
-        
-        mode_label = (
-            "BALANCED HIGH RECALL"
-            if high_recall_mode
-            else "CONSERVATIVE (High Specificity)"
-        )
-        mode_msg = (
-            "Good sensitivity while maintaining accuracy"
-            if high_recall_mode
-            else "Extra-cautious, prioritising specificity"
-        )
-
-        
-        print(f"🛈 {mode_label} MODE – {mode_msg}")
-        print(f"   - Max samples: {max_samples}")
-        print(f"   - Confidence threshold: {confidence_threshold}")
-        
-        for i in range(max_samples):
-            print(f"Generating sample {i+1}/{max_samples}...")
-            
-            # Keep temperature constant at 0.1 as requested
-            sample = self.generate_sample(ocr_text, temperature=0.1, high_recall_mode=high_recall_mode)
-            
-            if sample is None:
-                continue
-                
-            all_samples.append(sample)
-            
-            # Add weighted vote
-            votes[sample.predicted_class] += sample.confidence_score
-            
-            # Store high-confidence responses for future reference
-            if sample.confidence_score > 0.8:
-                self.past_high_confidence_responses.append(sample.raw_response)
-                # Keep only recent high-confidence responses
-                if len(self.past_high_confidence_responses) > 20:
-                    self.past_high_confidence_responses.pop(0)
-            
-            # BALANCED HIGH RECALL EARLY STOPPING LOGIC
-            total_votes = sum(votes.values())
-            if total_votes > 0:
-                leading_class = max(votes.keys(), key=lambda k: votes[k])
-                leading_proportion = votes[leading_class] / total_votes
-                
-                if leading_class == 1:  # Positive classification (has reservations)
-                    # Moderate threshold for positive classifications - still favor recall but not extreme
-                    required_confidence = 0.65  # Reasonable threshold (was 0.55, too low)
-                    min_samples_positive = 4    # More samples needed for confidence (was 3)
-                    
-                    if leading_proportion >= required_confidence and i >= min_samples_positive - 1:
-                        print(f"BALANCED Early stopping: Positive classification with {leading_proportion:.3f} confidence after {i+1} samples")
-                        early_stopped = True
-                        break
-                else:  # Negative classification (no reservations)
-                    # Moderate threshold for negative classifications - not too high to maintain recall
-                    required_confidence = 0.75  # Reasonable threshold (was 0.85, too high)
-                    min_samples_negative = 5     # Moderate samples required (was 6)
-                    
-                    if leading_proportion >= required_confidence and i >= min_samples_negative - 1:
-                        print(f"BALANCED Early stopping: Negative classification with {leading_proportion:.3f} confidence after {i+1} samples")
-                        early_stopped = True
-                        break
-        
-        # Determine final classification
-        if sum(votes.values()) > 0:
-            predicted_class = max(votes.keys(), key=lambda k: votes[k])
-            
-            # Use vote proportion (mathematically sound for consensus confidence)
-            final_confidence = votes[predicted_class] / sum(votes.values())
-            
-            # BALANCED HIGH RECALL MODE: Apply tie-breaking bias only in very close cases
-            if abs(votes[0] - votes[1]) < 0.2:  # Only very close votes (was 0.3, too aggressive)
-                print(f"🎯 BALANCED RECALL: Very close vote detected ({votes}), applying slight positive bias")
-                predicted_class = 1  # Bias toward positive classification
-                final_confidence = max(final_confidence, 0.55)  # Modest boost (was 0.6)
-                
-        else:
-            predicted_class = 0  # Default to no reservations
-            final_confidence = 0.0
-            
-        return ClassificationResult(
-            predicted_class=predicted_class,
-            confidence=final_confidence,
-            votes=votes,
-            samples_used=len(all_samples),
-            early_stopped=early_stopped,
-            all_samples=all_samples
-        )
-
-class DocumentProcessor:
-    """Complete pipeline from PDF to classification"""
-    
-    def __init__(self, api_key: str = None):
-        try:
-            self.classifier = OilGasRightsClassifier(api_key)
-            print("✅ Document processor initialized successfully")
-        except Exception as e:
-            print(f"❌ Failed to initialize document processor: {e}")
-            raise
-
-    def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_detection") -> Dict:
-        """
-        Process PDF with multiple deeds
-        
-        Args:
-            pdf_path: Path to multi-deed PDF
-            strategy: Splitting strategy ("smart_detection", "page_based", "ai_assisted")
-        """
-        print(f"🏛️  Starting multi-deed processing with strategy: {strategy}")
-        
-        deed_pdfs = []
-        try:
-            # 1. Split PDF into individual deed PDFs
-            deed_pdfs = self.split_pdf_by_deeds(pdf_path, strategy=strategy)
-            
-            if not deed_pdfs:
-                raise Exception("No deeds could be extracted from the PDF")
-            
-            print(f"📄 Processing {len(deed_pdfs)} individual deeds...")
-            
-            # 2. Process each deed separately
-            results = []
-            for i, deed_pdf_path in enumerate(deed_pdfs):
-                print(f"\n--- PROCESSING DEED {i + 1}/{len(deed_pdfs)} ---")
-                
-                try:
-                    result = self.process_document(deed_pdf_path)
-                    result['deed_number'] = i + 1
-                    result['deed_file'] = Path(deed_pdf_path).name
-                    result['pages_in_deed'] = self._count_pdf_pages(deed_pdf_path)
-                    results.append(result)
-                    
-                    print(f"✅ Deed {i + 1} processed successfully")
-                    
-                except Exception as e:
-                    print(f"❌ Error processing deed {i + 1}: {e}")
-                    # Include failed deed in results with error info
-                    results.append({
-                        'deed_number': i + 1,
-                        'deed_file': Path(deed_pdf_path).name,
-                        'error': str(e),
-                        'classification': 'error',
-                        'confidence': 0.0
-                    })
-            
-            # 3. Generate summary statistics
-            successful_results = [r for r in results if 'error' not in r]
-            total_reservations = sum(1 for r in successful_results if r.get('classification') == 1)
-            
-            return {
-                'total_deeds': len(deed_pdfs),
-                'successful_processed': len(successful_results),
-                'deeds_with_reservations': total_reservations,
-                'processing_mode': 'multi_deed',
-                'splitting_strategy': strategy,
-                'deed_results': results,
-                'summary': {
-                    'total_deeds': len(deed_pdfs),
-                    'reservations_found': total_reservations,
-                    'success_rate': len(successful_results) / len(deed_pdfs) if deed_pdfs else 0
-                }
-            }
-            
-        finally:
-            # 4. Cleanup temporary files
-            if deed_pdfs:
-                print(f"\n🧹 Cleaning up {len(deed_pdfs)} temporary files...")
-                self._cleanup_temp_files(deed_pdfs)
-
-    def split_pdf_by_deeds(self, pdf_path: str, strategy: str = "smart_detection") -> List[str]:
-        """
-        Split PDF into separate deed documents using multiple strategies
-        
-        Args:
-            pdf_path: Path to the multi-deed PDF
-            strategy: "smart_detection", "page_based", or "ai_assisted"
-        
-        Returns:
-            List of paths to individual deed PDF files
-        """
-        print(f"Splitting PDF using strategy: {strategy}")
-        
-        if strategy == "smart_detection":
-            return self._split_by_deed_boundaries(pdf_path)
-        elif strategy == "page_based":
-            return self._split_by_pages(pdf_path, pages_per_deed=3)
-        elif strategy == "ai_assisted":
-            return self._split_with_ai_assistance(pdf_path)
-        else:
-            raise ValueError(f"Unknown splitting strategy: {strategy}")
 
     def _split_by_pages(self, pdf_path: str, pages_per_deed: int = 3) -> List[str]:
         """Fallback: Split PDF by fixed number of pages per deed"""
@@ -752,8 +458,117 @@ class DocumentProcessor:
 
     def _split_with_ai_assistance(self, pdf_path: str) -> List[str]:
         """AI-assisted deed boundary detection for complex cases"""
-        print("🤖 AI assistance not implemented yet, falling back to smart detection")
-        return self._split_by_deed_boundaries(pdf_path)
+        print("🤖 Using AI assistance for deed boundary detection...")
+        
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        
+        # Extract text from first several pages to analyze structure
+        sample_pages = min(10, total_pages)  # Analyze first 10 pages for patterns
+        sample_text = ""
+        
+        print(f"🤖 Analyzing first {sample_pages} pages with Claude...")
+        
+        for page_num in range(sample_pages):
+            page = doc.load_page(page_num)
+            page_text = page.get_text()
+            sample_text += f"\n=== PAGE {page_num + 1} ===\n{page_text[:2000]}"  # Limit per page for token efficiency
+        
+        # Use Claude to analyze document structure
+        try:
+            boundary_prompt = f"""Analyze this legal document and identify where separate deeds begin.
+
+INSTRUCTIONS:
+- Look for patterns that indicate new deed documents starting
+- Common indicators include:
+  * "WARRANTY DEED", "QUITCLAIM DEED", "DEED OF TRUST", "SPECIAL WARRANTY DEED"
+  * Legal phrases like "KNOW ALL MEN BY THESE PRESENTS", "THIS DEED"
+  * New grantor/grantee sections
+  * Property descriptions starting new transactions
+  * Document headers or titles
+
+RESPONSE FORMAT:
+Return ONLY a comma-separated list of page numbers where new deeds start (1-indexed).
+Examples:
+- If one deed: "1"
+- If multiple deeds start on pages 1, 4, and 7: "1,4,7"
+- If you're uncertain about boundaries: "UNCERTAIN"
+
+DOCUMENT ANALYSIS:
+Total pages in document: {total_pages}
+Sample text from first {sample_pages} pages:
+{sample_text}
+"""
+            
+            response = self.classifier.client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=200,
+                messages=[{
+                    "role": "user",
+                    "content": boundary_prompt
+                }]
+            )
+            
+            boundary_text = response.content[0].text.strip()
+            print(f"🤖 Claude analysis result: {boundary_text}")
+            
+            if boundary_text == "UNCERTAIN":
+                print("🤖 Claude is uncertain about boundaries, falling back to smart detection")
+                doc.close()
+                return self._split_by_deed_boundaries(pdf_path)
+            
+            # Parse Claude's response
+            try:
+                page_numbers = [int(x.strip()) for x in boundary_text.split(',') if x.strip().isdigit()]
+                if not page_numbers or page_numbers[0] != 1:
+                    page_numbers = [1] + [p for p in page_numbers if p != 1]  # Ensure starts with page 1
+                
+                boundaries = [p - 1 for p in page_numbers]  # Convert to 0-indexed
+                boundaries.append(total_pages)  # Add end boundary
+                
+                # Validate boundaries make sense
+                boundaries = sorted(set(boundaries))  # Remove duplicates and sort
+                if len(boundaries) <= 2:  # Only start and end
+                    print("🤖 Claude found insufficient boundaries, using smart detection fallback")
+                    doc.close()
+                    return self._split_by_deed_boundaries(pdf_path)
+                
+                print(f"🤖 Claude identified deed boundaries at pages: {[b+1 for b in boundaries[:-1]]}")
+                
+                # Create PDFs based on AI-detected boundaries
+                deed_paths = []
+                base_name = Path(pdf_path).stem
+                temp_dir = Path(pdf_path).parent
+                
+                for i in range(len(boundaries) - 1):
+                    start_page = boundaries[i]
+                    end_page = boundaries[i + 1] - 1
+                    
+                    deed_doc = fitz.open()
+                    deed_doc.insert_pdf(doc, from_page=start_page, to_page=end_page)
+                    
+                    deed_path = temp_dir / f"{base_name}_deed_{i + 1}.pdf"
+                    deed_doc.save(str(deed_path))
+                    deed_doc.close()
+                    
+                    deed_paths.append(str(deed_path))
+                    print(f"🤖 AI-created deed {i + 1}: pages {start_page + 1}-{end_page + 1} -> {deed_path.name}")
+                
+                doc.close()
+                print(f"🤖 Successfully created {len(deed_paths)} deeds using AI analysis")
+                return deed_paths
+                
+            except (ValueError, IndexError) as e:
+                print(f"🤖 Error parsing Claude response '{boundary_text}': {e}")
+                print("🤖 Falling back to smart detection")
+                doc.close()
+                return self._split_by_deed_boundaries(pdf_path)
+            
+        except Exception as e:
+            print(f"🤖 AI assistance failed: {e}")
+            print("🤖 Falling back to smart detection")
+            doc.close()
+            return self._split_by_deed_boundaries(pdf_path)
 
     def _count_pdf_pages(self, pdf_path: str) -> int:
         """Count pages in a PDF file"""
@@ -773,7 +588,7 @@ class DocumentProcessor:
                 print(f"🧹 Cleaned up: {Path(file_path).name}")
             except (FileNotFoundError, OSError):
                 pass  # Ignore cleanup errors
-    
+        
     def pdf_to_image(self, pdf_path: str) -> Image.Image:
         """Convert PDF to high-quality image (first page only - legacy method)"""
         doc = fitz.open(pdf_path)
@@ -931,7 +746,7 @@ class DocumentProcessor:
         combine_method: str = "early_stop",
         high_recall_mode: bool = False,
     ) -> Dict:
-        # OPTIONAL: simple helper so we don’t have to touch every print
+        # OPTIONAL: simple helper so we don't have to touch every print
         def _log(msg: str):
             print(msg)
             if log_fn:
@@ -946,9 +761,6 @@ class DocumentProcessor:
         
         # Use sequential early stopping by default
         if page_strategy == "sequential_early_stop" or combine_method == "early_stop":
-            # return self._process_with_early_stopping(
-            #     pdf_path, max_samples, confidence_threshold, max_tokens_per_page, max_pages
-            # )
             return self._process_with_early_stopping(
                 pdf_path,
                 max_samples,
@@ -957,86 +769,10 @@ class DocumentProcessor:
                 max_pages,
                 high_recall_mode,                     # pass flag down
             )
-        
-
-
-
-
-        
-        # Legacy processing for other strategies
-        # Step 1: Determine which pages to process
-        if max_pages is not None:
-            # Use max_pages override
-            images = self.pdf_to_images(pdf_path, max_pages)
-        else:
-            # Use smart page selection
-            page_numbers = self.get_smart_pages(pdf_path, page_strategy)
-            print(f"Selected pages: {[p+1 for p in page_numbers]}")  # Convert to 1-indexed for display
-            
-            if page_strategy == "first_only":
-                # Use legacy single-page method for backward compatibility
-                image = self.pdf_to_image(pdf_path)
-                images = [image]
-            else:
-                # Process selected pages
-                doc = fitz.open(pdf_path)
-                images = []
-                for page_num in page_numbers:
-                    page = doc.load_page(page_num)
-                    mat = fitz.Matrix(2, 2)
-                    pix = page.get_pixmap(matrix=mat)
-                    img_data = pix.tobytes("png")
-                    images.append(Image.open(BytesIO(img_data)))
-                doc.close()
-        
-        # Step 2: Extract text from all selected pages
-        print("Extracting text with Claude OCR...")
-        if len(images) == 1:
-            ocr_text = self.extract_text_with_claude(images[0], max_tokens_per_page)
-        else:
-            ocr_text = self.extract_text_from_multiple_pages(
-                images, max_tokens_per_page, combine_method
-            )
-        
-        print(f"Extracted text length: {len(ocr_text)} characters")
-        
-        # Step 3: Classify with self-consistent sampling (always high recall)
-        print("Classifying document...")
-        classification_result = self.classifier.classify_document(
-            ocr_text, max_samples, confidence_threshold, high_recall_mode=high_recall_mode
-        )
-        
-        return {
-            'document_path': pdf_path,
-            'pages_processed': len(images),
-            'page_strategy': page_strategy,
-            'max_tokens_per_page': max_tokens_per_page,
-            'high_recall_mode': high_recall_mode,
-            'ocr_text': ocr_text,
-            'ocr_text_length': len(ocr_text),
-            'classification': classification_result.predicted_class,
-            'confidence': classification_result.confidence,
-            'votes': classification_result.votes,
-            'samples_used': classification_result.samples_used,
-            'early_stopped': classification_result.early_stopped,
-            'chunk_analysis': [],  # Empty for legacy mode
-            'stopped_at_chunk': None,
-            'detailed_samples': [
-                {
-                    'predicted_class': s.predicted_class,
-                    'reasoning': s.reasoning,
-                    'confidence_score': s.confidence_score,
-                    'features': s.features
-                }
-                for s in classification_result.all_samples
-            ]
-        }
     
     def _process_with_early_stopping(self, pdf_path: str, max_samples: int, 
-                                   confidence_threshold: float, max_tokens_per_page: int, 
-                                   max_pages: int = None, high_recall_mode: bool = False, ) -> Dict:
- 
-
+                                    confidence_threshold: float, max_tokens_per_page: int, 
+                                    max_pages: int = None, high_recall_mode: bool = False, ) -> Dict:
         """Process document chunk by chunk with early stopping when reservations are found"""
         
         print("Using chunk-by-chunk early stopping analysis")

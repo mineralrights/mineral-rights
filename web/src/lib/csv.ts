@@ -6,10 +6,11 @@ export function rowsToCSV(rows: PredictionRow[]): string {
   
   rows.forEach(row => {
     if (row.processingMode === "multi_deed" && row.deedResults) {
-      // For multi-deed, create a row for each individual deed
+      // For multi-deed, create a row for each individual deed with smart names
       row.deedResults.forEach(deed => {
         data.push({
-          File: row.filename,
+          "Original File": row.filename,
+          "Deed Name": deed.smart_deed_name || `deed_${deed.deed_number}`,
           "Deed Number": deed.deed_number,
           Status: row.status,
           Prediction: deed.prediction,
@@ -21,8 +22,9 @@ export function rowsToCSV(rows: PredictionRow[]): string {
       
       // Also add a summary row
       data.push({
-        File: row.filename + " (Summary)",
-        "Deed Number": "ALL",
+        "Original File": row.filename + " (Summary)",
+        "Deed Name": "ALL_DEEDS_SUMMARY",
+        "Deed Number": "SUMMARY",
         Status: row.status,
         Prediction: row.prediction,
         Confidence: "",
@@ -32,7 +34,8 @@ export function rowsToCSV(rows: PredictionRow[]): string {
     } else {
       // Single deed format
       data.push({
-        File: row.filename,
+        "Original File": row.filename,
+        "Deed Name": row.filename.replace('.pdf', '_single_deed'),
         "Deed Number": 1,
         Status: row.status,
         Prediction: row.prediction ?? "",

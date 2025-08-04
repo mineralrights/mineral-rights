@@ -17,6 +17,7 @@ export interface DeedResult {
   prediction: "has_reservation" | "no_reservation";
   explanation?: string;
   deed_file?: string;
+  smart_deed_name?: string;  // NEW: Smart generated name
   pages_in_deed?: number;
 }
 

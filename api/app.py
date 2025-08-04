@@ -59,12 +59,6 @@ async def predict(
     if processor is None:
         raise HTTPException(status_code=500, detail="Model not initialised")
 
-    # DEBUG: Log received parameters
-    print(f"🔍 DEBUG - Received parameters:")
-    print(f"  - processing_mode: '{processing_mode}'")
-    print(f"  - splitting_strategy: '{splitting_strategy}'")
-    print(f"  - file: {file.filename}")
-
     # save upload to a temp file
     contents = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
