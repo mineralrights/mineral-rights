@@ -390,6 +390,76 @@ class DocumentProcessor:
             print(f"❌ Failed to initialize document processor: {e}")
             raise
 
+    def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_detection") -> Dict:
+        """
+        Process PDF with multiple deeds
+        
+        Args:
+            pdf_path: Path to multi-deed PDF
+            strategy: Splitting strategy ("smart_detection", "page_based", "ai_assisted")
+        """
+        print(f"🏛️  Starting multi-deed processing with strategy: {strategy}")
+        
+        deed_pdfs = []
+        try:
+            # 1. Split PDF into individual deed PDFs
+            deed_pdfs = self.split_pdf_by_deeds(pdf_path, strategy=strategy)
+            
+            if not deed_pdfs:
+                raise Exception("No deeds could be extracted from the PDF")
+            
+            print(f"📄 Processing {len(deed_pdfs)} individual deeds...")
+            base_filename = Path(pdf_path).stem
+            
+            # 2. Process each deed separately
+            results = []
+            renamed_paths = []
+            
+            for i, deed_pdf_path in enumerate(deed_pdfs):
+                print(f"\n--- PROCESSING DEED {i + 1}/{len(deed_pdfs)} ---")
+                
+                try:
+                    # Process the deed
+                    result = self.process_document(deed_pdf_path)
+                    
+                    # Update result with deed info
+                    result['deed_number'] = i + 1
+                    result['deed_file'] = Path(deed_pdf_path).name
+                    result['pages_in_deed'] = self._count_pdf_pages(deed_pdf_path)
+                    results.append(result)
+                    renamed_paths.append(deed_pdf_path)
+                    
+                    print(f"✅ Deed {i + 1} processed successfully")
+                    
+                except Exception as e:
+                    print(f"❌ Error processing deed {i + 1}: {e}")
+                    # Include failed deed in results with error info
+                    results.append({
+                        'deed_number': i + 1,
+                        'deed_file': Path(deed_pdf_path).name,
+                        'error': str(e),
+                        'classification': 'error',
+                        'confidence': 0.0
+                    })
+                    renamed_paths.append(deed_pdf_path)
+            
+            # 3. Generate summary statistics
+            successful_results = [r for r in results if 'error' not in r]
+            total_reservations = sum(1 for r in successful_results if r.get('classification') == 1)
+            
+            return {
+                'total_deeds': len(deed_pdfs),
+                'successful_processed': len(successful_results),
+                'deeds_with_reservations': total_reservations,
+                'processing_mode': 'multi_deed',
+                'splitting_strategy': strategy,
+                'deed_results': successful_results
+            }
+
+        finally:
+            # 4. Clean up temporary files
+            self._cleanup_files(renamed_paths)
+
     def _split_by_pages(self, pdf_path: str, pages_per_deed: int = 3) -> List[str]:
         """Fallback: Split PDF by fixed number of pages per deed"""
         print(f"📄 Splitting PDF by {pages_per_deed} pages per deed...")
