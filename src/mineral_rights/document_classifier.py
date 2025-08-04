@@ -569,7 +569,7 @@ class DocumentProcessor:
         total_pages = len(doc)
         
         # Extract text from first several pages to analyze structure
-        sample_pages = min(10, total_pages)  # Analyze first 10 pages for patterns
+        sample_pages = min(8, total_pages)  # Analyze first 8 pages for patterns
         sample_text = ""
         
         print(f"🤖 Analyzing first {sample_pages} pages with Claude...")
@@ -577,66 +577,88 @@ class DocumentProcessor:
         for page_num in range(sample_pages):
             page = doc.load_page(page_num)
             
-            # Try text extraction first
-            page_text = page.get_text()
+            # Try multiple text extraction methods
+            page_text = ""
             
-            # If no text, try OCR
-            if len(page_text.strip()) < 50:  # Very little text extracted
-                print(f"🔍 Page {page_num + 1}: Using OCR (text extraction failed)")
+            # Method 1: Standard text extraction
+            try:
+                page_text = page.get_text()
+            except:
+                pass
+                
+            # Method 2: Try different text extraction modes if first fails
+            if len(page_text.strip()) < 20:
+                try:
+                    page_text = page.get_text("text")  # Explicit text mode
+                except:
+                    pass
+                    
+            # Method 3: Try extracting text blocks
+            if len(page_text.strip()) < 20:
+                try:
+                    text_blocks = page.get_text("blocks")
+                    page_text = " ".join([block[4] for block in text_blocks if len(block) > 4])
+                except:
+                    pass
+            
+            # Method 4: If still no text, use Claude OCR (this is still AI!)
+            if len(page_text.strip()) < 20:
+                print(f"🔍 Page {page_num + 1}: Using Claude OCR (PDF text extraction failed)")
                 # Convert page to image and use Claude OCR
                 mat = fitz.Matrix(2, 2)  # 2x zoom for quality
                 pix = page.get_pixmap(matrix=mat)
                 img_data = pix.tobytes("png")
                 image = Image.open(BytesIO(img_data))
                 
-                # Use existing OCR method
-                page_text = self.extract_text_with_claude(image, max_tokens=4000)
+                # Use Claude OCR (this is STILL using Claude AI, just for text extraction)
+                page_text = self.extract_text_with_claude(image, max_tokens=3000)
+                print(f"🤖 Claude OCR extracted {len(page_text)} characters from page {page_num + 1}")
             else:
-                print(f"🔍 Page {page_num + 1}: {len(page_text)} characters extracted")
+                print(f"🔍 Page {page_num + 1}: {len(page_text)} characters extracted via PDF text")
                 
-            sample_text += f"\n=== PAGE {page_num + 1} ===\n{page_text[:2000]}"  # Limit per page for token efficiency
+            # Add to sample with page markers
+            if page_text.strip():
+                sample_text += f"\n=== PAGE {page_num + 1} ===\n{page_text[:1500]}\n"  # Limit per page
         
-        # Check total sample text
         print(f"🔍 Total sample text length: {len(sample_text)} characters")
         
-        # If no text extracted, fall back immediately
-        if len(sample_text.strip()) < 100:  # Less than 100 characters total
+        # If still no meaningful text, fall back
+        if len(sample_text.strip()) < 200:
             print("🤖 Insufficient text extracted from PDF, falling back to smart detection")
             doc.close()
             return self._split_by_deed_boundaries(pdf_path)
         
-        # Use Claude to analyze document structure
+        # Now use Claude AI for boundary analysis
         try:
-            boundary_prompt = f"""Analyze this legal document and identify where separate deeds begin.
+            boundary_prompt = f"""Analyze this legal document text and identify where separate deeds begin.
 
-INSTRUCTIONS:
-- Look for patterns that indicate new deed documents starting
-- Common indicators include:
-  * "WARRANTY DEED", "QUITCLAIM DEED", "DEED OF TRUST", "SPECIAL WARRANTY DEED"
-  * Legal phrases like "KNOW ALL MEN BY THESE PRESENTS", "THIS DEED"
-  * New grantor/grantee sections
-  * Property descriptions starting new transactions
-  * Document headers or titles
+TASK: You are analyzing a multi-deed document. Each deed is a separate legal transaction.
 
-RESPONSE FORMAT:
-Return ONLY a comma-separated list of page numbers where new deeds start (1-indexed).
-Examples:
-- If one deed: "1"
-- If multiple deeds start on pages 1, 4, and 7: "1,4,7"
-- If you're uncertain about boundaries: "UNCERTAIN"
+LOOK FOR DEED START INDICATORS:
+- Deed type headers: "WARRANTY DEED", "QUITCLAIM DEED", "DEED OF TRUST", "SPECIAL WARRANTY DEED"
+- Legal openings: "KNOW ALL MEN BY THESE PRESENTS", "THIS DEED", "THIS INSTRUMENT"
+- New grantor/grantee introductions: "John Smith, grantor, to Mary Jones, grantee"
+- Property description beginnings: "Being the same property", "Situated in [County]"
+- Consideration clauses: "For and in consideration of"
+- Document recording information: "Filed for record", "Book [X] Page [Y]"
 
-DOCUMENT ANALYSIS:
-Total pages in document: {total_pages}
-Sample text from first {sample_pages} pages:
+IMPORTANT: A new deed typically starts fresh with these elements, not just continues mid-sentence.
+
+RESPONSE: Return ONLY page numbers where NEW deeds start, comma-separated (1-indexed).
+- If this appears to be one continuous deed: "1"
+- If deeds start on pages 1, 4, and 7: "1,4,7"  
+- If you cannot determine boundaries clearly: "UNCERTAIN"
+
+DOCUMENT TEXT ({total_pages} total pages, showing first {sample_pages} pages):
 {sample_text}
-"""
+
+ANALYSIS:"""
             
-            # DEBUG: Show what we're sending to Claude (first 500 chars)
-            print(f"🔍 Sending to Claude (first 500 chars): {boundary_prompt[:500]}...")
+            print(f"🤖 Sending document analysis to Claude...")
             
             response = self.classifier.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
-                max_tokens=200,
+                max_tokens=300,
                 messages=[{
                     "role": "user",
                     "content": boundary_prompt
@@ -644,32 +666,50 @@ Sample text from first {sample_pages} pages:
             )
             
             boundary_text = response.content[0].text.strip()
-            print(f"🤖 Claude analysis result: {boundary_text}")
+            print(f"🤖 Claude boundary analysis: {boundary_text}")
             
+            # Parse Claude's response
             if boundary_text == "UNCERTAIN":
-                print("🤖 Claude is uncertain about boundaries, falling back to smart detection")
+                print("🤖 Claude reports uncertain boundaries, using smart detection fallback")
                 doc.close()
                 return self._split_by_deed_boundaries(pdf_path)
             
-            # Parse Claude's response
             try:
-                page_numbers = [int(x.strip()) for x in boundary_text.split(',') if x.strip().isdigit()]
-                if not page_numbers or page_numbers[0] != 1:
-                    page_numbers = [1] + [p for p in page_numbers if p != 1]  # Ensure starts with page 1
+                # Extract page numbers from Claude's response
+                page_numbers = []
+                for part in boundary_text.split(','):
+                    part = part.strip()
+                    # Extract just the numbers
+                    import re
+                    numbers = re.findall(r'\d+', part)
+                    if numbers:
+                        page_numbers.extend([int(n) for n in numbers])
                 
-                boundaries = [p - 1 for p in page_numbers]  # Convert to 0-indexed
-                boundaries.append(total_pages)  # Add end boundary
+                # Clean up the page numbers
+                page_numbers = sorted(set(page_numbers))  # Remove duplicates and sort
+                page_numbers = [p for p in page_numbers if 1 <= p <= total_pages]  # Valid range
                 
-                # Validate boundaries make sense
-                boundaries = sorted(set(boundaries))  # Remove duplicates and sort
-                if len(boundaries) <= 2:  # Only start and end
-                    print("🤖 Claude found insufficient boundaries, using smart detection fallback")
+                if not page_numbers or len(page_numbers) < 1:
+                    print("🤖 Claude returned invalid page numbers, using smart detection")
                     doc.close()
                     return self._split_by_deed_boundaries(pdf_path)
                 
-                print(f"🤖 Claude identified deed boundaries at pages: {[b+1 for b in boundaries[:-1]]}")
+                # Ensure starts with page 1
+                if page_numbers[0] != 1:
+                    page_numbers = [1] + page_numbers
                 
-                # Create PDFs based on AI-detected boundaries
+                boundaries = [p - 1 for p in page_numbers]  # Convert to 0-indexed
+                boundaries.append(total_pages)  # Add end boundary
+                boundaries = sorted(set(boundaries))  # Remove duplicates
+                
+                if len(boundaries) <= 2:  # Only start and end
+                    print("🤖 Claude found only one deed, using page-based splitting")
+                    doc.close()
+                    return self._split_by_pages(pdf_path, pages_per_deed=max(3, total_pages // 3))
+                
+                print(f"🤖 Claude identified {len(boundaries)-1} deeds starting at pages: {[b+1 for b in boundaries[:-1]]}")
+                
+                # Create PDFs based on Claude's analysis
                 deed_paths = []
                 base_name = Path(pdf_path).stem
                 temp_dir = Path(pdf_path).parent
@@ -686,20 +726,20 @@ Sample text from first {sample_pages} pages:
                     deed_doc.close()
                     
                     deed_paths.append(str(deed_path))
-                    print(f"🤖 AI-created deed {i + 1}: pages {start_page + 1}-{end_page + 1} -> {deed_path.name}")
+                    print(f"🤖 AI-created deed {i + 1}: pages {start_page + 1}-{end_page + 1}")
                 
                 doc.close()
-                print(f"🤖 Successfully created {len(deed_paths)} deeds using AI analysis")
+                print(f"🤖 Successfully created {len(deed_paths)} deeds using Claude AI analysis")
                 return deed_paths
                 
-            except (ValueError, IndexError) as e:
-                print(f"🤖 Error parsing Claude response '{boundary_text}': {e}")
+            except Exception as e:
+                print(f"🤖 Error processing Claude's response: {e}")
                 print("🤖 Falling back to smart detection")
                 doc.close()
                 return self._split_by_deed_boundaries(pdf_path)
             
         except Exception as e:
-            print(f"🤖 AI assistance failed: {e}")
+            print(f"🤖 Claude AI analysis failed: {e}")
             print("🤖 Falling back to smart detection")
             doc.close()
             return self._split_by_deed_boundaries(pdf_path)
