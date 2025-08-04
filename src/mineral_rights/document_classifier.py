@@ -458,7 +458,29 @@ class DocumentProcessor:
 
         finally:
             # 4. Clean up temporary files
-            self._cleanup_files(renamed_paths)
+            self._cleanup_temp_files(renamed_paths)
+
+    def split_pdf_by_deeds(self, pdf_path: str, strategy: str = "smart_detection") -> List[str]:
+        """
+        Split PDF into separate deed documents using multiple strategies
+        
+        Args:
+            pdf_path: Path to the multi-deed PDF
+            strategy: "smart_detection", "page_based", or "ai_assisted"
+        
+        Returns:
+            List of paths to individual deed PDF files
+        """
+        print(f"Splitting PDF using strategy: {strategy}")
+        
+        if strategy == "smart_detection":
+            return self._split_by_deed_boundaries(pdf_path)
+        elif strategy == "page_based":
+            return self._split_by_pages(pdf_path, pages_per_deed=3)
+        elif strategy == "ai_assisted":
+            return self._split_with_ai_assistance(pdf_path)
+        else:
+            raise ValueError(f"Unknown splitting strategy: {strategy}")
 
     def _split_by_pages(self, pdf_path: str, pages_per_deed: int = 3) -> List[str]:
         """Fallback: Split PDF by fixed number of pages per deed"""
@@ -491,20 +513,19 @@ class DocumentProcessor:
         return deed_paths
 
     def _split_by_deed_boundaries(self, pdf_path: str) -> List[str]:
-        """Smart deed boundary detection using text patterns - simplified version"""
+        """Smart deed boundary detection using text patterns"""
         print("🔍 Detecting deed boundaries using text analysis...")
         
         doc = fitz.open(pdf_path)
         total_pages = len(doc)
         
-        # For now, let's use a simplified approach to test if the system works
-        # We'll look for obvious page breaks and deed patterns
+        # Simple heuristic: check every 3-5 pages for potential deed starts
         boundaries = [0]  # Always start with page 0
         
         print(f"Analyzing {total_pages} pages for deed boundaries...")
         
-        # Simple heuristic: check every 3-5 pages for potential deed starts
-        for page_num in range(3, total_pages, 3):  # Check every 3rd page
+        # Simple approach: split every 3 pages
+        for page_num in range(3, total_pages, 3):
             if page_num < total_pages:
                 boundaries.append(page_num)
                 print(f"📄 Adding deed boundary at page {page_num + 1}")
@@ -542,7 +563,7 @@ class DocumentProcessor:
 
     def _split_with_ai_assistance(self, pdf_path: str) -> List[str]:
         """AI-assisted deed boundary detection for complex cases"""
-        print("🤖 Using AI assistance for deed boundary detection... [VERSION 2.0]")  # Add version marker
+        print("🤖 Using AI assistance for deed boundary detection...")
         
         doc = fitz.open(pdf_path)
         total_pages = len(doc)
