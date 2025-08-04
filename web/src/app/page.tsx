@@ -15,9 +15,25 @@ export default function Home() {
   const [splittingStrategy, setSplittingStrategy] = useState<SplittingStrategy>("smart_detection");
 
   const handleFiles = async (files: File[]) => {
+    // DEBUG: Log the current state
+    console.log("🔍 Frontend DEBUG - About to process files:");
+    console.log(`  - processingMode: ${processingMode}`);
+    console.log(`  - splittingStrategy: ${splittingStrategy}`);
+    console.log(`  - files:`, files.map(f => f.name));
+    
     setIsRunning(true);
     await predictBatch(files, processingMode, splittingStrategy, setRows);
     setIsRunning(false);
+  };
+
+  const handleProcessingModeChange = (mode: ProcessingMode) => {
+    console.log(`🔄 Processing mode changed to: ${mode}`);
+    setProcessingMode(mode);
+  };
+
+  const handleSplittingStrategyChange = (strategy: SplittingStrategy) => {
+    console.log(`🔄 Splitting strategy changed to: ${strategy}`);
+    setSplittingStrategy(strategy);
   };
 
   const downloadCSV = () => {
@@ -37,11 +53,16 @@ export default function Home() {
           Mineral-Rights&nbsp;Classifier
         </h1>
 
+        {/* DEBUG: Show current state */}
+        <div className="mb-4 p-2 bg-yellow-100 rounded text-xs">
+          <strong>DEBUG:</strong> Mode={processingMode}, Strategy={splittingStrategy}
+        </div>
+
         <ProcessingModeSelector
           processingMode={processingMode}
           splittingStrategy={splittingStrategy}
-          onProcessingModeChange={setProcessingMode}
-          onSplittingStrategyChange={setSplittingStrategy}
+          onProcessingModeChange={handleProcessingModeChange}
+          onSplittingStrategyChange={handleSplittingStrategyChange}
         />
 
         <PDFUpload onSelect={handleFiles} />
