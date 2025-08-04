@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile, os, traceback
-from typing import List
+from typing import List, Dict
 import asyncio, threading, uuid, json
 from fastapi.responses import StreamingResponse
 import io, sys
@@ -51,7 +51,11 @@ jobs: dict[str, asyncio.Queue[str]] = {}        # log lines per job-id
 # POST /predict  – upload PDF, return {"job_id": "..."}
 # --------------------------------------------------------------------------
 @app.post("/predict")
-async def predict(file: UploadFile = File(...)):
+async def predict(
+    file: UploadFile = File(...), 
+    processing_mode: str = "single_deed",  # "single_deed" or "multi_deed"
+    splitting_strategy: str = "smart_detection"  # For multi_deed mode
+):
     if processor is None:
         raise HTTPException(status_code=500, detail="Model not initialised")
 
@@ -67,21 +71,33 @@ async def predict(file: UploadFile = File(...)):
 
     def logger(msg: str):
         log_q.put_nowait(msg)
+    
     # run pipeline in a background thread so we don't block the event loop
     def run():
         try:
-            # anything printed during processing goes to the queue
             with redirect_stdout(QueueWriter(log_q)):
-                result = processor.process_document(tmp_path)
-            log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
+                if processing_mode == "single_deed":
+                    result = processor.process_document(tmp_path)
+                    log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
+                
+                elif processing_mode == "multi_deed":
+                    deed_results = processor.process_multi_deed_document(
+                        tmp_path, 
+                        strategy=splitting_strategy
+                    )
+                    log_q.put_nowait(f"__RESULT__{json.dumps(deed_results)}")
+                else:
+                    raise ValueError(f"Unknown processing_mode: {processing_mode}")
+                    
         except Exception as e:
+            print(f"Processing error: {e}")  # This will show in Render logs
             log_q.put_nowait(f"__ERROR__{str(e)}")
         finally:
-            log_q.put_nowait("__END__")
+            log_q.put_nowait("__END__")  # ALWAYS send end signal
             try:
                 os.remove(tmp_path)
-            except FileNotFoundError:
-                pass
+            except (FileNotFoundError, OSError):
+                pass  # Ignore file deletion errors
 
     threading.Thread(target=run, daemon=True).start()
     return {"job_id": job_id}
