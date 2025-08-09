@@ -900,12 +900,12 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
         """Extract text for a specific deed based on character positions"""
         return full_text[start_pos:end_pos].strip()
 
-    def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_split") -> List[Dict]:
+    def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_detection") -> List[Dict]:
         """Process a PDF containing multiple deeds with intelligent deed boundary detection
         
         Args:
             pdf_path: Path to PDF file containing multiple deeds
-            strategy: "page_based", "smart_split", or "llm_boundaries"
+            strategy: "page_based", "smart_detection", or "ai_assisted"
         
         Returns:
             List of classification results, one per deed
@@ -919,12 +919,12 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
             # Simple approach: each page is a deed
             return self._process_page_based_deeds(pdf_path)
         
-        elif strategy in ["smart_split", "llm_boundaries"]:
+        elif strategy in ["smart_detection", "ai_assisted", "smart_split", "llm_boundaries"]:
             # Advanced approach: detect deed boundaries using LLM
             return self._process_with_boundary_detection(pdf_path)
         
         else:
-            raise ValueError(f"Unknown strategy: {strategy}")
+            raise ValueError(f"Unknown strategy: {strategy}. Valid strategies are: page_based, smart_detection, ai_assisted")
 
     def _process_page_based_deeds(self, pdf_path: str) -> List[Dict]:
         """Simple page-based processing - each page is a separate deed"""
