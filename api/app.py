@@ -15,18 +15,17 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 ## TESTING NEW DEPLOYMENT 
 app = FastAPI(title="Mineral-Rights API")
 
-def is_cors_allowed(origin: str) -> bool:
-    allowed = [
-        "http://localhost:3000",
-        "https://localhost:3000",
-    ]
-    if origin and (origin.endswith(".vercel.app") or origin in allowed):
-        return True
-    return False
-
+# More permissive CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origin_regex=r"https://.*\.vercel\.app",  # Regex pattern for all Vercel
+    allow_origins=[
+        "http://localhost:3000",
+        "https://localhost:3000", 
+        "https://mineral-rights-4o8gr9h79-lauragomezjurados-projects.vercel.app",
+        # Allow all Vercel domains
+        "*"  # Temporarily allow all origins for debugging
+    ],
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
