@@ -835,14 +835,14 @@ class DocumentProcessor:
             'requires_manual_review': len(unread_pages) > 0,
         }
 
-def detect_deed_boundaries(self, full_text: str) -> List[Dict]:
-    """Use LLM to detect deed boundaries in multi-deed document
-    
-    Returns:
-        List of deed boundaries with start/end positions and metadata
-    """
-    
-    boundary_prompt = f"""You are analyzing a legal document that contains multiple property deeds. Your task is to identify where each individual deed starts and ends.
+    def detect_deed_boundaries(self, full_text: str) -> List[Dict]:
+        """Use LLM to detect deed boundaries in multi-deed document
+        
+        Returns:
+            List of deed boundaries with start/end positions and metadata
+        """
+        
+        boundary_prompt = f"""You are analyzing a legal document that contains multiple property deeds. Your task is to identify where each individual deed starts and ends.
 
 DOCUMENT TEXT:
 \"\"\"{full_text[:20000]}\"\"\"
@@ -874,201 +874,201 @@ Format your response as JSON:
 
 If you cannot clearly identify multiple deeds, return a single deed covering the entire document."""
 
-    try:
-        response = self.classifier.client.messages.create(
-            model="claude-3-5-sonnet-20241022",
-            max_tokens=2000,
-            messages=[{"role": "user", "content": boundary_prompt}]
-        )
-        
-        # Parse JSON response
-        import json
-        boundary_data = json.loads(response.content[0].text)
-        return boundary_data.get("deeds", [])
-        
-    except Exception as e:
-        print(f"Error detecting deed boundaries: {e}")
-        # Fallback: treat entire document as single deed
-        return [{
-            "deed_number": 1,
-            "start_position": 0,
-            "end_position": len(full_text),
-            "description": "Full document (boundary detection failed)"
-        }]
-
-def extract_deed_text(self, full_text: str, start_pos: int, end_pos: int) -> str:
-    """Extract text for a specific deed based on character positions"""
-    return full_text[start_pos:end_pos].strip()
-
-def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_split") -> List[Dict]:
-    """Process a PDF containing multiple deeds with intelligent deed boundary detection
-    
-    Args:
-        pdf_path: Path to PDF file containing multiple deeds
-        strategy: "page_based", "smart_split", or "llm_boundaries"
-    
-    Returns:
-        List of classification results, one per deed
-    """
-    print(f"Processing multi-deed document: {pdf_path}")
-    print(f"Strategy: {strategy}")
-    
-    results = []
-    
-    if strategy == "page_based":
-        # Simple approach: each page is a deed
-        return self._process_page_based_deeds(pdf_path)
-    
-    elif strategy in ["smart_split", "llm_boundaries"]:
-        # Advanced approach: detect deed boundaries using LLM
-        return self._process_with_boundary_detection(pdf_path)
-    
-    else:
-        raise ValueError(f"Unknown strategy: {strategy}")
-
-def _process_page_based_deeds(self, pdf_path: str) -> List[Dict]:
-    """Simple page-based processing - each page is a separate deed"""
-    doc = fitz.open(pdf_path)
-    total_pages = len(doc)
-    results = []
-    
-    print(f"Processing {total_pages} pages as separate deeds")
-    
-    for page_num in range(total_pages):
-        current_page = page_num + 1
-        print(f"\n--- PROCESSING DEED {current_page}/{total_pages} (Page {current_page}) ---")
-        
         try:
-            # Convert page to image and extract text
-            page = doc.load_page(page_num)
-            mat = fitz.Matrix(2, 2)
-            pix = page.get_pixmap(matrix=mat)
-            img_data = pix.tobytes("png")
-            image = Image.open(BytesIO(img_data))
-            
-            page_text = self.extract_text_with_claude(image, 8000)
-            print(f"Extracted {len(page_text)} characters from page {current_page}")
-            
-            # Classify the deed
-            classification_result = self.classifier.classify_document(
-                page_text,
-                max_samples=6,
-                confidence_threshold=0.7,
-                high_recall_mode=False
+            response = self.classifier.client.messages.create(
+                model="claude-3-5-sonnet-20241022",
+                max_tokens=2000,
+                messages=[{"role": "user", "content": boundary_prompt}]
             )
             
-            deed_result = {
-                'deed_number': current_page,
-                'page_numbers': [current_page],
-                'document_path': pdf_path,
-                'strategy': 'page_based',
-                'ocr_text': page_text,
-                'ocr_text_length': len(page_text),
-                'classification': classification_result.predicted_class,
-                'confidence': classification_result.confidence,
-                'votes': classification_result.votes,
-                'samples_used': classification_result.samples_used,
-                'early_stopped': classification_result.early_stopped,
-                'status': 'success'
-            }
-            
-            results.append(deed_result)
-            
-            print(f"Deed {current_page}: {classification_result.predicted_class} ({'Oil & Gas Reservations' if classification_result.predicted_class == 1 else 'No Reservations'}) (conf: {classification_result.confidence:.3f})")
+            # Parse JSON response
+            import json
+            boundary_data = json.loads(response.content[0].text)
+            return boundary_data.get("deeds", [])
             
         except Exception as e:
-            print(f"Error processing page {current_page}: {e}")
-            results.append({
-                'deed_number': current_page,
-                'page_numbers': [current_page],
-                'document_path': pdf_path,
-                'strategy': 'page_based',
-                'status': 'error',
-                'error': str(e),
-                'classification': 0,
-                'confidence': 0.0
-            })
-    
-    doc.close()
-    return results
+            print(f"Error detecting deed boundaries: {e}")
+            # Fallback: treat entire document as single deed
+            return [{
+                "deed_number": 1,
+                "start_position": 0,
+                "end_position": len(full_text),
+                "description": "Full document (boundary detection failed)"
+            }]
 
-def _process_with_boundary_detection(self, pdf_path: str) -> List[Dict]:
-    """Advanced processing with LLM-based deed boundary detection"""
-    
-    # Step 1: Extract all text from the document
-    print("Step 1: Extracting full document text...")
-    images = self.pdf_to_images(pdf_path)
-    full_text = self.extract_text_from_multiple_pages(images, 8000, "concatenate")
-    
-    print(f"Extracted {len(full_text)} total characters from {len(images)} pages")
-    
-    # Step 2: Use LLM to detect deed boundaries
-    print("Step 2: Detecting deed boundaries using LLM...")
-    deed_boundaries = self.detect_deed_boundaries(full_text)
-    
-    print(f"Detected {len(deed_boundaries)} deeds:")
-    for boundary in deed_boundaries:
-        print(f"  Deed {boundary['deed_number']}: chars {boundary['start_position']}-{boundary['end_position']}")
-        print(f"    Description: {boundary.get('description', 'No description')}")
-    
-    # Step 3: Process each detected deed
-    results = []
-    
-    for boundary in deed_boundaries:
-        deed_num = boundary['deed_number']
-        print(f"\n--- PROCESSING DEED {deed_num}/{len(deed_boundaries)} ---")
+    def extract_deed_text(self, full_text: str, start_pos: int, end_pos: int) -> str:
+        """Extract text for a specific deed based on character positions"""
+        return full_text[start_pos:end_pos].strip()
+
+    def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_split") -> List[Dict]:
+        """Process a PDF containing multiple deeds with intelligent deed boundary detection
         
-        try:
-            # Extract deed text
-            deed_text = self.extract_deed_text(
-                full_text, 
-                boundary['start_position'], 
-                boundary['end_position']
-            )
+        Args:
+            pdf_path: Path to PDF file containing multiple deeds
+            strategy: "page_based", "smart_split", or "llm_boundaries"
+        
+        Returns:
+            List of classification results, one per deed
+        """
+        print(f"Processing multi-deed document: {pdf_path}")
+        print(f"Strategy: {strategy}")
+        
+        results = []
+        
+        if strategy == "page_based":
+            # Simple approach: each page is a deed
+            return self._process_page_based_deeds(pdf_path)
+        
+        elif strategy in ["smart_split", "llm_boundaries"]:
+            # Advanced approach: detect deed boundaries using LLM
+            return self._process_with_boundary_detection(pdf_path)
+        
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
+
+    def _process_page_based_deeds(self, pdf_path: str) -> List[Dict]:
+        """Simple page-based processing - each page is a separate deed"""
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        results = []
+        
+        print(f"Processing {total_pages} pages as separate deeds")
+        
+        for page_num in range(total_pages):
+            current_page = page_num + 1
+            print(f"\n--- PROCESSING DEED {current_page}/{total_pages} (Page {current_page}) ---")
             
-            print(f"Deed {deed_num} text length: {len(deed_text)} characters")
+            try:
+                # Convert page to image and extract text
+                page = doc.load_page(page_num)
+                mat = fitz.Matrix(2, 2)
+                pix = page.get_pixmap(matrix=mat)
+                img_data = pix.tobytes("png")
+                image = Image.open(BytesIO(img_data))
+                
+                page_text = self.extract_text_with_claude(image, 8000)
+                print(f"Extracted {len(page_text)} characters from page {current_page}")
+                
+                # Classify the deed
+                classification_result = self.classifier.classify_document(
+                    page_text,
+                    max_samples=6,
+                    confidence_threshold=0.7,
+                    high_recall_mode=False
+                )
+                
+                deed_result = {
+                    'deed_number': current_page,
+                    'page_numbers': [current_page],
+                    'document_path': pdf_path,
+                    'strategy': 'page_based',
+                    'ocr_text': page_text,
+                    'ocr_text_length': len(page_text),
+                    'classification': classification_result.predicted_class,
+                    'confidence': classification_result.confidence,
+                    'votes': classification_result.votes,
+                    'samples_used': classification_result.samples_used,
+                    'early_stopped': classification_result.early_stopped,
+                    'status': 'success'
+                }
+                
+                results.append(deed_result)
+                
+                print(f"Deed {current_page}: {classification_result.predicted_class} ({'Oil & Gas Reservations' if classification_result.predicted_class == 1 else 'No Reservations'}) (conf: {classification_result.confidence:.3f})")
+                
+            except Exception as e:
+                print(f"Error processing page {current_page}: {e}")
+                results.append({
+                    'deed_number': current_page,
+                    'page_numbers': [current_page],
+                    'document_path': pdf_path,
+                    'strategy': 'page_based',
+                    'status': 'error',
+                    'error': str(e),
+                    'classification': 0,
+                    'confidence': 0.0
+                })
+        
+        doc.close()
+        return results
+
+    def _process_with_boundary_detection(self, pdf_path: str) -> List[Dict]:
+        """Advanced processing with LLM-based deed boundary detection"""
+        
+        # Step 1: Extract all text from the document
+        print("Step 1: Extracting full document text...")
+        images = self.pdf_to_images(pdf_path)
+        full_text = self.extract_text_from_multiple_pages(images, 8000, "concatenate")
+        
+        print(f"Extracted {len(full_text)} total characters from {len(images)} pages")
+        
+        # Step 2: Use LLM to detect deed boundaries
+        print("Step 2: Detecting deed boundaries using LLM...")
+        deed_boundaries = self.detect_deed_boundaries(full_text)
+        
+        print(f"Detected {len(deed_boundaries)} deeds:")
+        for boundary in deed_boundaries:
+            print(f"  Deed {boundary['deed_number']}: chars {boundary['start_position']}-{boundary['end_position']}")
+            print(f"    Description: {boundary.get('description', 'No description')}")
+        
+        # Step 3: Process each detected deed
+        results = []
+        
+        for boundary in deed_boundaries:
+            deed_num = boundary['deed_number']
+            print(f"\n--- PROCESSING DEED {deed_num}/{len(deed_boundaries)} ---")
             
-            # Classify the deed
-            classification_result = self.classifier.classify_document(
-                deed_text,
-                max_samples=6,
-                confidence_threshold=0.7,
-                high_recall_mode=False
-            )
-            
-            deed_result = {
-                'deed_number': deed_num,
-                'document_path': pdf_path,
-                'strategy': 'llm_boundaries',
-                'boundary_info': boundary,
-                'ocr_text': deed_text,
-                'ocr_text_length': len(deed_text),
-                'classification': classification_result.predicted_class,
-                'confidence': classification_result.confidence,
-                'votes': classification_result.votes,
-                'samples_used': classification_result.samples_used,
-                'early_stopped': classification_result.early_stopped,
-                'status': 'success'
-            }
-            
-            results.append(deed_result)
-            
-            print(f"Deed {deed_num}: {classification_result.predicted_class} ({'Oil & Gas Reservations' if classification_result.predicted_class == 1 else 'No Reservations'}) (conf: {classification_result.confidence:.3f})")
-            
-        except Exception as e:
-            print(f"Error processing deed {deed_num}: {e}")
-            results.append({
-                'deed_number': deed_num,
-                'document_path': pdf_path,
-                'strategy': 'llm_boundaries',
-                'boundary_info': boundary,
-                'status': 'error',
-                'error': str(e),
-                'classification': 0,
-                'confidence': 0.0
-            })
-    
-    return results
+            try:
+                # Extract deed text
+                deed_text = self.extract_deed_text(
+                    full_text, 
+                    boundary['start_position'], 
+                    boundary['end_position']
+                )
+                
+                print(f"Deed {deed_num} text length: {len(deed_text)} characters")
+                
+                # Classify the deed
+                classification_result = self.classifier.classify_document(
+                    deed_text,
+                    max_samples=6,
+                    confidence_threshold=0.7,
+                    high_recall_mode=False
+                )
+                
+                deed_result = {
+                    'deed_number': deed_num,
+                    'document_path': pdf_path,
+                    'strategy': 'llm_boundaries',
+                    'boundary_info': boundary,
+                    'ocr_text': deed_text,
+                    'ocr_text_length': len(deed_text),
+                    'classification': classification_result.predicted_class,
+                    'confidence': classification_result.confidence,
+                    'votes': classification_result.votes,
+                    'samples_used': classification_result.samples_used,
+                    'early_stopped': classification_result.early_stopped,
+                    'status': 'success'
+                }
+                
+                results.append(deed_result)
+                
+                print(f"Deed {deed_num}: {classification_result.predicted_class} ({'Oil & Gas Reservations' if classification_result.predicted_class == 1 else 'No Reservations'}) (conf: {classification_result.confidence:.3f})")
+                
+            except Exception as e:
+                print(f"Error processing deed {deed_num}: {e}")
+                results.append({
+                    'deed_number': deed_num,
+                    'document_path': pdf_path,
+                    'strategy': 'llm_boundaries',
+                    'boundary_info': boundary,
+                    'status': 'error',
+                    'error': str(e),
+                    'classification': 0,
+                    'confidence': 0.0
+                })
+        
+        return results
 
 
 def main() -> None:
