@@ -408,9 +408,437 @@ Reasoning: Explain your decision in 1-2 sentences, citing specific language if r
 OilGasRightsClassifier = ImprovedOilGasRightsClassifier
 
 
+class DocumentProcessor:
+    """Complete pipeline from PDF to classification"""
+    
+    def __init__(self, api_key: str = None):
+        try:
+            self.classifier = OilGasRightsClassifier(api_key)
+            print("✅ Document processor initialized successfully")
+        except Exception as e:
+            print(f"❌ Failed to initialize document processor: {e}")
+            raise
+        
+    def pdf_to_image(self, pdf_path: str) -> Image.Image:
+        """Convert PDF to high-quality image (first page only - legacy method)"""
+        doc = fitz.open(pdf_path)
+        page = doc.load_page(0)
+        mat = fitz.Matrix(2, 2)  # 2x zoom for quality
+        pix = page.get_pixmap(matrix=mat)
+        img_data = pix.tobytes("png")
+        doc.close()
+        return Image.open(BytesIO(img_data))
+    
+    def pdf_to_images(self, pdf_path: str, max_pages: int = None) -> List[Image.Image]:
+        """Convert PDF pages to high-quality images
+        
+        Args:
+            pdf_path: Path to PDF file
+            max_pages: Maximum number of pages to process (None = all pages)
+        """
+        doc = fitz.open(pdf_path)
+        images = []
+        
+        total_pages = len(doc)
+        pages_to_process = min(total_pages, max_pages) if max_pages else total_pages
+        
+        print(f"Converting {pages_to_process} pages to images (total pages: {total_pages})")
+        
+        for page_num in range(pages_to_process):
+            page = doc.load_page(page_num)
+            mat = fitz.Matrix(2, 2)  # 2x zoom for quality
+            pix = page.get_pixmap(matrix=mat)
+            img_data = pix.tobytes("png")
+            images.append(Image.open(BytesIO(img_data)))
+            
+        doc.close()
+        return images
+    
+    def get_smart_pages(self, pdf_path: str, strategy: str = "first_few") -> List[int]:
+        """Smart page selection based on strategy
+        
+        Args:
+            pdf_path: Path to PDF file
+            strategy: "first_few", "first_and_last", "all", or "first_only"
+        """
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        doc.close()
+        
+        if strategy == "first_only":
+            return [0] if total_pages > 0 else []
+        elif strategy == "first_few":
+            # First 3 pages (where mineral rights clauses typically appear)
+            return list(range(min(3, total_pages)))
+        elif strategy == "first_and_last":
+            # First 2 pages and last page
+            if total_pages <= 2:
+                return list(range(total_pages))
+            else:
+                return [0, 1, total_pages - 1]
+        elif strategy == "all":
+            return list(range(total_pages))
+        else:
+            raise ValueError(f"Unknown strategy: {strategy}")
+    
+    def extract_text_with_claude(self, image: Image.Image, max_tokens: int = 8000) -> str:
+        """Extract text using Claude OCR with configurable token limit"""
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        img_base64 = base64.b64encode(buffered.getvalue()).decode()
+        
+        # Retry logic for network issues
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                response = self.classifier.client.messages.create(
+                    model="claude-3-5-sonnet-20241022",
+                    max_tokens=max_tokens,  # Configurable token limit
+                    messages=[{
+                        "role": "user",
+                        "content": [
+                            {
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": "image/png",
+                                    "data": img_base64
+                                }
+                            },
+                            {
+                                "type": "text",
+                                "text": "Extract ALL text from this legal deed document. Pay special attention to any mineral rights reservations but do not make any judgment. Format as clean text. Avoid any commentary."
+                            }
+                        ]
+                    }]
+                )
+                
+                return response.content[0].text
+                
+            except anthropic.APIError as e:
+                print(f"Anthropic API error during OCR (attempt {attempt + 1}): {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(2 ** attempt)  # Exponential backoff
+                    continue
+                raise Exception(f"OCR failed after {max_retries} attempts: {e}")
+            except Exception as e:
+                print(f"Unexpected error during OCR (attempt {attempt + 1}): {e}")
+                if attempt < max_retries - 1:
+                    time.sleep(1)
+                    continue
+                raise Exception(f"OCR failed after {max_retries} attempts: {e}")
+        
+        raise Exception("OCR failed - should not reach here")
+    
+    def extract_text_from_multiple_pages(self, images: List[Image.Image], 
+                                       max_tokens_per_page: int = 8000,
+                                       combine_method: str = "concatenate") -> str:
+        """Extract text from multiple page images
+        
+        Args:
+            images: List of page images
+            max_tokens_per_page: Token limit per page
+            combine_method: "concatenate" or "summarize"
+        """
+        all_text = []
+        
+        for i, image in enumerate(images, 1):
+            print(f"Extracting text from page {i}/{len(images)}...")
+            try:
+                page_text = self.extract_text_with_claude(image, max_tokens_per_page)
+                all_text.append(f"=== PAGE {i} ===\n{page_text}")
+            except Exception as e:
+                print(f"Error extracting text from page {i}: {e}")
+                all_text.append(f"=== PAGE {i} ===\n[ERROR: Could not extract text]")
+        
+        if combine_method == "concatenate":
+            return "\n\n".join(all_text)
+        elif combine_method == "summarize":
+            # For very long documents, we could implement summarization here
+            combined = "\n\n".join(all_text)
+            if len(combined) > 50000:  # If too long, truncate with warning
+                print("Warning: Combined text is very long, truncating...")
+                return combined[:50000] + "\n\n[TRUNCATED - Document continues...]"
+            return combined
+        else:
+            raise ValueError(f"Unknown combine_method: {combine_method}")
+    
+    def process_document(self, pdf_path: str, max_samples: int = 8, 
+                        confidence_threshold: float = 0.7,
+                        page_strategy: str = "sequential_early_stop",
+                        max_pages: int = None,
+                        max_tokens_per_page: int = 8000,
+                        combine_method: str = "early_stop",
+                        high_recall_mode: bool = False) -> dict:
+        """Complete pipeline: PDF -> OCR -> Classification with high recall mode
+        
+        Args:
+            pdf_path: Path to PDF file
+            max_samples: Maximum classification samples per chunk
+            confidence_threshold: Early stopping threshold for classification
+            page_strategy: "sequential_early_stop" (default), "first_only", "first_few", "first_and_last", "all"
+            max_pages: Maximum pages to process (overrides strategy if set)
+            max_tokens_per_page: Token limit per page for OCR
+            combine_method: "early_stop" (default), "concatenate", "summarize"
+        """
+        
+        print(f"Processing: {pdf_path}")
+        print(f"Page strategy: {page_strategy}")
+        print(f"Max tokens per page: {max_tokens_per_page}")
+        if high_recall_mode:
+            print("🎯 BALANCED HIGH RECALL MODE – Good sensitivity while maintaining accuracy")
+        else:
+            print("🎯 CONSERVATIVE (High Specificity) MODE – Extra-cautious, prioritising specificity")
+        
+        # Use sequential early stopping by default
+        if page_strategy == "sequential_early_stop" or combine_method == "early_stop":
+            return self._process_with_early_stopping(
+                pdf_path,
+                max_samples,
+                confidence_threshold,
+                max_tokens_per_page,
+                max_pages,
+                high_recall_mode,
+            )
+        
+        # Legacy processing for other strategies
+        # Step 1: Determine which pages to process
+        if max_pages is not None:
+            # Use max_pages override
+            images = self.pdf_to_images(pdf_path, max_pages)
+        else:
+            # Use smart page selection
+            page_numbers = self.get_smart_pages(pdf_path, page_strategy)
+            print(f"Selected pages: {[p+1 for p in page_numbers]}")  # Convert to 1-indexed for display
+            
+            if page_strategy == "first_only":
+                # Use legacy single-page method for backward compatibility
+                image = self.pdf_to_image(pdf_path)
+                images = [image]
+            else:
+                # Process selected pages
+                doc = fitz.open(pdf_path)
+                images = []
+                for page_num in page_numbers:
+                    page = doc.load_page(page_num)
+                    mat = fitz.Matrix(2, 2)
+                    pix = page.get_pixmap(matrix=mat)
+                    img_data = pix.tobytes("png")
+                    images.append(Image.open(BytesIO(img_data)))
+                doc.close()
+        
+        # Step 2: Extract text from all selected pages
+        print("Extracting text with Claude OCR...")
+        if len(images) == 1:
+            ocr_text = self.extract_text_with_claude(images[0], max_tokens_per_page)
+        else:
+            ocr_text = self.extract_text_from_multiple_pages(
+                images, max_tokens_per_page, combine_method
+            )
+        
+        print(f"Extracted text length: {len(ocr_text)} characters")
+        
+        # Step 3: Classify with self-consistent sampling (always high recall)
+        print("Classifying document...")
+        classification_result = self.classifier.classify_document(
+            ocr_text, max_samples, confidence_threshold, high_recall_mode=high_recall_mode
+        )
+        
+        return {
+            'document_path': pdf_path,
+            'pages_processed': len(images),
+            'page_strategy': page_strategy,
+            'max_tokens_per_page': max_tokens_per_page,
+            'high_recall_mode': high_recall_mode,
+            'ocr_text': ocr_text,
+            'ocr_text_length': len(ocr_text),
+            'classification': classification_result.predicted_class,
+            'confidence': classification_result.confidence,
+            'votes': classification_result.votes,
+            'samples_used': classification_result.samples_used,
+            'early_stopped': classification_result.early_stopped,
+            'chunk_analysis': [],  # Empty for legacy mode
+            'stopped_at_chunk': None,
+            'detailed_samples': [
+                {
+                    'predicted_class': s.predicted_class,
+                    'reasoning': s.reasoning,
+                    'confidence_score': s.confidence_score,
+                    'features': s.features
+                }
+                for s in classification_result.all_samples
+            ]
+        }
+    
+    def _process_with_early_stopping(self, pdf_path: str, max_samples: int, 
+                                   confidence_threshold: float, max_tokens_per_page: int, 
+                                   max_pages: int = None, high_recall_mode: bool = False) -> dict:
+        """Process document chunk by chunk with early stopping when reservations are found"""
+        
+        print("Using chunk-by-chunk early stopping analysis")
+        mode_label = (
+            "BALANCED HIGH RECALL"
+            if high_recall_mode
+            else "CONSERVATIVE (High Specificity)"
+        )
+        mode_msg = (
+            "Good sensitivity while maintaining accuracy"
+            if high_recall_mode
+            else "Extra-cautious, prioritising specificity"
+        )
+        print(f"🛈 {mode_label} MODE – {mode_msg}")
+        
+        # Open PDF and get total pages
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        pages_to_process = min(total_pages, max_pages) if max_pages else total_pages
+        
+        print(f"Document has {total_pages} pages, will process up to {pages_to_process} if needed")
+        
+        chunk_analysis = []
+        all_ocr_text = []
+        stopped_at_chunk = None
+        unread_pages = []
+        
+        # Process page by page with early stopping
+        for page_num in range(pages_to_process):
+            current_page = page_num + 1
+            print(f"\n--- PROCESSING CHUNK {current_page}/{pages_to_process} ---")
+            
+            # Convert current page to image
+            page = doc.load_page(page_num)
+            mat = fitz.Matrix(2, 2)  # 2x zoom for quality
+            pix = page.get_pixmap(matrix=mat)
+            img_data = pix.tobytes("png")
+            image = Image.open(BytesIO(img_data))
+            
+            # Extract text from current page
+            print(f"Extracting text from page {current_page}...")
+            try:
+                page_text = self.extract_text_with_claude(image, max_tokens_per_page)
+                all_ocr_text.append(f"=== PAGE {current_page} ===\n{page_text}")
+                print(f"Extracted {len(page_text)} characters from page {current_page}")
+            
+            except Exception as e:
+                print(f"Error extracting text from page {current_page}: {e}")
+                # record failure and skip classification for this page
+                unread_pages.append(current_page)
+                chunk_analysis.append({
+                    "page_number": current_page,
+                    "status": "ocr_failed",
+                    "error": str(e),
+                })   
+                continue
+            
+            # Classify current chunk (always high recall)
+            print(f"Analyzing page {current_page} for oil and gas reservations...")
+            
+            classification_result = self.classifier.classify_document(
+                page_text,
+                max_samples,
+                confidence_threshold,
+                high_recall_mode=high_recall_mode,
+            )
+            
+            chunk_info = {
+                'page_number': current_page,
+                'text_length': len(page_text),
+                'classification': classification_result.predicted_class,
+                'confidence': classification_result.confidence,
+                'votes': classification_result.votes,
+                'samples_used': classification_result.samples_used,
+                'early_stopped': classification_result.early_stopped,
+                'page_text': page_text,
+                'high_recall_mode': high_recall_mode
+            }
+        
+            chunk_analysis.append(chunk_info)
+            
+            print(f"Page {current_page} analysis:")
+            print(f"  Classification: {classification_result.predicted_class} ({'Has Oil and Gas Reservations' if classification_result.predicted_class == 1 else 'No Oil and Gas Reservations'})")
+            print(f"  Confidence: {classification_result.confidence:.3f}")
+            print(f"  Samples used: {classification_result.samples_used}")
+            
+            # EARLY STOPPING: If oil and gas reservations found, stop here!
+            if classification_result.predicted_class == 1:
+                print(f"🎯 OIL AND GAS RESERVATIONS FOUND in page {current_page}! Stopping analysis here.")
+                stopped_at_chunk = current_page
+                doc.close()
+                
+                return {
+                    'document_path': pdf_path,
+                    'pages_processed': current_page,
+                    'page_strategy': "sequential_early_stop",
+                    'max_tokens_per_page': max_tokens_per_page,
+                    'high_recall_mode': high_recall_mode,
+                    'ocr_text': "\n\n".join(all_ocr_text),
+                    'ocr_text_length': sum(len(chunk.get('page_text', '')) for chunk in chunk_analysis),
+                    'classification': 1,  # Found oil and gas reservations
+                    'confidence': classification_result.confidence,
+                    'votes': classification_result.votes,
+                    'samples_used': classification_result.samples_used,
+                    'early_stopped': True,  # Stopped early due to finding oil and gas reservations
+                    'chunk_analysis': chunk_analysis,
+                    'stopped_at_chunk': stopped_at_chunk,
+                    'total_pages_in_document': total_pages,
+                    'detailed_samples': [
+                        {
+                            'predicted_class': s.predicted_class,
+                            'reasoning': s.reasoning,
+                            'confidence_score': s.confidence_score,
+                            'features': s.features
+                        }
+                        for s in classification_result.all_samples
+                    ],
+                    'ocr_failed_pages': unread_pages,
+                    'requires_manual_review': len(unread_pages) > 0,
+                }
+            else:
+                print(f"No oil and gas reservations found in page {current_page}, continuing to next page...")
+        
+        doc.close()
+        
+        # If we get here, no oil and gas reservations were found in any page
+        print(f"\n✅ ANALYSIS COMPLETE: No oil and gas reservations found in any of the {pages_to_process} pages")
+        
+        # For final classification when no reservations found, use the last page's result
+        successful_chunks = [c for c in chunk_analysis if 'classification' in c]
+        if successful_chunks:
+            final_result = successful_chunks[-1]
+        else:  # every page failed OCR
+            final_result = {
+                'classification': 0,
+                'confidence': 0.0,
+                'votes': {0: 0.0, 1: 0.0},
+                'samples_used': 0,
+                'early_stopped': False
+            }
+        
+        return {
+            'document_path': pdf_path,
+            'pages_processed': pages_to_process,
+            'page_strategy': "sequential_early_stop",
+            'max_tokens_per_page': max_tokens_per_page,
+            'high_recall_mode': high_recall_mode,
+            'ocr_text': "\n\n".join(all_ocr_text),
+            'ocr_text_length': sum(len(chunk.get('page_text', '')) for chunk in chunk_analysis),
+            'classification': final_result['classification'],
+            'confidence': final_result['confidence'],
+            'votes': final_result['votes'],
+            'samples_used': final_result['samples_used'],
+            'early_stopped': final_result['early_stopped'],
+            'chunk_analysis': chunk_analysis,
+            'stopped_at_chunk': stopped_at_chunk,
+            'total_pages_in_document': total_pages,
+            'detailed_samples': [],  # Could aggregate all samples if needed
+            'ocr_failed_pages': unread_pages,
+            'requires_manual_review': len(unread_pages) > 0,
+        }
+
+
 def main() -> None:
     api_key = os.getenv("ANTHROPIC_API_KEY")
-    clf = OilGasRightsClassifier(api_key=api_key)
+    clf = ImprovedOilGasRightsClassifier(api_key=api_key)
 
     pdf_path = "data/reservs/Washington DB 405_547.pdf"
     result = clf.process_document(
