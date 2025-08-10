@@ -840,64 +840,217 @@ class DocumentProcessor:
     # ─────────────────────────────────────────────────────────────────────────────────────
 
     def detect_deed_boundaries(self, full_text: str) -> List[Dict]:
-        """Use LLM to detect deed boundaries in multi-deed document
+        """Use LLM to detect deed boundaries in multi-deed document with improved parsing"""
         
-        Returns:
-            List of deed boundaries with start/end positions and metadata
-        """
+        # Strategy 1: Try pattern-based detection first
+        pattern_boundaries = self._detect_boundaries_by_patterns(full_text)
+        if len(pattern_boundaries) > 1:
+            print(f"Pattern-based detection found {len(pattern_boundaries)} deeds")
+            return pattern_boundaries
         
-        boundary_prompt = f"""You are analyzing a legal document that contains multiple property deeds. Your task is to identify where each individual deed starts and ends.
+        # Strategy 2: Use LLM with improved prompt and parsing
+        return self._detect_boundaries_with_llm(full_text)
 
-DOCUMENT TEXT:
-\"\"\"{full_text[:20000]}\"\"\"
+    def _detect_boundaries_by_patterns(self, full_text: str) -> List[Dict]:
+        """Use regex patterns to detect deed boundaries"""
+        
+        # Common deed start patterns
+        deed_start_patterns = [
+            r'(?i)(?:KNOW ALL (?:MEN|PEOPLE) BY THESE PRESENTS)',
+            r'(?i)(?:THIS INDENTURE|THIS DEED)',
+            r'(?i)(?:WARRANTY DEED|QUIT.?CLAIM DEED|GENERAL WARRANTY DEED)',
+            r'(?i)(?:STATE OF \w+.*?COUNTY OF \w+)',
+            r'(?i)(?:GRANTORS?.*?GRANTEES?)',
+            r'(?i)(?:FOR AND IN CONSIDERATION)',
+            r'(?i)(?:Book \d+.*?Page \d+)',  # Recording references
+        ]
+        
+        boundaries = []
+        deed_starts = []
+        
+        # Find all potential deed starts
+        for pattern in deed_start_patterns:
+            matches = list(re.finditer(pattern, full_text))
+            for match in matches:
+                deed_starts.append({
+                    'position': match.start(),
+                    'pattern': pattern,
+                    'matched_text': match.group()[:50]
+                })
+        
+        # Sort by position and remove duplicates that are too close
+        deed_starts.sort(key=lambda x: x['position'])
+        filtered_starts = []
+        
+        for start in deed_starts:
+            if not filtered_starts or start['position'] - filtered_starts[-1]['position'] > 500:
+                filtered_starts.append(start)
+        
+        # Create boundaries
+        for i, start in enumerate(filtered_starts):
+            end_pos = filtered_starts[i + 1]['position'] if i + 1 < len(filtered_starts) else len(full_text)
+            
+            # Extract a snippet for description
+            snippet = full_text[start['position']:start['position'] + 200]
+            description = f"Deed starting at char {start['position']}: {snippet[:100]}..."
+            
+            boundaries.append({
+                'deed_number': i + 1,
+                'start_position': start['position'],
+                'end_position': end_pos,
+                'description': description,
+                'detection_method': 'pattern'
+            })
+        
+        return boundaries
 
-Please identify all individual deeds in this document. For each deed, provide:
-1. The approximate character position where it starts
-2. The approximate character position where it ends  
-3. A brief description of the deed (grantors, grantees, property description)
+    def _detect_boundaries_with_llm(self, full_text: str) -> List[Dict]:
+        """Use LLM with improved prompt and JSON extraction"""
+        
+        # Use a larger sample but still manageable
+        sample_text = full_text[:25000] if len(full_text) > 25000 else full_text
+        
+        boundary_prompt = f"""You are analyzing a legal document containing multiple property deeds. Identify each individual deed's boundaries.
 
-Look for patterns like:
-- "KNOW ALL MEN BY THESE PRESENTS" or similar deed opening language
-- Grantor and grantee names
-- Property descriptions
-- Notary acknowledgments or signatures that end a deed
-- Recording information
+DOCUMENT TEXT (first 25,000 characters):
+\"\"\"{sample_text}\"\"\"
 
-Format your response as JSON:
+Instructions:
+1. Look for deed start indicators: "KNOW ALL MEN", "THIS DEED", "WARRANTY DEED", "State of [State] County of [County]", recording information
+2. Look for deed end indicators: notary acknowledgments, signatures, "WITNESS", recording stamps
+3. Provide approximate character positions within the text above
+
+Respond with ONLY valid JSON in this exact format:
 {{
   "deeds": [
     {{
       "deed_number": 1,
       "start_position": 0,
       "end_position": 1500,
-      "description": "Deed from John Smith to Jane Doe for Lot 1"
-    }},
-    ...
+      "description": "Brief description"
+    }}
   ]
 }}
 
-If you cannot clearly identify multiple deeds, return a single deed covering the entire document."""
+If multiple deeds are unclear, provide your best estimate. If only one deed is identifiable, return just one deed covering the full text."""
 
         try:
             response = self.classifier.client.messages.create(
                 model="claude-3-5-sonnet-20241022",
-                max_tokens=2000,
+                max_tokens=3000,
                 messages=[{"role": "user", "content": boundary_prompt}]
             )
             
-            # Parse JSON response
-            boundary_data = json.loads(response.content[0].text)
-            return boundary_data.get("deeds", [])
+            response_text = response.content[0].text.strip()
+            
+            # Extract JSON more robustly
+            boundary_data = self._extract_json_from_response(response_text)
+            
+            if boundary_data and "deeds" in boundary_data:
+                deeds = boundary_data["deeds"]
+                
+                # Validate and fix positions
+                validated_deeds = []
+                for deed in deeds:
+                    if isinstance(deed, dict) and all(k in deed for k in ['deed_number', 'start_position', 'end_position']):
+                        # Ensure positions are within bounds
+                        start_pos = max(0, min(deed['start_position'], len(full_text)))
+                        end_pos = max(start_pos + 100, min(deed['end_position'], len(full_text)))
+                        
+                        validated_deeds.append({
+                            'deed_number': deed['deed_number'],
+                            'start_position': start_pos,
+                            'end_position': end_pos,
+                            'description': deed.get('description', f"Deed {deed['deed_number']}"),
+                            'detection_method': 'llm'
+                        })
+                
+                if validated_deeds:
+                    print(f"LLM detection found {len(validated_deeds)} deeds")
+                    return validated_deeds
             
         except Exception as e:
-            print(f"Error detecting deed boundaries: {e}")
-            # Fallback: treat entire document as single deed
-            return [{
-                "deed_number": 1,
-                "start_position": 0,
-                "end_position": len(full_text),
-                "description": "Full document (boundary detection failed)"
-            }]
+            print(f"LLM boundary detection failed: {e}")
+        
+        # Final fallback: split by page estimate
+        return self._fallback_page_based_split(full_text)
+
+    def _extract_json_from_response(self, response_text: str) -> Dict:
+        """Extract JSON from LLM response that may contain extra text"""
+        
+        # Try to find JSON block
+        json_patterns = [
+            r'\{[\s\S]*\}',  # Any text between outermost braces
+            r'```json\s*(\{[\s\S]*?\})\s*```',  # JSON in code blocks
+            r'```\s*(\{[\s\S]*?\})\s*```',  # JSON in plain code blocks
+        ]
+        
+        for pattern in json_patterns:
+            matches = re.findall(pattern, response_text)
+            for match in matches:
+                try:
+                    return json.loads(match)
+                except json.JSONDecodeError:
+                    continue
+        
+        # Try parsing the whole response
+        try:
+            return json.loads(response_text)
+        except json.JSONDecodeError:
+            pass
+        
+        return None
+
+    def _fallback_page_based_split(self, full_text: str) -> List[Dict]:
+        """Fallback: estimate deed boundaries based on page breaks"""
+        
+        # Look for page break indicators
+        page_patterns = [
+            r'=== PAGE \d+ ===',
+            r'Page \d+',
+            r'\f',  # Form feed character
+        ]
+        
+        page_breaks = []
+        for pattern in page_patterns:
+            matches = list(re.finditer(pattern, full_text))
+            page_breaks.extend([m.start() for m in matches])
+        
+        page_breaks = sorted(set(page_breaks))
+        
+        if len(page_breaks) >= 2:
+            # Estimate 2-3 pages per deed
+            deeds = []
+            pages_per_deed = max(2, len(page_breaks) // 6)  # Assuming 6 deeds
+            
+            deed_num = 1
+            for i in range(0, len(page_breaks), pages_per_deed):
+                start_pos = page_breaks[i] if i < len(page_breaks) else 0
+                end_pos = page_breaks[i + pages_per_deed] if i + pages_per_deed < len(page_breaks) else len(full_text)
+                
+                deeds.append({
+                    'deed_number': deed_num,
+                    'start_position': start_pos,
+                    'end_position': end_pos,
+                    'description': f"Deed {deed_num} (estimated from page breaks)",
+                    'detection_method': 'page_based_fallback'
+                })
+                deed_num += 1
+                
+                if end_pos >= len(full_text):
+                    break
+            
+            print(f"Page-based fallback found {len(deeds)} estimated deeds")
+            return deeds
+        
+        # Ultimate fallback: single deed
+        return [{
+            "deed_number": 1,
+            "start_position": 0,
+            "end_position": len(full_text),
+            "description": "Full document (all detection methods failed)",
+            "detection_method": "single_deed_fallback"
+        }]
 
     def extract_deed_text(self, full_text: str, start_pos: int, end_pos: int) -> str:
         """Extract text for a specific deed based on character positions"""
