@@ -16,7 +16,30 @@ export default function Home() {
 
   const handleFiles = async (files: File[]) => {
     setIsRunning(true);
-    await predictBatch(files, processingMode, splittingStrategy, setRows);
+    
+    // Create initial rows for the new files and add them to existing rows
+    const newFileRows: PredictionRow[] = files.map(f => ({
+      filename: f.name,
+      status: "waiting",
+      steps: [],
+      processingMode
+    }));
+    
+    // Add the new files to the existing rows immediately
+    setRows(prevRows => [...prevRows, ...newFileRows]);
+    
+    // Process the files and update only the new rows
+    await predictBatch(files, processingMode, splittingStrategy, (updatedNewRows) => {
+      // Update only the rows for the files being processed
+      setRows(prevRows => {
+        return prevRows.map(row => {
+          // Find if this row is one of the files being processed
+          const updatedRow = updatedNewRows.find(ur => ur.filename === row.filename);
+          return updatedRow || row; // Use updated version if found, otherwise keep original
+        });
+      });
+    });
+    
     setIsRunning(false);
   };
 
@@ -38,6 +61,10 @@ export default function Home() {
     a.download = "predictions.csv";
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  const clearAllResults = () => {
+    setRows([]);
   };
 
   return (
@@ -65,12 +92,20 @@ export default function Home() {
         <ResultsTable rows={rows} />
 
         {rows.length > 0 && (
-          <button
-            onClick={downloadCSV}
-            className="mt-6 inline-block bg-[color:var(--accent)] text-white px-4 py-2 rounded hover:brightness-110"
-          >
-            Download CSV
-          </button>
+          <div className="mt-6 flex gap-4">
+            <button
+              onClick={downloadCSV}
+              className="bg-[color:var(--accent)] text-white px-4 py-2 rounded hover:brightness-110"
+            >
+              Download CSV ({rows.length} files)
+            </button>
+            <button
+              onClick={clearAllResults}
+              className="bg-gray-500 text-white px-4 py-2 rounded hover:brightness-110"
+            >
+              Clear All Results
+            </button>
+          </div>
         )}
       </div>
     </main>
