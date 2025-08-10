@@ -12,6 +12,7 @@ import json
 import random
 import base64
 import tempfile
+import statistics
 from dataclasses import dataclass
 from pathlib import Path
 from io import BytesIO
@@ -839,218 +840,187 @@ class DocumentProcessor:
     # MULTI-DEED PROCESSING METHODS - Added without changing core logic
     # ─────────────────────────────────────────────────────────────────────────────────────
 
-    def detect_deed_boundaries(self, full_text: str) -> List[Dict]:
-        """Use LLM to detect deed boundaries in multi-deed document with improved parsing"""
-        
-        # Strategy 1: Try pattern-based detection first
-        pattern_boundaries = self._detect_boundaries_by_patterns(full_text)
-        if len(pattern_boundaries) > 1:
-            print(f"Pattern-based detection found {len(pattern_boundaries)} deeds")
-            return pattern_boundaries
-        
-        # Strategy 2: Use LLM with improved prompt and parsing
-        return self._detect_boundaries_with_llm(full_text)
+    def _page_spans_from_text(self, full_text: str):
+        """Extract page span positions from text markers"""
+        # Find "=== PAGE n ===" markers you already insert during OCR
+        page_markers = list(re.finditer(r'=== PAGE\s+(\d+)\s+===', full_text))
+        spans = []
+        for i, m in enumerate(page_markers):
+            start = m.start()
+            end = page_markers[i+1].start() if i+1 < len(page_markers) else len(full_text)
+            spans.append((start, end))
+        if not spans:
+            # Fallback: single page span
+            spans = [(0, len(full_text))]
+        return spans  # list of (start_idx, end_idx)
+
+    def _find_positions(self, text: str, patterns):
+        """Find all pattern matches with weights and sort by position"""
+        pos = []
+        for pat, weight in patterns:
+            for m in re.finditer(pat, text):
+                pos.append((m.start(), weight, pat))
+        pos.sort(key=lambda x: x[0])
+        return pos
 
     def _detect_boundaries_by_patterns(self, full_text: str) -> List[Dict]:
-        """Use regex patterns to detect deed boundaries"""
-        
-        # Common deed start patterns
-        deed_start_patterns = [
-            r'(?i)(?:KNOW ALL (?:MEN|PEOPLE) BY THESE PRESENTS)',
-            r'(?i)(?:THIS INDENTURE|THIS DEED)',
-            r'(?i)(?:WARRANTY DEED|QUIT.?CLAIM DEED|GENERAL WARRANTY DEED)',
-            r'(?i)(?:STATE OF \w+.*?COUNTY OF \w+)',
-            r'(?i)(?:GRANTORS?.*?GRANTEES?)',
-            r'(?i)(?:FOR AND IN CONSIDERATION)',
-            r'(?i)(?:Book \d+.*?Page \d+)',  # Recording references
+        """Conservative start detection + end markers + merging."""
+        page_spans = self._page_spans_from_text(full_text)
+        page_len_est = [end - start for (start, end) in page_spans]
+        avg_page_len = statistics.median(page_len_est) if page_len_est else 2500
+        min_start_gap = max(1500, int(0.5 * avg_page_len))  # was 500
+
+        # STRONG starts only (page-top-ish + deed heading)
+        START_STRONG = [
+            (r'(?mi)^\s*KNOW ALL (?:MEN|PEOPLE) BY THESE PRESENTS\b', 1.0),
+            (r'(?mi)^\s*THIS\s+(?:DEED|INDENTURE)\b', 1.0),
+            (r'(?mi)^\s*(?:GENERAL\s+)?WARRANTY\s+DEED\b', 1.0),
+            (r'(?mi)^\s*QUIT[ -]?CLAIM\s+DEED\b', 1.0),
+            (r'(?mi)^\s*SPECIAL\s+WARRANTY\s+DEED\b', 1.0),
+            (r'(?mi)^\s*MINERAL\s+DEED\b', 1.0),
+            # All-caps short line that contains DEED
+            (r'(?m)^(?=.{4,60}$)[A-Z\s]+DEED[A-Z\s]*$', 0.9),
         ]
-        
-        boundaries = []
-        deed_starts = []
-        
-        # Find all potential deed starts
-        for pattern in deed_start_patterns:
-            matches = list(re.finditer(pattern, full_text))
-            for match in matches:
-                deed_starts.append({
-                    'position': match.start(),
-                    'pattern': pattern,
-                    'matched_text': match.group()[:50]
-                })
-        
-        # Sort by position and remove duplicates that are too close
-        deed_starts.sort(key=lambda x: x['position'])
+
+        # WEAK starts (used only if also page-top AND nearby deed verbs)
+        START_WEAK = [
+            (r'(?mi)^\s*Prepared by\b', 0.4),
+            (r'(?mi)^\s*Return to\b', 0.4),
+            (r'(?mi)^\s*This deed was prepared\b', 0.5),
+            # NOTE: We intentionally do NOT include "State of X, County of Y" or "Book/Page" here.
+        ]
+
+        # End markers (acknowledgments / notary)
+        END_STRONG = [
+            (r'(?i)acknowledged before me', 1.0),
+            (r'(?i)sworn to and subscribed', 1.0),
+            (r'(?i)\bnotary public\b', 1.0),
+            (r'(?i)my commission expires', 0.9),
+            (r'(?i)witness my hand', 0.6),
+            (r'(?i)\bseal\b', 0.5),
+        ]
+
+        # Helper: map char index -> page index
+        def page_index_of(pos):
+            for i, (s, e) in enumerate(page_spans):
+                if s <= pos < e:
+                    return i
+            return len(page_spans) - 1
+
+        start_candidates = []
+        for pos, w, pat in self._find_positions(full_text, START_STRONG + START_WEAK):
+            pidx = page_index_of(pos)
+            pstart, pend = page_spans[pidx]
+            # gate to page-top region
+            near_top = (pos - pstart) <= 0.35 * (pend - pstart)
+            if not near_top and w < 0.9:
+                continue  # weak starts must be near top
+            # require deed-y context within next 500–700 chars
+            window = full_text[pos: min(pos + 700, pend)]
+            hits = 0
+            if re.search(r'(?i)\bgrantor[s]?\b', window): hits += 1
+            if re.search(r'(?i)\bgrantee[s]?\b', window): hits += 1
+            if re.search(r'(?i)\bconvey[s]?\b|\bgrant[s]?\b|\bbargain[s]?\b|\bsell[s]?\b|\bquitclaim[s]?\b', window): hits += 1
+            if re.search(r'(?i)\bfor and in consideration\b|\bDOLLARS\b|\$\s?\d', window): hits += 1
+            if re.search(r'(?i)\bsituat(?:e|ed)\b|\blegal description\b', window): hits += 1
+
+            score = w + 0.15 * hits
+            if score >= 1.1:  # threshold for accepting a start
+                start_candidates.append((pos, score, pat, pidx))
+
+        # sort & widen dedup window
+        start_candidates.sort(key=lambda x: x[0])
         filtered_starts = []
-        
-        for start in deed_starts:
-            if not filtered_starts or start['position'] - filtered_starts[-1]['position'] > 500:
-                filtered_starts.append(start)
-        
-        # Create boundaries
-        for i, start in enumerate(filtered_starts):
-            end_pos = filtered_starts[i + 1]['position'] if i + 1 < len(filtered_starts) else len(full_text)
-            
-            # Extract a snippet for description
-            snippet = full_text[start['position']:start['position'] + 200]
-            description = f"Deed starting at char {start['position']}: {snippet[:100]}..."
-            
+        for pos, score, pat, pidx in start_candidates:
+            if not filtered_starts:
+                filtered_starts.append((pos, score, pat, pidx))
+            else:
+                if pos - filtered_starts[-1][0] >= min_start_gap:
+                    filtered_starts.append((pos, score, pat, pidx))
+                else:
+                    # keep the stronger of the two
+                    if score > filtered_starts[-1][1]:
+                        filtered_starts[-1] = (pos, score, pat, pidx)
+
+        # find ends once, globally
+        end_positions = [p for (p, _w, _pat) in self._find_positions(full_text, END_STRONG)]
+
+        # Build segments by pairing each start to the first end after it;
+        # if no end before next start, we assume the next start is spurious unless it's much stronger.
+        boundaries = []
+        for i, (spos, sscore, spat, spage) in enumerate(filtered_starts):
+            next_start = filtered_starts[i+1][0] if i+1 < len(filtered_starts) else None
+            # first end after spos
+            epos_candidates = [e for e in end_positions if e > spos and (next_start is None or e < next_start)]
+            if epos_candidates:
+                epos = epos_candidates[0]
+            else:
+                # if no end before next start, tentatively extend to next page break or next start
+                if next_start is not None:
+                    epos = next_start
+                else:
+                    # last deed: run until end of doc (we'll tighten in refine pass)
+                    epos = len(full_text)
             boundaries.append({
-                'deed_number': i + 1,
-                'start_position': start['position'],
-                'end_position': end_pos,
-                'description': description,
+                'deed_number': len(boundaries) + 1,
+                'start_position': spos,
+                'end_position': epos,
+                'description': f"Start pattern: {spat} (score={sscore:.2f})",
                 'detection_method': 'pattern'
             })
-        
-        return boundaries
 
-    def _detect_boundaries_with_llm(self, full_text: str) -> List[Dict]:
-        """Use LLM with improved prompt and JSON extraction"""
-        
-        # Use a larger sample but still manageable
-        sample_text = full_text[:25000] if len(full_text) > 25000 else full_text
-        
-        boundary_prompt = f"""You are analyzing a legal document containing multiple property deeds. Identify each individual deed's boundaries.
+        # Refine / merge sanity pass
+        return self._refine_and_merge_boundaries(full_text, boundaries, page_spans, end_positions)
 
-DOCUMENT TEXT (first 25,000 characters):
-\"\"\"{sample_text}\"\"\"
+    def _refine_and_merge_boundaries(self, full_text, boundaries, page_spans, end_positions):
+        """Refine and merge boundaries based on various criteria"""
+        # 1) Ensure end follows start and spans have reasonable size
+        MIN_DEED_LEN = 800
+        MAX_DEEDS_CAP = max(1, len(page_spans))  # at most one per page as a default cap
 
-Instructions:
-1. Look for deed start indicators: "KNOW ALL MEN", "THIS DEED", "WARRANTY DEED", "State of [State] County of [County]", recording information
-2. Look for deed end indicators: notary acknowledgments, signatures, "WITNESS", recording stamps
-3. Provide approximate character positions within the text above
+        # Merge if too short or if there is no end marker inside
+        refined = []
+        for b in boundaries:
+            if not refined:
+                refined.append(b)
+                continue
+            prev = refined[-1]
+            # If there was no end marker between prev.start and this.start, it's likely the same deed
+            had_end_between = any(prev['start_position'] < e < b['start_position'] for e in end_positions)
+            short_prev = (prev['end_position'] - prev['start_position']) < MIN_DEED_LEN
+            if not had_end_between or short_prev:
+                # merge: extend prev end to this end
+                prev['end_position'] = max(prev['end_position'], b['end_position'])
+                prev['description'] += " | merged (no end marker/too short)"
+            else:
+                refined.append(b)
 
-Respond with ONLY valid JSON in this exact format:
-{{
-  "deeds": [
-    {{
-      "deed_number": 1,
-      "start_position": 0,
-      "end_position": 1500,
-      "description": "Brief description"
-    }}
-  ]
-}}
+        # 2) Re-index and clamp to page ends
+        final = []
+        for i, b in enumerate(refined, 1):
+            start = b['start_position']
+            end = max(start + MIN_DEED_LEN, b['end_position'])
+            final.append({
+                'deed_number': i,
+                'start_position': start,
+                'end_position': min(end, len(full_text)),
+                'description': b.get('description', f"Deed {i}"),
+                'detection_method': b.get('detection_method', 'pattern')
+            })
 
-If multiple deeds are unclear, provide your best estimate. If only one deed is identifiable, return just one deed covering the full text."""
+        # 3) Hard cap: if still more deeds than pages, collapse adjacent pairs until <= cap
+        while len(final) > MAX_DEEDS_CAP and len(final) > 1:
+            # merge the closest pair
+            gaps = [(final[i+1]['start_position'] - final[i]['end_position'], i) for i in range(len(final)-1)]
+            _, i = min(gaps, key=lambda x: abs(x[0]))
+            final[i]['end_position'] = final[i+1]['end_position']
+            final[i]['description'] += " | collapsed (cap)"
+            del final[i+1]
 
-        try:
-            response = self.classifier.client.messages.create(
-                model="claude-3-5-sonnet-20241022",
-                max_tokens=3000,
-                messages=[{"role": "user", "content": boundary_prompt}]
-            )
-            
-            response_text = response.content[0].text.strip()
-            
-            # Extract JSON more robustly
-            boundary_data = self._extract_json_from_response(response_text)
-            
-            if boundary_data and "deeds" in boundary_data:
-                deeds = boundary_data["deeds"]
-                
-                # Validate and fix positions
-                validated_deeds = []
-                for deed in deeds:
-                    if isinstance(deed, dict) and all(k in deed for k in ['deed_number', 'start_position', 'end_position']):
-                        # Ensure positions are within bounds
-                        start_pos = max(0, min(deed['start_position'], len(full_text)))
-                        end_pos = max(start_pos + 100, min(deed['end_position'], len(full_text)))
-                        
-                        validated_deeds.append({
-                            'deed_number': deed['deed_number'],
-                            'start_position': start_pos,
-                            'end_position': end_pos,
-                            'description': deed.get('description', f"Deed {deed['deed_number']}"),
-                            'detection_method': 'llm'
-                        })
-                
-                if validated_deeds:
-                    print(f"LLM detection found {len(validated_deeds)} deeds")
-                    return validated_deeds
-            
-        except Exception as e:
-            print(f"LLM boundary detection failed: {e}")
-        
-        # Final fallback: split by page estimate
-        return self._fallback_page_based_split(full_text)
-
-    def _extract_json_from_response(self, response_text: str) -> Dict:
-        """Extract JSON from LLM response that may contain extra text"""
-        
-        # Try to find JSON block
-        json_patterns = [
-            r'\{[\s\S]*\}',  # Any text between outermost braces
-            r'```json\s*(\{[\s\S]*?\})\s*```',  # JSON in code blocks
-            r'```\s*(\{[\s\S]*?\})\s*```',  # JSON in plain code blocks
-        ]
-        
-        for pattern in json_patterns:
-            matches = re.findall(pattern, response_text)
-            for match in matches:
-                try:
-                    return json.loads(match)
-                except json.JSONDecodeError:
-                    continue
-        
-        # Try parsing the whole response
-        try:
-            return json.loads(response_text)
-        except json.JSONDecodeError:
-            pass
-        
-        return None
-
-    def _fallback_page_based_split(self, full_text: str) -> List[Dict]:
-        """Fallback: estimate deed boundaries based on page breaks"""
-        
-        # Look for page break indicators
-        page_patterns = [
-            r'=== PAGE \d+ ===',
-            r'Page \d+',
-            r'\f',  # Form feed character
-        ]
-        
-        page_breaks = []
-        for pattern in page_patterns:
-            matches = list(re.finditer(pattern, full_text))
-            page_breaks.extend([m.start() for m in matches])
-        
-        page_breaks = sorted(set(page_breaks))
-        
-        if len(page_breaks) >= 2:
-            # Estimate 2-3 pages per deed
-            deeds = []
-            pages_per_deed = max(2, len(page_breaks) // 6)  # Assuming 6 deeds
-            
-            deed_num = 1
-            for i in range(0, len(page_breaks), pages_per_deed):
-                start_pos = page_breaks[i] if i < len(page_breaks) else 0
-                end_pos = page_breaks[i + pages_per_deed] if i + pages_per_deed < len(page_breaks) else len(full_text)
-                
-                deeds.append({
-                    'deed_number': deed_num,
-                    'start_position': start_pos,
-                    'end_position': end_pos,
-                    'description': f"Deed {deed_num} (estimated from page breaks)",
-                    'detection_method': 'page_based_fallback'
-                })
-                deed_num += 1
-                
-                if end_pos >= len(full_text):
-                    break
-            
-            print(f"Page-based fallback found {len(deeds)} estimated deeds")
-            return deeds
-        
-        # Ultimate fallback: single deed
-        return [{
-            "deed_number": 1,
-            "start_position": 0,
-            "end_position": len(full_text),
-            "description": "Full document (all detection methods failed)",
-            "detection_method": "single_deed_fallback"
-        }]
+        # Re-number
+        for i, b in enumerate(final, 1):
+            b['deed_number'] = i
+        return final
 
     def extract_deed_text(self, full_text: str, start_pos: int, end_pos: int) -> str:
         """Extract text for a specific deed based on character positions"""
