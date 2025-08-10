@@ -840,6 +840,25 @@ class DocumentProcessor:
     # MULTI-DEED PROCESSING METHODS - Added without changing core logic
     # ─────────────────────────────────────────────────────────────────────────────────────
 
+    def detect_deed_boundaries(self, full_text: str) -> List[Dict]:
+        """Use pattern-based detection to find deed boundaries in multi-deed document"""
+        
+        # Use the improved pattern-based detection
+        pattern_boundaries = self._detect_boundaries_by_patterns(full_text)
+        if len(pattern_boundaries) >= 1:
+            print(f"Pattern-based detection found {len(pattern_boundaries)} deeds")
+            return pattern_boundaries
+        
+        # Fallback: single deed
+        print("No deed boundaries detected, treating as single deed")
+        return [{
+            "deed_number": 1,
+            "start_position": 0,
+            "end_position": len(full_text),
+            "description": "Full document (no boundaries detected)",
+            "detection_method": "single_deed_fallback"
+        }]
+
     def _page_spans_from_text(self, full_text: str):
         """Extract page span positions from text markers"""
         # Find "=== PAGE n ===" markers you already insert during OCR
@@ -968,7 +987,7 @@ class DocumentProcessor:
                 'description': f"Start pattern: {spat} (score={sscore:.2f})",
                 'detection_method': 'pattern'
             })
-
+        
         # Refine / merge sanity pass
         return self._refine_and_merge_boundaries(full_text, boundaries, page_spans, end_positions)
 
