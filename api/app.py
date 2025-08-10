@@ -88,7 +88,16 @@ async def predict(
                         tmp_path, 
                         strategy=splitting_strategy
                     )
-                    log_q.put_nowait(f"__RESULT__{json.dumps(deed_results)}")
+                    
+                    # Wrap results in expected structure
+                    response = {
+                        "deed_results": deed_results,
+                        "total_deeds": len(deed_results),
+                        "summary": {
+                            "reservations_found": sum(1 for deed in deed_results if deed.get('classification') == 1)
+                        }
+                    }
+                    log_q.put_nowait(f"__RESULT__{json.dumps(response)}")
                 else:
                     raise ValueError(f"Unknown processing_mode: '{processing_mode}'")
                     

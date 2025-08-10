@@ -203,7 +203,7 @@ class ImprovedOilGasRightsClassifier:
         if high_recall_mode:
             raise RuntimeError("High specificity mode only.")
         
-        return f"""You are an expert legal document analyst specializing in oil and gas rights in real estate deeds. 
+        return f"""You are an expert legal document analyst specializing in oil and gas rights in real estate deeds.
 
 Your task: Determine if this document text contains a SUBSTANTIVE reservation of oil and gas rights.
 
@@ -593,7 +593,7 @@ class DocumentProcessor:
         # Use sequential early stopping by default
         if page_strategy == "sequential_early_stop" or combine_method == "early_stop":
             return self._process_with_early_stopping(
-                pdf_path,
+            pdf_path,
                 max_samples,
                 confidence_threshold,
                 max_tokens_per_page,
@@ -835,6 +835,10 @@ class DocumentProcessor:
             'requires_manual_review': len(unread_pages) > 0,
         }
 
+    # ─────────────────────────────────────────────────────────────────────────────────────
+    # MULTI-DEED PROCESSING METHODS - Added without changing core logic
+    # ─────────────────────────────────────────────────────────────────────────────────────
+
     def detect_deed_boundaries(self, full_text: str) -> List[Dict]:
         """Use LLM to detect deed boundaries in multi-deed document
         
@@ -882,7 +886,6 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
             )
             
             # Parse JSON response
-            import json
             boundary_data = json.loads(response.content[0].text)
             return boundary_data.get("deeds", [])
             
@@ -912,8 +915,6 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
         """
         print(f"Processing multi-deed document: {pdf_path}")
         print(f"Strategy: {strategy}")
-        
-        results = []
         
         if strategy == "page_based":
             # Simple approach: each page is a deed
@@ -949,7 +950,7 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
                 page_text = self.extract_text_with_claude(image, 8000)
                 print(f"Extracted {len(page_text)} characters from page {current_page}")
                 
-                # Classify the deed
+                # Classify the deed using SAME CORE LOGIC
                 classification_result = self.classifier.classify_document(
                     page_text,
                     max_samples=6,
@@ -962,6 +963,7 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
                     'page_numbers': [current_page],
                     'document_path': pdf_path,
                     'strategy': 'page_based',
+                    'processing_mode': 'multi_deed',
                     'ocr_text': page_text,
                     'ocr_text_length': len(page_text),
                     'classification': classification_result.predicted_class,
@@ -983,6 +985,7 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
                     'page_numbers': [current_page],
                     'document_path': pdf_path,
                     'strategy': 'page_based',
+                    'processing_mode': 'multi_deed',
                     'status': 'error',
                     'error': str(e),
                     'classification': 0,
@@ -1028,7 +1031,7 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
                 
                 print(f"Deed {deed_num} text length: {len(deed_text)} characters")
                 
-                # Classify the deed
+                # Classify the deed using SAME CORE LOGIC
                 classification_result = self.classifier.classify_document(
                     deed_text,
                     max_samples=6,
@@ -1040,6 +1043,7 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
                     'deed_number': deed_num,
                     'document_path': pdf_path,
                     'strategy': 'llm_boundaries',
+                    'processing_mode': 'multi_deed',
                     'boundary_info': boundary,
                     'ocr_text': deed_text,
                     'ocr_text_length': len(deed_text),
@@ -1061,6 +1065,7 @@ If you cannot clearly identify multiple deeds, return a single deed covering the
                     'deed_number': deed_num,
                     'document_path': pdf_path,
                     'strategy': 'llm_boundaries',
+                    'processing_mode': 'multi_deed',
                     'boundary_info': boundary,
                     'status': 'error',
                     'error': str(e),
