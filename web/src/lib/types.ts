@@ -2,6 +2,7 @@ export interface PredictionRow {
   filename: string;
   status: "waiting" | "processing" | "done" | "error";
   prediction?: string;
+  confidence?: number;  // NEW: Add confidence field
   explanation?: string;
   steps?: string[];         // for live log bubbles
   // New fields for multi-deed support

@@ -24,5 +24,5 @@ COPY src ./src
 # Expose the default FastAPI port
 EXPOSE 8000
 
-# Start the service
-CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000"] 
+# Start the service with extended timeouts for very long-running processes (8+ hours)
+CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-keep-alive", "28800", "--timeout-graceful-shutdown", "28800"] 

@@ -6,7 +6,7 @@ export function rowsToCSV(rows: PredictionRow[]): string {
   
   rows.forEach(row => {
     if (row.processingMode === "multi_deed" && row.deedResults) {
-      // For multi-deed, create a row for each individual deed with smart names
+      // For multi-deed, create a row for each individual deed
       row.deedResults.forEach(deed => {
         data.push({
           "Original File": row.filename,
@@ -39,7 +39,7 @@ export function rowsToCSV(rows: PredictionRow[]): string {
         "Deed Number": 1,
         Status: row.status,
         Prediction: row.prediction ?? "",
-        Confidence: "",
+        Confidence: row.confidence ? (row.confidence * 100).toFixed(1) + "%" : "",
         "Pages in Deed": "",
         Explanation: row.explanation ?? ""
       });

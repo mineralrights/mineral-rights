@@ -15,6 +15,7 @@ export default function ResultsTable({ rows }: Props) {
             <th className="px-4 py-2 text-left">File</th>
             <th className="px-4 py-2 text-left">Status</th>
             <th className="px-4 py-2 text-left">Prediction</th>
+            <th className="px-4 py-2 text-left">Confidence</th>
             <th className="px-4 py-2 text-left">Explanation</th>
             <th className="px-4 py-2 text-left">Details</th>
           </tr>
@@ -30,6 +31,11 @@ export default function ResultsTable({ rows }: Props) {
 function Row({ row }: { row: PredictionRow }) {
   const [open, setOpen] = useState(false);
 
+  const formatConfidence = (confidence?: number) => {
+    if (confidence === undefined) return "—";
+    return (confidence * 100).toFixed(0) + "%";
+  };
+
   return (
     <>
       <tr className="border-t odd:bg-gray-50">
@@ -38,6 +44,7 @@ function Row({ row }: { row: PredictionRow }) {
           <StatusBadge status={row.status} />
         </td>
         <td className="px-4 py-2">{row.prediction ?? "—"}</td>
+        <td className="px-4 py-2">{formatConfidence(row.confidence)}</td>
         <td className="px-4 py-2 whitespace-pre-wrap">{row.explanation ?? "—"}</td>
         <td className="px-4 py-2">
           {row.steps && (
@@ -50,9 +57,9 @@ function Row({ row }: { row: PredictionRow }) {
           )}
         </td>
       </tr>
-      {open && row.steps && (            // keeps rendering while processing
+      {open && row.steps && (
         <tr>
-          <td colSpan={5} className="bg-gray-50 px-6 py-4">
+          <td colSpan={6} className="bg-gray-50 px-6 py-4">
             {row.steps.map((s, i) => (
               <StepBubble key={i} text={s} />
             ))}
