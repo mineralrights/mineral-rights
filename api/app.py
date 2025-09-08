@@ -157,7 +157,12 @@ async def predict(
                 
                 if processing_mode == "single_deed":
                     print("📄 Using single deed processing")
-                    result = processor.process_document(tmp_path)
+                    result = processor.process_document(
+                        tmp_path,
+                        max_samples=3,  # Reduced from 8 to 3 for faster processing
+                        confidence_threshold=0.6,  # Slightly lower threshold
+                        high_recall_mode=True  # Use high recall mode for better accuracy with fewer samples
+                    )
                     log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
                 
                 elif processing_mode == "multi_deed":
