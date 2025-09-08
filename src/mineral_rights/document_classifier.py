@@ -688,24 +688,50 @@ class DocumentProcessor:
                 print(f"Warning: Could not clean up {file_path}: {e}")
 
     def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_detection") -> List[Dict]:
-        """Process PDF with multiple deeds"""
+        """Process PDF with multiple deeds using memory-efficient processing"""
+        
+        print(f"🔧 Starting multi-deed processing with strategy: {strategy}")
         
         # 1. Split PDF into individual deed PDFs based on strategy
         deed_pdfs = self.split_pdf_by_deeds(pdf_path, strategy)
+        print(f"📄 Split into {len(deed_pdfs)} deed files")
         
         try:
-            # 2. Process each deed separately
+            # 2. Process each deed separately using memory-efficient processing
             results = []
             for i, deed_pdf_path in enumerate(deed_pdfs):
                 print(f"Processing deed {i+1}/{len(deed_pdfs)}...")
-                result = self.process_document(deed_pdf_path)
-                result['deed_number'] = i + 1
-                result['deed_file'] = deed_pdf_path
-                results.append(result)
+                try:
+                    # Use memory-efficient processing for each deed
+                    result = self.process_document_memory_efficient(
+                        deed_pdf_path,
+                        chunk_size=25,  # Smaller chunks for individual deeds
+                        max_samples=6,  # Fewer samples for speed
+                        high_recall_mode=True
+                    )
+                    result['deed_number'] = i + 1
+                    result['deed_file'] = deed_pdf_path
+                    result['pages_in_deed'] = result.get('pages_processed', 0)
+                    results.append(result)
+                    print(f"✅ Deed {i+1} completed: {result['classification']} (confidence: {result['confidence']:.3f})")
+                except Exception as e:
+                    print(f"❌ Error processing deed {i+1}: {e}")
+                    # Add error result
+                    error_result = {
+                        'deed_number': i + 1,
+                        'deed_file': deed_pdf_path,
+                        'classification': 0,
+                        'confidence': 0.0,
+                        'pages_in_deed': 0,
+                        'error': str(e)
+                    }
+                    results.append(error_result)
             
+            print(f"🎯 Multi-deed processing completed: {len(results)} deeds processed")
             return results
         finally:
             # 3. Clean up temporary files
+            print("🧹 Cleaning up temporary deed files...")
             self.cleanup_temp_files(deed_pdfs)
 
     def pdf_to_image(self, pdf_path: str) -> Image.Image:
@@ -1278,7 +1304,7 @@ class DocumentProcessor:
         doc.close()
         
         # If we get here, no reservations were found
-        if not final_result:
+        if 'final_result' not in locals():
             final_result = self._combine_chunk_results(chunk_results, pdf_path, total_pages)
             final_result['early_stopped'] = False
         

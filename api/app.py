@@ -117,20 +117,25 @@ async def predict(
                 
                 elif processing_mode == "multi_deed":
                     print(f"📑 Using multi-deed processing with strategy: '{splitting_strategy}'")
-                    deed_results = processor.process_multi_deed_document(
-                        tmp_path, 
-                        strategy=splitting_strategy
-                    )
-                    
-                    # Wrap results in expected structure
-                    response = {
-                        "deed_results": deed_results,
-                        "total_deeds": len(deed_results),
-                        "summary": {
-                            "reservations_found": sum(1 for deed in deed_results if deed.get('classification') == 1)
+                    try:
+                        deed_results = processor.process_multi_deed_document(
+                            tmp_path, 
+                            strategy=splitting_strategy
+                        )
+                        
+                        # Wrap results in expected structure
+                        response = {
+                            "deed_results": deed_results,
+                            "total_deeds": len(deed_results),
+                            "summary": {
+                                "reservations_found": sum(1 for deed in deed_results if deed.get('classification') == 1)
+                            }
                         }
-                    }
-                    log_q.put_nowait(f"__RESULT__{json.dumps(response)}")
+                        log_q.put_nowait(f"__RESULT__{json.dumps(response)}")
+                    except Exception as e:
+                        print(f"❌ Multi-deed processing error: {e}")
+                        traceback.print_exc()
+                        log_q.put_nowait(f"__ERROR__Multi-deed processing failed: {str(e)}")
                 else:
                     raise ValueError(f"Unknown processing_mode: '{processing_mode}'")
                     
