@@ -6,3 +6,4 @@ anthropic
 Pillow
 scikit-learn
 numpy
+psutil  # Memory monitoring and management

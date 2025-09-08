@@ -7,6 +7,7 @@ from fastapi.responses import StreamingResponse
 import io, sys
 from contextlib import redirect_stdout
 import gc  # For garbage collection
+import psutil  # For memory monitoring
 
 #  import your pipeline ----------------------------------------------
 from src.mineral_rights.document_classifier import DocumentProcessor
@@ -61,6 +62,11 @@ async def predict(
     if processor is None:
         raise HTTPException(status_code=500, detail="Model not initialised")
 
+    # Memory monitoring at start
+    process = psutil.Process(os.getpid())
+    initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+    print(f"💾 Starting job - Memory usage: {initial_memory:.1f} MB")
+
     # save upload to a temp file
     contents = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
@@ -68,7 +74,7 @@ async def predict(
         tmp_path = tmp.name
 
     job_id = str(uuid.uuid4())
-    log_q: asyncio.Queue[str] = asyncio.Queue(maxsize=1000)  # Increased queue size for long sessions
+    log_q: asyncio.Queue[str] = asyncio.Queue(maxsize=500)  # Reduced queue size to prevent memory buildup
     jobs[job_id] = log_q
     
     # Initialize job metadata
@@ -79,7 +85,8 @@ async def predict(
         "start_time": time.time(),
         "status": "processing",
         "pages_processed": 0,
-        "total_pages": 0
+        "total_pages": 0,
+        "initial_memory_mb": initial_memory
     }
     job_start_times[job_id] = time.time()
 
@@ -101,6 +108,7 @@ async def predict(
                 print(f"🎯 Processing mode: '{processing_mode}'")
                 print(f"📁 File: {file.filename}")
                 print(f"⏰ Started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+                print(f"💾 Initial memory: {initial_memory:.1f} MB")
                 
                 if processing_mode == "single_deed":
                     print("📄 Using single deed processing")
@@ -136,10 +144,19 @@ async def predict(
                 job_metadata[job_id]["status"] = "completed"
                 job_metadata[job_id]["end_time"] = time.time()
                 job_metadata[job_id]["duration"] = time.time() - job_start_times.get(job_id, time.time())
+                
+                # Final memory check
+                final_memory = process.memory_info().rss / 1024 / 1024
+                memory_change = final_memory - initial_memory
+                job_metadata[job_id]["final_memory_mb"] = final_memory
+                job_metadata[job_id]["memory_change_mb"] = memory_change
+                
+                print(f"💾 Final memory: {final_memory:.1f} MB (change: {memory_change:+.1f} MB)")
             
             log_q.put_nowait("__END__")  # ALWAYS send end signal
             
             # Force garbage collection to free memory
+            print("🧹 Running final garbage collection...")
             gc.collect()
             
             try:
@@ -165,6 +182,7 @@ async def stream(job_id: str):
         last_heartbeat = time.time()
         heartbeat_interval = 10  # Send heartbeat every 10 seconds for very long sessions
         session_start = time.time()
+        last_memory_check = time.time()
         
         while True:
             try:
@@ -186,9 +204,23 @@ async def stream(job_id: str):
                     yield f"data: __HEARTBEAT__{current_time}|{session_duration}\n\n"
                     last_heartbeat = current_time
                     
-                    # Force garbage collection periodically
-                    if int(session_duration) % 300 == 0:  # Every 5 minutes
-                        gc.collect()
+                    # Memory monitoring every 5 minutes during heartbeats
+                    if current_time - last_memory_check > 300:  # 5 minutes
+                        try:
+                            process = psutil.Process(os.getpid())
+                            current_memory = process.memory_info().rss / 1024 / 1024
+                            yield f"data: __MEMORY__{current_memory}\n\n"
+                            last_memory_check = current_time
+                            
+                            # Force garbage collection if memory is high
+                            if current_memory > 500:  # More than 500MB
+                                print("🧹 Running memory-triggered garbage collection...")
+                                gc.collect()
+                                after_gc_memory = process.memory_info().rss / 1024 / 1024
+                                memory_freed = current_memory - after_gc_memory
+                                print(f"🧹 Memory-triggered GC freed: {memory_freed:.1f} MB")
+                        except Exception as e:
+                            print(f"Memory monitoring error: {e}")
                 continue
                 
             except Exception as e:
@@ -230,6 +262,27 @@ async def get_job_status(job_id: str):
         metadata["elapsed_time"] = time.time() - metadata["start_time"]
     
     return metadata
+
+
+# --------------------------------------------------------------------------
+# GET /memory-status  – Get current memory usage
+# --------------------------------------------------------------------------
+@app.get("/memory-status")
+async def get_memory_status():
+    try:
+        process = psutil.Process(os.getpid())
+        memory_info = process.memory_info()
+        
+        return {
+            "memory_rss_mb": memory_info.rss / 1024 / 1024,
+            "memory_vms_mb": memory_info.vms / 1024 / 1024,
+            "cpu_percent": process.cpu_percent(),
+            "num_threads": process.num_threads(),
+            "open_files": len(process.open_files()),
+            "connections": len(process.connections())
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # ——————————————————————————————————————————————

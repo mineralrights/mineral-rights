@@ -72,6 +72,17 @@ export async function predictBatch(
             return;
           }
 
+          if (msg.startsWith("__MEMORY__")) {
+            // Handle memory status updates
+            const memoryMB = msg.replace("__MEMORY__", "");
+            console.log(`💾 Memory usage: ${memoryMB} MB`);
+            
+            // Update progress with memory info
+            row.steps!.push(`Memory usage: ${memoryMB} MB`);
+            emit();
+            return;
+          }
+
           if (msg.startsWith("__RESULT__")) {
             const result = JSON.parse(msg.replace("__RESULT__", ""));
             

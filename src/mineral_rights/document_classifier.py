@@ -1190,6 +1190,226 @@ class DocumentProcessor:
             'requires_manual_review': len(unread_pages) > 0,
         }
 
+    def process_document_memory_efficient(self, pdf_path: str, max_samples: int = 8, 
+                                        confidence_threshold: float = 0.7,
+                                        max_tokens_per_page: int = 8000, 
+                                        chunk_size: int = 50, high_recall_mode: bool = False) -> Dict:
+        """
+        Process document in memory-efficient chunks to prevent memory leaks during long sessions
+        """
+        import time
+        import gc
+        import psutil
+        import os
+        
+        print("Using memory-efficient chunked processing")
+        print(f"📊 Chunk size: {chunk_size} pages")
+        
+        # Memory monitoring
+        process = psutil.Process(os.getpid())
+        initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+        print(f"💾 Initial memory usage: {initial_memory:.1f} MB")
+        
+        # Open PDF and get total pages
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        
+        print(f"Document has {total_pages} pages")
+        print(f"⏰ Session started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Process in chunks
+        all_results = []
+        chunk_results = []
+        current_chunk = 1
+        total_chunks = (total_pages + chunk_size - 1) // chunk_size
+        
+        start_time = time.time()
+        
+        for chunk_start in range(0, total_pages, chunk_size):
+            chunk_end = min(chunk_start + chunk_size, total_pages)
+            chunk_pages = list(range(chunk_start, chunk_end))
+            
+            print(f"\n--- PROCESSING CHUNK {current_chunk}/{total_chunks} (pages {chunk_start+1}-{chunk_end}) ---")
+            
+            # Process this chunk
+            chunk_result = self._process_chunk_memory_efficient(
+                doc, chunk_pages, max_samples, confidence_threshold, 
+                max_tokens_per_page, high_recall_mode, current_chunk
+            )
+            
+            chunk_results.append(chunk_result)
+            
+            # Check for early stopping
+            if chunk_result.get('classification') == 1:
+                print(f"🎯 Oil and gas reservations found in chunk {current_chunk}!")
+                print(f"✅ Early stopping - no need to process remaining chunks")
+                
+                # Combine results
+                final_result = self._combine_chunk_results(chunk_results, pdf_path, total_pages)
+                final_result['early_stopped'] = True
+                final_result['stopped_at_chunk'] = current_chunk
+                
+                break
+            
+            # Memory management between chunks
+            current_memory = process.memory_info().rss / 1024 / 1024
+            memory_increase = current_memory - initial_memory
+            
+            print(f"💾 Memory after chunk {current_chunk}: {current_memory:.1f} MB (change: {memory_increase:+.1f} MB)")
+            
+            # Force garbage collection if memory increase is significant
+            if memory_increase > 200:  # More than 200MB increase
+                print("🧹 Running garbage collection between chunks...")
+                gc.collect()
+                after_gc_memory = process.memory_info().rss / 1024 / 1024
+                gc_reduction = current_memory - after_gc_memory
+                print(f"🧹 GC freed: {gc_reduction:.1f} MB")
+            
+            current_chunk += 1
+            
+            # Progress update
+            elapsed_time = time.time() - start_time
+            hours = int(elapsed_time // 3600)
+            minutes = int((elapsed_time % 3600) // 60)
+            print(f"📊 Progress: {current_chunk-1}/{total_chunks} chunks completed ({((current_chunk-1)/total_chunks*100):.1f}%)")
+            print(f"⏱️  Elapsed: {hours}h {minutes}m")
+        
+        # Close document
+        doc.close()
+        
+        # If we get here, no reservations were found
+        if not final_result:
+            final_result = self._combine_chunk_results(chunk_results, pdf_path, total_pages)
+            final_result['early_stopped'] = False
+        
+        # Final memory check
+        final_memory = process.memory_info().rss / 1024 / 1024
+        memory_change = final_memory - initial_memory
+        print(f"💾 Final memory: {final_memory:.1f} MB (change: {memory_change:+.1f} MB)")
+        
+        # Final garbage collection
+        print("🧹 Running final garbage collection...")
+        gc.collect()
+        
+        return final_result
+
+    def _process_chunk_memory_efficient(self, doc, chunk_pages, max_samples, confidence_threshold, 
+                                      max_tokens_per_page, high_recall_mode, chunk_number):
+        """Process a single chunk of pages with memory management"""
+        
+        chunk_start_time = time.time()
+        chunk_analysis = []
+        chunk_ocr_text = []
+        
+        print(f"Processing {len(chunk_pages)} pages in chunk {chunk_number}")
+        
+        for page_num in chunk_pages:
+            page_start_time = time.time()
+            current_page = page_num + 1
+            
+            print(f"  Processing page {current_page}...")
+            
+            try:
+                # Convert page to image
+                page = doc.load_page(page_num)
+                mat = fitz.Matrix(2, 2)
+                pix = page.get_pixmap(matrix=mat)
+                img_data = pix.tobytes("png")
+                image = Image.open(BytesIO(img_data))
+                
+                # Clear page objects immediately
+                page = None
+                pix = None
+                del page, pix
+                
+                # Extract text
+                page_text = self.extract_text_with_claude(image, max_tokens_per_page)
+                chunk_ocr_text.append(f"=== PAGE {current_page} ===\n{page_text}")
+                
+                # Clear image immediately
+                image.close()
+                image = None
+                del image, img_data
+                
+                # Classify page
+                classification_result = self.classifier.classify_document(
+                    page_text, max_samples, confidence_threshold, high_recall_mode
+                )
+                
+                # Track page info
+                page_time = time.time() - page_start_time
+                chunk_analysis.append({
+                    'page_number': current_page,
+                    'text_length': len(page_text),
+                    'classification': classification_result.predicted_class,
+                    'confidence': classification_result.confidence,
+                    'processing_time': page_time
+                })
+                
+                # Clear page text
+                page_text = None
+                del page_text
+                
+                print(f"    Page {current_page} processed in {page_time:.1f}s")
+                
+            except Exception as e:
+                print(f"    Error processing page {current_page}: {e}")
+                chunk_analysis.append({
+                    'page_number': current_page,
+                    'status': 'error',
+                    'error': str(e)
+                })
+                continue
+        
+        chunk_time = time.time() - chunk_start_time
+        print(f"Chunk {chunk_number} completed in {chunk_time:.1f}s")
+        
+        return {
+            'chunk_number': chunk_number,
+            'pages': chunk_pages,
+            'analysis': chunk_analysis,
+            'ocr_text': chunk_ocr_text,
+            'processing_time': chunk_time,
+            'classification': max([p.get('classification', 0) for p in chunk_analysis if 'classification' in p], default=0)
+        }
+
+    def _combine_chunk_results(self, chunk_results, pdf_path, total_pages):
+        """Combine results from multiple chunks into final result"""
+        
+        # Combine all OCR text
+        all_ocr_text = []
+        for chunk in chunk_results:
+            all_ocr_text.extend(chunk['ocr_text'])
+        
+        # Find overall classification
+        overall_classification = max([chunk['classification'] for chunk in chunk_results], default=0)
+        
+        # Calculate overall confidence (average of chunk confidences)
+        chunk_confidences = []
+        for chunk in chunk_results:
+            for page in chunk['analysis']:
+                if 'confidence' in page:
+                    chunk_confidences.append(page['confidence'])
+        
+        overall_confidence = sum(chunk_confidences) / len(chunk_confidences) if chunk_confidences else 0.0
+        
+        # Combine all page analysis
+        all_page_analysis = []
+        for chunk in chunk_results:
+            all_page_analysis.extend(chunk['analysis'])
+        
+        return {
+            'document_path': pdf_path,
+            'pages_processed': total_pages,
+            'page_strategy': "memory_efficient_chunked",
+            'chunks_processed': len(chunk_results),
+            'classification': overall_classification,
+            'confidence': overall_confidence,
+            'ocr_text': "\n\n".join(all_ocr_text),
+            'page_analysis': all_page_analysis,
+            'total_processing_time': sum(chunk['processing_time'] for chunk in chunk_results)
+        }
+
 def main():
     """Example usage"""
     
