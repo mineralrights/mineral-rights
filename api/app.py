@@ -34,11 +34,50 @@ app.add_middleware(
 
 # 2️⃣  --- initialise once at startup ----------------------------------------
 API_KEY = os.getenv("ANTHROPIC_API_KEY")  # or whatever key the processor needs
-try:
-    processor = DocumentProcessor(API_KEY)
-except Exception as e:
-    print("❌ Failed to start DocumentProcessor:", e)
-    processor = None
+processor = None
+
+def initialize_processor():
+    global processor
+    try:
+        print("🔧 Initializing DocumentProcessor...")
+        print(f"API Key present: {'Yes' if API_KEY else 'No'}")
+        
+        # Test imports first
+        try:
+            import fitz
+            print("✅ PyMuPDF (fitz) imported successfully")
+        except ImportError as e:
+            print(f"❌ PyMuPDF import failed: {e}")
+            return False
+            
+        try:
+            import psutil
+            print("✅ psutil imported successfully")
+        except ImportError as e:
+            print(f"❌ psutil import failed: {e}")
+            return False
+            
+        try:
+            import anthropic
+            print("✅ anthropic imported successfully")
+        except ImportError as e:
+            print(f"❌ anthropic import failed: {e}")
+            return False
+        
+        # Initialize processor
+        processor = DocumentProcessor(API_KEY)
+        print("✅ DocumentProcessor initialized successfully")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Failed to start DocumentProcessor: {e}")
+        import traceback
+        traceback.print_exc()
+        processor = None
+        return False
+
+# Initialize on startup
+initialize_processor()
 # ---------------------------------------------------------------------------
 
 
@@ -59,8 +98,14 @@ async def predict(
     processing_mode: str = Form("single_deed"),  # FIXED: Use Form() for FormData
     splitting_strategy: str = Form("smart_detection")  # FIXED: Use Form() for FormData
 ):
+    # Try to initialize processor if it's None
     if processor is None:
-        raise HTTPException(status_code=500, detail="Model not initialised")
+        print("⚠️ Processor not initialized, attempting to initialize...")
+        if not initialize_processor():
+            raise HTTPException(
+                status_code=500, 
+                detail="Model not initialised. Check server logs for details."
+            )
 
     # Memory monitoring at start
     process = psutil.Process(os.getpid())
@@ -118,10 +163,18 @@ async def predict(
                 elif processing_mode == "multi_deed":
                     print(f"📑 Using multi-deed processing with strategy: '{splitting_strategy}'")
                     try:
+                        # Check if processor is still valid
+                        if processor is None:
+                            raise Exception("Processor became None during processing")
+                        
                         deed_results = processor.process_multi_deed_document(
                             tmp_path, 
                             strategy=splitting_strategy
                         )
+                        
+                        # Validate results
+                        if not isinstance(deed_results, list):
+                            raise Exception(f"Expected list of results, got {type(deed_results)}")
                         
                         # Wrap results in expected structure
                         response = {
@@ -132,10 +185,14 @@ async def predict(
                             }
                         }
                         log_q.put_nowait(f"__RESULT__{json.dumps(response)}")
+                        print(f"✅ Multi-deed processing completed successfully: {len(deed_results)} deeds")
+                        
                     except Exception as e:
                         print(f"❌ Multi-deed processing error: {e}")
                         traceback.print_exc()
-                        log_q.put_nowait(f"__ERROR__Multi-deed processing failed: {str(e)}")
+                        error_msg = f"Multi-deed processing failed: {str(e)}"
+                        log_q.put_nowait(f"__ERROR__{error_msg}")
+                        # Don't re-raise, let the finally block handle cleanup
                 else:
                     raise ValueError(f"Unknown processing_mode: '{processing_mode}'")
                     
@@ -268,6 +325,59 @@ async def get_job_status(job_id: str):
     
     return metadata
 
+
+# --------------------------------------------------------------------------
+# GET /health  – Health check endpoint
+# --------------------------------------------------------------------------
+@app.get("/health")
+async def health_check():
+    """Health check endpoint to verify API is working"""
+    try:
+        return {
+            "status": "healthy",
+            "processor_initialized": processor is not None,
+            "api_key_present": bool(API_KEY),
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        return {"status": "unhealthy", "error": str(e)}
+
+# --------------------------------------------------------------------------
+# GET /debug  – Debug information endpoint
+# --------------------------------------------------------------------------
+@app.get("/debug")
+async def debug_info():
+    """Debug endpoint to check system status"""
+    try:
+        import sys
+        import platform
+        
+        # Check imports
+        imports_status = {}
+        for module_name in ['fitz', 'psutil', 'anthropic', 'PIL', 'sklearn', 'numpy']:
+            try:
+                __import__(module_name)
+                imports_status[module_name] = "✅ OK"
+            except ImportError as e:
+                imports_status[module_name] = f"❌ {str(e)}"
+        
+        # System info
+        system_info = {
+            "python_version": sys.version,
+            "platform": platform.platform(),
+            "processor_initialized": processor is not None,
+            "api_key_present": bool(API_KEY),
+            "active_jobs": len(jobs),
+            "memory_usage_mb": psutil.Process(os.getpid()).memory_info().rss / 1024 / 1024 if 'psutil' in imports_status else "N/A"
+        }
+        
+        return {
+            "imports": imports_status,
+            "system": system_info,
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        return {"error": str(e), "timestamp": time.time()}
 
 # --------------------------------------------------------------------------
 # GET /memory-status  – Get current memory usage
