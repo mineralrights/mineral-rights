@@ -11,11 +11,10 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends build-essential && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy and install Python dependencies
-COPY requirements.txt .
-COPY api/requirements.txt ./api_requirements.txt
+# Copy and install Python dependencies (API only - main requirements.txt has conda-specific packages)
+COPY api/requirements.txt ./requirements.txt
 RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt -r api_requirements.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Copy application code (API + classifier)
 COPY api ./api

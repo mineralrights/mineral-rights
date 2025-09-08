@@ -1,0 +1,26 @@
+# Clean, platform-agnostic requirements for deployment
+# This file excludes conda-specific packages that cause deployment issues
+
+# Core ML and data processing
+numpy==1.26.4
+scikit-learn==1.6.1
+scipy==1.15.3
+
+# PDF processing
+PyMuPDF==1.26.0
+Pillow==10.4.0
+
+# API and web framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+python-multipart==0.0.6
+
+# AI/ML APIs
+anthropic==0.52.2
+
+# System monitoring
+psutil==7.0.0
+
+# Utilities
+python-dotenv==1.1.0
+requests==2.32.3
