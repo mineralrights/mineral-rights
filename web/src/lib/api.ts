@@ -34,7 +34,12 @@ export async function predictBatch(
     }
     
     // Use job system for long-running processing (8+ hours support)
-    const res = await fetch(`${API}/jobs/create`, { method: "POST", body: form });
+    const res = await fetch(`${API}/jobs/create`, { 
+      method: "POST", 
+      body: form,
+      // Add timeout and retry configuration
+      signal: AbortSignal.timeout(30000) // 30 second timeout for job creation
+    });
     if (!res.ok) {
       row.status = "error";
       row.explanation = await res.text();
@@ -64,8 +69,10 @@ export async function predictBatch(
             return;
           }
           
-          // Poll job status
-          const statusResponse = await fetch(`${API}/jobs/${job_id}/status`);
+          // Poll job status with retry logic
+          const statusResponse = await fetch(`${API}/jobs/${job_id}/status`, {
+            signal: AbortSignal.timeout(10000) // 10 second timeout for status checks
+          });
           if (!statusResponse.ok) {
             throw new Error(`Failed to get job status: ${statusResponse.status}`);
           }
@@ -83,7 +90,9 @@ export async function predictBatch(
           
           if (jobStatus.status === "completed") {
             // Get the result
-            const resultResponse = await fetch(`${API}/jobs/${job_id}/result`);
+            const resultResponse = await fetch(`${API}/jobs/${job_id}/result`, {
+              signal: AbortSignal.timeout(15000) // 15 second timeout for result retrieval
+            });
             if (!resultResponse.ok) {
               throw new Error(`Failed to get job result: ${resultResponse.status}`);
             }
@@ -135,6 +144,21 @@ export async function predictBatch(
           
         } catch (error) {
           console.error(`Error polling job ${job_id}:`, error);
+          
+          // Check if it's a network error that we can retry
+          const isNetworkError = error instanceof Error && (
+            error.message.includes('fetch') || 
+            error.message.includes('network') ||
+            error.message.includes('timeout') ||
+            error.message.includes('SSL')
+          );
+          
+          if (isNetworkError) {
+            console.log(`🔄 Network error detected, retrying in 10 seconds...`);
+            setTimeout(pollJob, 10000); // Retry after 10 seconds
+            return;
+          }
+          
           row.status = "error";
           const errorMessage = error instanceof Error ? error.message : String(error);
           row.explanation = `Error monitoring job: ${errorMessage}`;
