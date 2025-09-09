@@ -1,7 +1,7 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile, os, traceback
-from typing import List
+from typing import List, Optional
 import asyncio, threading, uuid, json, time
 from fastapi.responses import StreamingResponse
 import io, sys
