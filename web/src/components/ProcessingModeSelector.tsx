@@ -64,8 +64,11 @@ export default function ProcessingModeSelector({
             onChange={(e) => onSplittingStrategyChange(e.target.value as SplittingStrategy)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
           >
+            <option value="document_ai">
+              🤖 Document AI - Google Cloud custom trained model (Best accuracy)
+            </option>
             <option value="smart_detection">
-              Smart Detection - Automatically detect deed boundaries (Recommended)
+              Smart Detection - Automatically detect deed boundaries (Good fallback)
             </option>
             <option value="page_based">
               Page-Based - Split every 3 pages (Simple fallback)
@@ -75,7 +78,14 @@ export default function ProcessingModeSelector({
             </option>
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            Smart detection analyzes text patterns to find where each deed begins
+            {splittingStrategy === "document_ai" 
+              ? "Uses your custom trained Google Cloud Document AI model for precise deed boundary detection"
+              : splittingStrategy === "smart_detection"
+              ? "Analyzes text patterns to find where each deed begins"
+              : splittingStrategy === "page_based"
+              ? "Simple approach: treats every 3 pages as a separate deed"
+              : "Uses Claude AI to analyze document structure for complex cases"
+            }
           </p>
         </div>
       )}

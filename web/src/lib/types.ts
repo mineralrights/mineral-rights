@@ -23,4 +23,4 @@ export interface DeedResult {
 }
 
 export type ProcessingMode = "single_deed" | "multi_deed";
-export type SplittingStrategy = "smart_detection" | "page_based" | "ai_assisted";
+export type SplittingStrategy = "document_ai" | "smart_detection" | "page_based" | "ai_assisted";
