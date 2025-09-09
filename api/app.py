@@ -724,3 +724,32 @@ async def jobs_health_check():
         "active_jobs": len([j for j in job_manager.jobs.values() if j.status == JobStatus.RUNNING]),
         "total_jobs": len(job_manager.jobs)
     }
+
+@app.post("/jobs/test")
+async def test_job_creation():
+    """Test endpoint to verify job system works without file upload"""
+    try:
+        # Create a test job without file processing
+        job_id = job_manager.create_job(
+            "test.pdf",
+            "multi_deed",
+            "smart_detection"
+        )
+        
+        # Simulate job completion
+        job_manager.update_job_status(job_id, JobStatus.COMPLETED, result={
+            "classification": 1,
+            "confidence": 0.95,
+            "message": "Test job completed successfully"
+        })
+        
+        return {
+            "status": "success",
+            "job_id": job_id,
+            "message": "Test job created and completed successfully"
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Test job failed: {str(e)}"
+        }
