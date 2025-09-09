@@ -162,10 +162,10 @@ async def predict(
                 if processing_mode == "single_deed":
                     print("📄 Using single deed processing")
                     result = processor.process_document(tmp_path)
-                        # Store result for potential retrieval
-                        job_results[job_id] = result
-                        log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
-                
+                    # Store result for potential retrieval
+                    job_results[job_id] = result
+                    log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
+                    
                 elif processing_mode == "multi_deed":
                     print(f"📑 Using multi-deed processing with strategy: '{splitting_strategy}'")
                     try:
