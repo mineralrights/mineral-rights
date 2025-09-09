@@ -87,6 +87,7 @@ initialize_processor()
 jobs: dict[str, asyncio.Queue[str]] = {}        # log lines per job-id
 job_metadata: dict[str, dict] = {}              # job metadata for persistence
 job_start_times: dict[str, float] = {}          # track job start times
+job_results: dict[str, dict] = {}               # store completed results for retrieval
 
 
 # --------------------------------------------------------------------------
@@ -149,6 +150,9 @@ async def predict(
     # run pipeline in a background thread so we don't block the event loop
     def run():
         try:
+            print(f"🚀 Background thread started for job {job_id}")
+            log_q.put_nowait("🚀 Background thread started")
+            
             with redirect_stdout(QueueWriter(log_q)):
                 print(f"🎯 Processing mode: '{processing_mode}'")
                 print(f"📁 File: {file.filename}")
@@ -157,13 +161,10 @@ async def predict(
                 
                 if processing_mode == "single_deed":
                     print("📄 Using single deed processing")
-                    result = processor.process_document(
-                        tmp_path,
-                        max_samples=3,  # Reduced from 8 to 3 for faster processing
-                        confidence_threshold=0.6,  # Slightly lower threshold
-                        high_recall_mode=True  # Use high recall mode for better accuracy with fewer samples
-                    )
-                    log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
+                    result = processor.process_document(tmp_path)
+                        # Store result for potential retrieval
+                        job_results[job_id] = result
+                        log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
                 
                 elif processing_mode == "multi_deed":
                     print(f"📑 Using multi-deed processing with strategy: '{splitting_strategy}'")
@@ -189,6 +190,8 @@ async def predict(
                                 "reservations_found": sum(1 for deed in deed_results if deed.get('classification') == 1)
                             }
                         }
+                        # Store result for potential retrieval
+                        job_results[job_id] = response
                         log_q.put_nowait(f"__RESULT__{json.dumps(response)}")
                         print(f"✅ Multi-deed processing completed successfully: {len(deed_results)} deeds")
                         
@@ -231,8 +234,15 @@ async def predict(
             except (FileNotFoundError, OSError):
                 pass  # Ignore file deletion errors
 
-    threading.Thread(target=run, daemon=True).start()
-    return {"job_id": job_id}
+    try:
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
+        print(f"✅ Background thread started successfully for job {job_id}")
+        return {"job_id": job_id}
+    except Exception as e:
+        print(f"❌ Failed to start background thread: {e}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Failed to start processing: {str(e)}")
 
 
 # --------------------------------------------------------------------------
@@ -247,14 +257,15 @@ async def stream(job_id: str):
 
     async def event_generator():
         last_heartbeat = time.time()
-        heartbeat_interval = 10  # Send heartbeat every 10 seconds for very long sessions
+        heartbeat_interval = 5  # Send heartbeat every 5 seconds for better reliability
         session_start = time.time()
         last_memory_check = time.time()
+        last_progress_update = time.time()
         
         while True:
             try:
-                # Wait for message with timeout
-                line = await asyncio.wait_for(queue.get(), timeout=3.0)  # Increased timeout
+                # Wait for message with shorter timeout for more frequent heartbeats
+                line = await asyncio.wait_for(queue.get(), timeout=2.0)
                 
                 # Send the message
                 yield f"data: {line}\n\n"
@@ -271,8 +282,25 @@ async def stream(job_id: str):
                     yield f"data: __HEARTBEAT__{current_time}|{session_duration}\n\n"
                     last_heartbeat = current_time
                     
-                    # Memory monitoring every 5 minutes during heartbeats
-                    if current_time - last_memory_check > 300:  # 5 minutes
+                    # Progress updates every 2 minutes
+                    if current_time - last_progress_update > 120:  # 2 minutes
+                        try:
+                            # Send progress update with job metadata
+                            if job_id in job_metadata:
+                                metadata = job_metadata[job_id]
+                                progress_info = {
+                                    "session_duration": session_duration,
+                                    "status": metadata.get("status", "processing"),
+                                    "pages_processed": metadata.get("pages_processed", 0),
+                                    "total_pages": metadata.get("total_pages", 0)
+                                }
+                                yield f"data: __PROGRESS__{json.dumps(progress_info)}\n\n"
+                            last_progress_update = current_time
+                        except Exception as e:
+                            print(f"Progress update error: {e}")
+                    
+                    # Memory monitoring every 3 minutes during heartbeats
+                    if current_time - last_memory_check > 180:  # 3 minutes
                         try:
                             process = psutil.Process(os.getpid())
                             current_memory = process.memory_info().rss / 1024 / 1024
@@ -280,12 +308,13 @@ async def stream(job_id: str):
                             last_memory_check = current_time
                             
                             # Force garbage collection if memory is high
-                            if current_memory > 500:  # More than 500MB
+                            if current_memory > 400:  # Lowered threshold to 400MB
                                 print("🧹 Running memory-triggered garbage collection...")
                                 gc.collect()
                                 after_gc_memory = process.memory_info().rss / 1024 / 1024
                                 memory_freed = current_memory - after_gc_memory
                                 print(f"🧹 Memory-triggered GC freed: {memory_freed:.1f} MB")
+                                yield f"data: __MEMORY_GC__{after_gc_memory}|{memory_freed}\n\n"
                         except Exception as e:
                             print(f"Memory monitoring error: {e}")
                 continue
@@ -295,13 +324,14 @@ async def stream(job_id: str):
                 yield f"data: __ERROR__Stream error: {str(e)}\n\n"
                 break
         
-        # cleanup
+        # Delay cleanup to allow client to receive final messages
+        await asyncio.sleep(2)
+        
+        # cleanup (but preserve results for potential retrieval)
         if job_id in jobs:
             del jobs[job_id]
-        if job_id in job_metadata:
-            del job_metadata[job_id]
-        if job_id in job_start_times:
-            del job_start_times[job_id]
+        # Keep job_metadata and job_results for potential retrieval
+        # They will be cleaned up by a background task or on server restart
 
     return StreamingResponse(
         event_generator(),
@@ -329,6 +359,26 @@ async def get_job_status(job_id: str):
         metadata["elapsed_time"] = time.time() - metadata["start_time"]
     
     return metadata
+
+
+# --------------------------------------------------------------------------
+# GET /job-result/<job_id>  – Get completed job result
+# --------------------------------------------------------------------------
+@app.get("/job-result/{job_id}")
+async def get_job_result(job_id: str):
+    """Get the result of a completed job"""
+    if job_id not in job_results:
+        # Check if job is still processing
+        if job_id in job_metadata:
+            status = job_metadata[job_id].get("status", "unknown")
+            if status == "processing":
+                raise HTTPException(status_code=202, detail="Job still processing")
+            else:
+                raise HTTPException(status_code=404, detail="Job result not found")
+        else:
+            raise HTTPException(status_code=404, detail="Unknown job_id")
+    
+    return job_results[job_id]
 
 
 # --------------------------------------------------------------------------
