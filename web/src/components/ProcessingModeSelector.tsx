@@ -64,11 +64,11 @@ export default function ProcessingModeSelector({
             onChange={(e) => onSplittingStrategyChange(e.target.value as SplittingStrategy)}
             className="block w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
           >
-            <option value="document_ai">
-              🤖 Document AI - Google Cloud custom trained model (Best accuracy)
+            <option value="document_ai" disabled>
+              🤖 Document AI - Google Cloud custom trained model (Coming soon)
             </option>
             <option value="smart_detection">
-              Smart Detection - Automatically detect deed boundaries (Good fallback)
+              Smart Detection - Automatically detect deed boundaries (Recommended)
             </option>
             <option value="page_based">
               Page-Based - Split every 3 pages (Simple fallback)

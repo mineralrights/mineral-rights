@@ -12,7 +12,7 @@ export default function Home() {
   const [rows, setRows] = useState<PredictionRow[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [processingMode, setProcessingMode] = useState<ProcessingMode>("single_deed");
-  const [splittingStrategy, setSplittingStrategy] = useState<SplittingStrategy>("document_ai");
+  const [splittingStrategy, setSplittingStrategy] = useState<SplittingStrategy>("smart_detection");
 
   const handleFiles = async (files: File[]) => {
     setIsRunning(true);
