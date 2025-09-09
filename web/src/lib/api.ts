@@ -136,7 +136,8 @@ export async function predictBatch(
         } catch (error) {
           console.error(`Error polling job ${job_id}:`, error);
           row.status = "error";
-          row.explanation = `Error monitoring job: ${error.message}`;
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          row.explanation = `Error monitoring job: ${errorMessage}`;
           emit();
           reject(error);
         }
