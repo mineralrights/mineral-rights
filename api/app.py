@@ -8,31 +8,95 @@ import io, sys
 from contextlib import redirect_stdout
 import gc  # For garbage collection
 import psutil  # For memory monitoring
+from enum import Enum
+from dataclasses import dataclass, asdict
 
 #  import your pipeline ----------------------------------------------
 from src.mineral_rights.document_classifier import DocumentProcessor
 
-# Import job endpoints for long-running processing
-try:
-    from job_api_endpoints import job_router
-    JOB_ENDPOINTS_AVAILABLE = True
-    print("✅ Job endpoints imported successfully")
-except ImportError as e:
-    JOB_ENDPOINTS_AVAILABLE = False
-    print(f"⚠️ Job endpoints not available - ImportError: {e}")
-    print("   Make sure job_manager.py and job_api_endpoints.py are in the api/ directory")
+# Long-running job support built into main app
+JOB_ENDPOINTS_AVAILABLE = True
+print("✅ Long-running job support enabled")
+
+# --------------------------------------------------------------------------
+# Job System Classes (Built-in)
+# --------------------------------------------------------------------------
+class JobStatus(Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+@dataclass
+class JobInfo:
+    id: str
+    filename: str
+    processing_mode: str
+    splitting_strategy: str
+    status: JobStatus
+    created_at: float
+    started_at: Optional[float] = None
+    completed_at: Optional[float] = None
+    result: Optional[dict] = None
+    error: Optional[str] = None
+    logs: List[str] = None
+
+class SimpleJobManager:
+    """Simple in-memory job manager for long-running tasks"""
+    
+    def __init__(self):
+        self.jobs: dict[str, JobInfo] = {}
+        
+    def create_job(self, filename: str, processing_mode: str, splitting_strategy: str) -> str:
+        """Create a new job"""
+        job_id = f"job_{int(time.time())}_{hash(filename) % 10000}"
+        
+        job_info = JobInfo(
+            id=job_id,
+            filename=filename,
+            processing_mode=processing_mode,
+            splitting_strategy=splitting_strategy,
+            status=JobStatus.PENDING,
+            created_at=time.time(),
+            logs=[]
+        )
+        self.jobs[job_id] = job_info
+        return job_id
+    
+    def get_job(self, job_id: str) -> Optional[JobInfo]:
+        """Get job by ID"""
+        return self.jobs.get(job_id)
+    
+    def update_job_status(self, job_id: str, status: JobStatus, result: Optional[dict] = None, error: Optional[str] = None):
+        """Update job status"""
+        if job_id in self.jobs:
+            job = self.jobs[job_id]
+            job.status = status
+            if status == JobStatus.RUNNING:
+                job.started_at = time.time()
+            elif status in [JobStatus.COMPLETED, JobStatus.FAILED]:
+                job.completed_at = time.time()
+            if result:
+                job.result = result
+            if error:
+                job.error = error
+    
+    def list_jobs(self) -> List[dict]:
+        """List all jobs"""
+        return [asdict(job) for job in self.jobs.values()]
+
+# Global job manager
+job_manager = SimpleJobManager()
+
 # ---------------------------------------------------------------------------
 
 
 ## TESTING NEW DEPLOYMENT 
 app = FastAPI(title="Mineral-Rights API")
 
-# Include job endpoints if available
-if JOB_ENDPOINTS_AVAILABLE:
-    app.include_router(job_router)
-    print("✅ Job endpoints integrated successfully")
-else:
-    print("⚠️ Job endpoints not integrated - missing dependencies")
+# Job system is now built into the main app
+print("✅ Long-running job system integrated")
 
 # More permissive CORS configuration
 app.add_middleware(
@@ -503,20 +567,12 @@ class QueueWriter(io.TextIOBase):
 async def test_job_system():
     """Test endpoint to verify job system is working"""
     try:
-        if not JOB_ENDPOINTS_AVAILABLE:
-            return {
-                "status": "error",
-                "message": "Job endpoints not available - missing job_manager.py or job_api_endpoints.py",
-                "job_endpoints_available": False
-            }
-        
-        # Test job manager
-        from job_manager import job_manager
+        # Test built-in job manager
         jobs = job_manager.list_jobs()
         
         return {
             "status": "success",
-            "message": "Job system is working correctly",
+            "message": "Built-in job system is working correctly",
             "job_endpoints_available": True,
             "total_jobs": len(jobs),
             "active_jobs": len([j for j in jobs if j['status'] == 'running'])
@@ -528,33 +584,113 @@ async def test_job_system():
             "job_endpoints_available": False
         }
 
-@app.get("/test-imports")
-async def test_imports():
-    """Test endpoint to debug import issues"""
-    import_results = {}
+# --------------------------------------------------------------------------
+# Job Endpoints (Built-in)
+# --------------------------------------------------------------------------
+
+@app.post("/jobs/create")
+async def create_long_running_job(
+    file: UploadFile = File(...),
+    processing_mode: str = Form("multi_deed"),
+    splitting_strategy: str = Form("smart_detection")
+):
+    """
+    Create a long-running processing job that can run for 8+ hours
     
-    # Test individual imports
+    This endpoint creates a job instead of processing immediately,
+    avoiding the 22-minute timeout limit of web services.
+    """
     try:
-        import job_manager
-        import_results["job_manager"] = "✅ Success"
-    except ImportError as e:
-        import_results["job_manager"] = f"❌ Failed: {e}"
+        # Save uploaded file temporarily
+        contents = await file.read()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
+            tmp.write(contents)
+            tmp_path = tmp.name
+        
+        # Create job
+        job_id = job_manager.create_job(
+            file.filename,
+            processing_mode,
+            splitting_strategy
+        )
+        
+        # Start processing in background
+        def process_job():
+            try:
+                job_manager.update_job_status(job_id, JobStatus.RUNNING)
+                
+                # Process the document
+                if processing_mode == "single_deed":
+                    result = processor.process_document(tmp_path)
+                elif processing_mode == "multi_deed":
+                    result = processor.process_multi_deed_document(
+                        tmp_path, 
+                        strategy=splitting_strategy
+                    )
+                else:
+                    raise ValueError(f"Unknown processing_mode: {processing_mode}")
+                
+                job_manager.update_job_status(job_id, JobStatus.COMPLETED, result=result)
+                
+            except Exception as e:
+                job_manager.update_job_status(job_id, JobStatus.FAILED, error=str(e))
+            finally:
+                # Clean up temp file
+                try:
+                    os.remove(tmp_path)
+                except:
+                    pass
+        
+        # Start background thread
+        thread = threading.Thread(target=process_job, daemon=True)
+        thread.start()
+        
+        return {
+            "job_id": job_id,
+            "status": "created",
+            "message": "Long-running job created successfully. Use /jobs/{job_id}/status to monitor progress.",
+            "estimated_duration": "Up to 8 hours for large documents"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create job: {str(e)}")
+
+@app.get("/jobs/{job_id}/status")
+async def get_job_status(job_id: str):
+    """Get the current status of a processing job"""
+    job = job_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
     
-    try:
-        import job_api_endpoints
-        import_results["job_api_endpoints"] = "✅ Success"
-    except ImportError as e:
-        import_results["job_api_endpoints"] = f"❌ Failed: {e}"
+    return asdict(job)
+
+@app.get("/jobs/{job_id}/result")
+async def get_job_result(job_id: str):
+    """Get the result of a completed job"""
+    job = job_manager.get_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
     
-    try:
-        from job_manager import job_manager as jm
-        import_results["job_manager_instance"] = "✅ Success"
-    except ImportError as e:
-        import_results["job_manager_instance"] = f"❌ Failed: {e}"
+    if job.status != JobStatus.COMPLETED:
+        raise HTTPException(
+            status_code=202, 
+            detail=f"Job not completed yet. Current status: {job.status.value}"
+        )
     
+    return job.result
+
+@app.get("/jobs/")
+async def list_jobs():
+    """List all jobs"""
+    jobs = job_manager.list_jobs()
+    return {"jobs": jobs, "total": len(jobs)}
+
+@app.get("/jobs/health")
+async def jobs_health_check():
+    """Health check for the job system"""
     return {
-        "import_results": import_results,
-        "job_endpoints_available": JOB_ENDPOINTS_AVAILABLE,
-        "current_directory": os.getcwd(),
-        "api_directory_files": os.listdir(".") if os.path.exists(".") else "Directory not found"
+        "status": "healthy",
+        "job_manager_initialized": job_manager is not None,
+        "active_jobs": len([j for j in job_manager.jobs.values() if j.status == JobStatus.RUNNING]),
+        "total_jobs": len(job_manager.jobs)
     }
