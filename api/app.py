@@ -671,8 +671,12 @@ async def create_long_running_job(
                 except Exception as cleanup_error:
                     print(f"⚠️ Failed to cleanup temp file: {cleanup_error}")
         
-        # Start background thread
-        thread = threading.Thread(target=process_job, daemon=True)
+        # Start background thread with a small delay to ensure response is sent first
+        def delayed_start():
+            time.sleep(1)  # Small delay to ensure HTTP response is sent
+            process_job()
+        
+        thread = threading.Thread(target=delayed_start, daemon=True)
         thread.start()
         
         return {
@@ -683,6 +687,9 @@ async def create_long_running_job(
         }
         
     except Exception as e:
+        print(f"❌ Job creation failed: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to create job: {str(e)}")
 
 @app.get("/jobs/{job_id}/status")
