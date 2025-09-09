@@ -25,7 +25,7 @@ export async function predictBatch(
     row.status = "processing";
     emit();
 
-    // 1️⃣  upload PDF → get job_id
+    // 1️⃣  upload PDF → get job_id (use job system for long-running tasks)
     const form = new FormData();
     form.append("file", file);
     form.append("processing_mode", processingMode);
@@ -33,7 +33,8 @@ export async function predictBatch(
       form.append("splitting_strategy", splittingStrategy);
     }
     
-    const res = await fetch(`${API}/predict`, { method: "POST", body: form });
+    // Use job system for long-running processing (8+ hours support)
+    const res = await fetch(`${API}/jobs/create`, { method: "POST", body: form });
     if (!res.ok) {
       row.status = "error";
       row.explanation = await res.text();
@@ -42,240 +43,107 @@ export async function predictBatch(
     }
     const { job_id } = await res.json();
 
-    // 2️⃣  open SSE stream with retry logic for 8+ hour sessions
+    // 2️⃣  monitor job progress with polling (no timeout limits)
     await new Promise<void>((resolve, reject) => {
-      let retryCount = 0;
-      const maxRetries = 15;  // Increased retries for very long sessions
-      let lastHeartbeat = Date.now();
-      const heartbeatTimeout = 600000; // 10 minutes (600,000 ms) - shorter for better reliability
       let sessionStartTime = Date.now();
-      let connectionEstablished = false;
+      const pollInterval = 5000; // Poll every 5 seconds
+      const maxPollTime = 8 * 60 * 60 * 1000; // 8 hours max
       
-      const connectStream = () => {
-        console.log(`🔗 Connecting to stream for job ${job_id} (attempt ${retryCount + 1})`);
-        const es = new EventSource(`${API}/stream/${job_id}`);
-        
-        es.onopen = () => {
-          console.log(`✅ Stream connection established for job ${job_id}`);
-          connectionEstablished = true;
-          lastHeartbeat = Date.now();
-        };
-        
-        es.onmessage = e => {
-          const msg = e.data as string;
-          lastHeartbeat = Date.now();
-
-          if (msg.startsWith("__HEARTBEAT__")) {
-            // Handle heartbeat with session duration
-            const parts = msg.replace("__HEARTBEAT__", "").split("|");
-            const sessionDuration = parts.length > 1 ? parseInt(parts[1]) : 0;
-            const hours = Math.floor(sessionDuration / 3600);
-            const minutes = Math.floor((sessionDuration % 3600) / 60);
-            
-            console.log(`💓 Heartbeat received - Session: ${hours}h ${minutes}m`);
-            
-            // Update progress with session duration (only if not already shown)
-            const lastStep = row.steps![row.steps!.length - 1];
-            if (!lastStep || !lastStep.includes(`Session active for ${hours}h ${minutes}m`)) {
-              row.steps!.push(`Session active for ${hours}h ${minutes}m`);
-              emit();
-            }
-            return;
-          }
-
-          if (msg.startsWith("__PROGRESS__")) {
-            // Handle progress updates
-            try {
-              const progressData = JSON.parse(msg.replace("__PROGRESS__", ""));
-              const hours = Math.floor(progressData.session_duration / 3600);
-              const minutes = Math.floor((progressData.session_duration % 3600) / 60);
-              
-              console.log(`📊 Progress update - Session: ${hours}h ${minutes}m, Status: ${progressData.status}`);
-              
-              // Update progress with detailed info
-              const progressMsg = `Progress: ${progressData.pages_processed}/${progressData.total_pages} pages (${hours}h ${minutes}m)`;
-              row.steps!.push(progressMsg);
-              emit();
-            } catch (e) {
-              console.error("Error parsing progress data:", e);
-            }
-            return;
-          }
-
-          if (msg.startsWith("__MEMORY__")) {
-            // Handle memory status updates
-            const memoryMB = msg.replace("__MEMORY__", "");
-            console.log(`💾 Memory usage: ${memoryMB} MB`);
-            
-            // Update progress with memory info (only if significant change)
-            const lastStep = row.steps![row.steps!.length - 1];
-            if (!lastStep || !lastStep.includes(`Memory: ${memoryMB} MB`)) {
-              row.steps!.push(`Memory: ${memoryMB} MB`);
-              emit();
-            }
-            return;
-          }
-
-          if (msg.startsWith("__MEMORY_GC__")) {
-            // Handle garbage collection updates
-            const parts = msg.replace("__MEMORY_GC__", "").split("|");
-            const afterGC = parts[0];
-            const freed = parts[1];
-            console.log(`🧹 Memory GC: ${afterGC} MB (freed ${freed} MB)`);
-            
-            row.steps!.push(`Memory cleanup: ${afterGC} MB (freed ${freed} MB)`);
+      const pollJob = async () => {
+        try {
+          const sessionDuration = Date.now() - sessionStartTime;
+          const hours = Math.floor(sessionDuration / 3600000);
+          const minutes = Math.floor((sessionDuration % 3600000) / 60000);
+          
+          // Check if we've exceeded max polling time
+          if (sessionDuration > maxPollTime) {
+            row.status = "error";
+            row.explanation = `Job exceeded maximum processing time (8 hours)`;
             emit();
+            reject(new Error("Job timeout"));
             return;
           }
-
-          if (msg.startsWith("__RESULT__")) {
-            const result = JSON.parse(msg.replace("__RESULT__", ""));
+          
+          // Poll job status
+          const statusResponse = await fetch(`${API}/jobs/${job_id}/status`);
+          if (!statusResponse.ok) {
+            throw new Error(`Failed to get job status: ${statusResponse.status}`);
+          }
+          
+          const jobStatus = await statusResponse.json();
+          console.log(`📊 Job ${job_id} status: ${jobStatus.status} (${hours}h ${minutes}m)`);
+          
+          // Update progress
+          const progressMsg = `Processing... (${hours}h ${minutes}m) - Status: ${jobStatus.status}`;
+          const lastStep = row.steps![row.steps!.length - 1];
+          if (!lastStep || !lastStep.includes(progressMsg)) {
+            row.steps!.push(progressMsg);
+            emit();
+          }
+          
+          if (jobStatus.status === "completed") {
+            // Get the result
+            const resultResponse = await fetch(`${API}/jobs/${job_id}/result`);
+            if (!resultResponse.ok) {
+              throw new Error(`Failed to get job result: ${resultResponse.status}`);
+            }
             
+            const result = await resultResponse.json();
+            console.log(`✅ Job ${job_id} completed successfully`);
+            
+            // Process the result
             if (processingMode === "single_deed") {
-              // Handle single deed result - SEPARATE confidence from explanation
               row.prediction = result.classification === 1 ? "has_reservation" : "no_reservation";
-              row.confidence = result.confidence; // NEW: Store confidence separately
-              row.explanation = result.detailed_samples?.[0]?.reasoning || ""; // Only reasoning, no confidence
+              row.confidence = result.confidence;
+              row.explanation = result.detailed_samples?.[0]?.reasoning || "";
             } else {
-              // Handle multi-deed result
               row.totalDeeds = result.total_deeds;
               row.deedResults = result.deed_results.map((deedResult: any): DeedResult => ({
                 deed_number: deedResult.deed_number,
                 classification: deedResult.classification,
                 confidence: deedResult.confidence,
                 prediction: deedResult.classification === 1 ? "has_reservation" : "no_reservation",
-                explanation: deedResult.detailed_samples?.[0]?.reasoning || "", // Only reasoning
+                explanation: deedResult.detailed_samples?.[0]?.reasoning || "",
                 deed_file: deedResult.deed_file,
                 pages_in_deed: deedResult.pages_in_deed
               }));
               
-              // Set overall prediction based on summary
               const reservationsFound = result.summary?.reservations_found || 0;
               row.prediction = reservationsFound > 0 ? "has_reservation" : "no_reservation";
               row.explanation = `${reservationsFound}/${result.total_deeds} deeds have reservations`;
             }
             
             row.status = "done";
+            row.steps!.push(`✅ Processing completed successfully (${hours}h ${minutes}m)`);
             emit();
-            es.close();
             resolve();
-          } else if (msg.startsWith("__ERROR__")) {
+            
+          } else if (jobStatus.status === "failed") {
             row.status = "error";
-            row.explanation = msg.replace("__ERROR__", "");
+            row.explanation = jobStatus.error || "Job failed for unknown reason";
             emit();
-            es.close();
             reject(new Error(row.explanation));
-          } else if (msg === "__END__") {
-            es.close();
-            resolve();
+            
+          } else if (jobStatus.status === "running") {
+            // Continue polling
+            setTimeout(pollJob, pollInterval);
+            
           } else {
-            // normal progress line
-            row.steps!.push(msg);
-            emit();
-          }
-        };
-
-        es.onerror = err => {
-          console.error("EventSource error:", err);
-          es.close();
-          
-          const sessionDuration = Date.now() - sessionStartTime;
-          const hours = Math.floor(sessionDuration / 3600000);
-          const minutes = Math.floor((sessionDuration % 3600000) / 60000);
-          
-          // Check if it's been too long since last heartbeat
-          if (Date.now() - lastHeartbeat > heartbeatTimeout) {
-            row.status = "error";
-            row.explanation = `connection lost after ${hours}h ${minutes}m - no heartbeat received for 10 minutes`;
-            emit();
-            reject(new Error("Connection timeout"));
-            return;
+            // Unknown status, continue polling
+            setTimeout(pollJob, pollInterval);
           }
           
-          // Try to reconnect if we haven't exceeded max retries
-          if (retryCount < maxRetries) {
-            retryCount++;
-            const retryDelay = Math.min(5000 * retryCount, 30000); // Cap at 30 seconds
-            console.log(`🔄 Retrying connection (${retryCount}/${maxRetries}) after ${hours}h ${minutes}m... (delay: ${retryDelay}ms)`);
-            
-            // Add retry info to steps
-            row.steps!.push(`🔄 Retrying connection (${retryCount}/${maxRetries}) - delay: ${retryDelay/1000}s`);
-            emit();
-            
-            setTimeout(connectStream, retryDelay);
-          } else {
-            // Try to get result via fallback endpoint before giving up
-            console.log(`🔄 All retries exhausted, attempting to retrieve result for job ${job_id}`);
-            
-            // Use async function to handle the fallback
-            (async () => {
-              try {
-                const resultResponse = await fetch(`${API}/job-result/${job_id}`);
-                if (resultResponse.ok) {
-                  const result = await resultResponse.json();
-                  console.log(`✅ Retrieved result via fallback endpoint`);
-                  
-                  // Process the result as if it came through the stream
-                  if (processingMode === "single_deed") {
-                    row.prediction = result.classification === 1 ? "has_reservation" : "no_reservation";
-                    row.confidence = result.confidence;
-                    row.explanation = result.detailed_samples?.[0]?.reasoning || "";
-                  } else {
-                    row.totalDeeds = result.total_deeds;
-                    row.deedResults = result.deed_results.map((deedResult: any): DeedResult => ({
-                      deed_number: deedResult.deed_number,
-                      classification: deedResult.classification,
-                      confidence: deedResult.confidence,
-                      prediction: deedResult.classification === 1 ? "has_reservation" : "no_reservation",
-                      explanation: deedResult.detailed_samples?.[0]?.reasoning || "",
-                      deed_file: deedResult.deed_file,
-                      pages_in_deed: deedResult.pages_in_deed
-                    }));
-                    
-                    const reservationsFound = result.summary?.reservations_found || 0;
-                    row.prediction = reservationsFound > 0 ? "has_reservation" : "no_reservation";
-                    row.explanation = `${reservationsFound}/${result.total_deeds} deeds have reservations`;
-                  }
-                  
-                  row.status = "done";
-                  row.steps!.push(`✅ Result retrieved via fallback after connection issues`);
-                  emit();
-                  resolve();
-                  return;
-                }
-              } catch (fallbackError) {
-                console.error("Fallback result retrieval failed:", fallbackError);
-              }
-              
-              row.status = "error";
-              row.explanation = `connection lost after ${hours}h ${minutes}m - exceeded retry attempts (${maxRetries})`;
-              emit();
-              reject(err);
-            })();
-          }
-        };
-
-        // Set up heartbeat monitoring with shorter intervals for better reliability
-        const heartbeatCheck = setInterval(() => {
-          const sessionDuration = Date.now() - sessionStartTime;
-          const hours = Math.floor(sessionDuration / 3600000);
-          const minutes = Math.floor((sessionDuration % 3600000) / 60000);
-          
-          if (Date.now() - lastHeartbeat > heartbeatTimeout) {
-            clearInterval(heartbeatCheck);
-            es.close();
-            row.status = "error";
-            row.explanation = `connection lost after ${hours}h ${minutes}m - heartbeat timeout (10 minutes)`;
-            emit();
-            reject(new Error("Heartbeat timeout"));
-          }
-        }, 30000); // Check every 30 seconds for better reliability
-
-        // Clean up interval when connection closes
-        es.addEventListener('close', () => clearInterval(heartbeatCheck));
+        } catch (error) {
+          console.error(`Error polling job ${job_id}:`, error);
+          row.status = "error";
+          row.explanation = `Error monitoring job: ${error.message}`;
+          emit();
+          reject(error);
+        }
       };
       
-      connectStream();
+      // Start polling
+      pollJob();
     });
   }
 
