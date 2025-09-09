@@ -601,11 +601,22 @@ async def create_long_running_job(
     avoiding the 22-minute timeout limit of web services.
     """
     try:
+        # Validate file
+        if not file.filename:
+            raise HTTPException(status_code=400, detail="No filename provided")
+        
         # Save uploaded file temporarily
         contents = await file.read()
+        if len(contents) == 0:
+            raise HTTPException(status_code=400, detail="File is empty")
+        
+        print(f"📁 Received file: {file.filename} (size: {len(contents)} bytes)")
+        
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             tmp.write(contents)
             tmp_path = tmp.name
+        
+        print(f"💾 Saved to temp file: {tmp_path}")
         
         # Create job
         job_id = job_manager.create_job(
@@ -614,10 +625,23 @@ async def create_long_running_job(
             splitting_strategy
         )
         
+        print(f"🎯 Created job: {job_id}")
+        
         # Start processing in background
         def process_job():
             try:
+                print(f"🚀 Starting job {job_id} processing...")
                 job_manager.update_job_status(job_id, JobStatus.RUNNING)
+                
+                # Check if file exists and has content
+                if not os.path.exists(tmp_path):
+                    raise ValueError(f"Temporary file not found: {tmp_path}")
+                
+                file_size = os.path.getsize(tmp_path)
+                if file_size == 0:
+                    raise ValueError(f"File is empty: {tmp_path}")
+                
+                print(f"📁 Processing file: {tmp_path} (size: {file_size} bytes)")
                 
                 # Process the document
                 if processing_mode == "single_deed":
@@ -630,16 +654,22 @@ async def create_long_running_job(
                 else:
                     raise ValueError(f"Unknown processing_mode: {processing_mode}")
                 
+                print(f"✅ Job {job_id} completed successfully")
                 job_manager.update_job_status(job_id, JobStatus.COMPLETED, result=result)
                 
             except Exception as e:
+                print(f"❌ Job {job_id} failed: {e}")
+                import traceback
+                traceback.print_exc()
                 job_manager.update_job_status(job_id, JobStatus.FAILED, error=str(e))
             finally:
                 # Clean up temp file
                 try:
-                    os.remove(tmp_path)
-                except:
-                    pass
+                    if os.path.exists(tmp_path):
+                        os.remove(tmp_path)
+                        print(f"🧹 Cleaned up temp file: {tmp_path}")
+                except Exception as cleanup_error:
+                    print(f"⚠️ Failed to cleanup temp file: {cleanup_error}")
         
         # Start background thread
         thread = threading.Thread(target=process_job, daemon=True)
