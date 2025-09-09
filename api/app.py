@@ -16,9 +16,11 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 try:
     from job_api_endpoints import job_router
     JOB_ENDPOINTS_AVAILABLE = True
-except ImportError:
+    print("✅ Job endpoints imported successfully")
+except ImportError as e:
     JOB_ENDPOINTS_AVAILABLE = False
-    print("⚠️ Job endpoints not available - job_manager.py and job_api_endpoints.py required")
+    print(f"⚠️ Job endpoints not available - ImportError: {e}")
+    print("   Make sure job_manager.py and job_api_endpoints.py are in the api/ directory")
 # ---------------------------------------------------------------------------
 
 
@@ -525,3 +527,34 @@ async def test_job_system():
             "message": f"Job system test failed: {str(e)}",
             "job_endpoints_available": False
         }
+
+@app.get("/test-imports")
+async def test_imports():
+    """Test endpoint to debug import issues"""
+    import_results = {}
+    
+    # Test individual imports
+    try:
+        import job_manager
+        import_results["job_manager"] = "✅ Success"
+    except ImportError as e:
+        import_results["job_manager"] = f"❌ Failed: {e}"
+    
+    try:
+        import job_api_endpoints
+        import_results["job_api_endpoints"] = "✅ Success"
+    except ImportError as e:
+        import_results["job_api_endpoints"] = f"❌ Failed: {e}"
+    
+    try:
+        from job_manager import job_manager as jm
+        import_results["job_manager_instance"] = "✅ Success"
+    except ImportError as e:
+        import_results["job_manager_instance"] = f"❌ Failed: {e}"
+    
+    return {
+        "import_results": import_results,
+        "job_endpoints_available": JOB_ENDPOINTS_AVAILABLE,
+        "current_directory": os.getcwd(),
+        "api_directory_files": os.listdir(".") if os.path.exists(".") else "Directory not found"
+    }
