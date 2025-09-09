@@ -1,0 +1,77 @@
+{
+  "doc_id": "synthetic_train_018",
+  "source_pdf": "train/pdfs/synthetic_train_018.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 5,
+    "total_pages": 16
+  },
+  "deed_count": 5,
+  "page_starts": [
+    1,
+    7,
+    8,
+    10,
+    14
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 6,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 2,
+      "page_start": 7,
+      "page_end": 7,
+      "source_file": "Guernsey DB 290_74.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 9,
+      "source_file": "Potter DB 197_879.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 13,
+      "source_file": "Washington 201408321 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 16,
+      "source_file": "Harrison DV 194_5.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 5,
+    "n_starts_normalized": 5,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.984220",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "2fafac03671432ba337ebab52499eeaf96eabe13ee7fa9ac61d9500c8b75bbfc"
+  }
+}

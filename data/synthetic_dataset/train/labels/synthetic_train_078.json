@@ -1,0 +1,68 @@
+{
+  "doc_id": "synthetic_train_078",
+  "source_pdf": "train/pdfs/synthetic_train_078.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 4,
+    "total_pages": 17
+  },
+  "deed_count": 4,
+  "page_starts": [
+    1,
+    5,
+    8,
+    15
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "OR 133-302.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "DB 99-241.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 14,
+      "source_file": "DB 536_306.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 7
+    },
+    {
+      "index": 4,
+      "page_start": 15,
+      "page_end": 17,
+      "source_file": "Guernsey Co OH DV 145_283.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 4,
+    "n_starts_normalized": 4,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.844753",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "9f5bea40abb593cc70d4b259a3fba3695aa3057eed88b401cbbd63aefc525caa"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "doc_id": "synthetic_train_072",
+  "source_pdf": "train/pdfs/synthetic_train_072.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 6,
+    "total_pages": 21
+  },
+  "deed_count": 6,
+  "page_starts": [
+    1,
+    7,
+    11,
+    14,
+    15,
+    19
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 6,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 2,
+      "page_start": 7,
+      "page_end": 10,
+      "source_file": "OR 601_3875.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 11,
+      "page_end": 13,
+      "source_file": "OR 178_693.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 14,
+      "page_end": 14,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 5,
+      "page_start": 15,
+      "page_end": 18,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 6,
+      "page_start": 19,
+      "page_end": 21,
+      "source_file": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 6,
+    "n_starts_normalized": 6,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.702948",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "eaf506c56cf6192cecf0a95463fd88728bc15c063886d125d5184a4c8892b1dc"
+  }
+}

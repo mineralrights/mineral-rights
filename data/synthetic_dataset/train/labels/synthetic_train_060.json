@@ -1,0 +1,140 @@
+{
+  "doc_id": "synthetic_train_060",
+  "source_pdf": "train/pdfs/synthetic_train_060.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 12,
+    "total_pages": 49
+  },
+  "deed_count": 12,
+  "page_starts": [
+    1,
+    5,
+    10,
+    12,
+    15,
+    21,
+    23,
+    25,
+    31,
+    37,
+    41,
+    44
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Butler DB 1895_80 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 9,
+      "source_file": "Brooke DB 176_514.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 3,
+      "page_start": 10,
+      "page_end": 11,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 14,
+      "source_file": "DB 360_239.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 15,
+      "page_end": 20,
+      "source_file": "OR 274_678.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 6,
+      "page_start": 21,
+      "page_end": 22,
+      "source_file": "OR 1388_76.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 23,
+      "page_end": 24,
+      "source_file": "Harrison DV 96_39.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 25,
+      "page_end": 30,
+      "source_file": "Somerset DB 1820_349.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 9,
+      "page_start": 31,
+      "page_end": 36,
+      "source_file": "DV 192_833.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 10,
+      "page_start": 37,
+      "page_end": 40,
+      "source_file": "Allegheny DB 92_389.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 11,
+      "page_start": 41,
+      "page_end": 43,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 12,
+      "page_start": 44,
+      "page_end": 49,
+      "source_file": "DB 800_131.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 12,
+    "n_starts_normalized": 12,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.303205",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "522af16fad98e938489aa16faa1ac0622cc4bcb8160ecd6b4cf08ccaa67bd9a3"
+  }
+}

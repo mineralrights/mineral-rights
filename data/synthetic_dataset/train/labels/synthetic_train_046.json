@@ -1,0 +1,167 @@
+{
+  "doc_id": "synthetic_train_046",
+  "source_pdf": "train/pdfs/synthetic_train_046.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 15,
+    "total_pages": 54
+  },
+  "deed_count": 15,
+  "page_starts": [
+    1,
+    5,
+    11,
+    14,
+    21,
+    24,
+    26,
+    32,
+    34,
+    38,
+    40,
+    41,
+    43,
+    46,
+    49
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Allegheny DB 92_389.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 10,
+      "source_file": "Allegheny 16920-254 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 11,
+      "page_end": 13,
+      "source_file": "OR 137_1211.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 14,
+      "page_end": 20,
+      "source_file": "DB 536_306.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 7
+    },
+    {
+      "index": 5,
+      "page_start": 21,
+      "page_end": 23,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 24,
+      "page_end": 25,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 26,
+      "page_end": 31,
+      "source_file": "Westmoreland DV 2483_444.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 8,
+      "page_start": 32,
+      "page_end": 33,
+      "source_file": "Allegheny DB 2470_179 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 9,
+      "page_start": 34,
+      "page_end": 37,
+      "source_file": "Washington Co PA Inst# 201031651.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 10,
+      "page_start": 38,
+      "page_end": 39,
+      "source_file": "Washington DB 704_223.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 11,
+      "page_start": 40,
+      "page_end": 40,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 12,
+      "page_start": 41,
+      "page_end": 42,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 13,
+      "page_start": 43,
+      "page_end": 45,
+      "source_file": "OR 568_1267.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 14,
+      "page_start": 46,
+      "page_end": 48,
+      "source_file": "Harrison DV 194_5.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 15,
+      "page_start": 49,
+      "page_end": 54,
+      "source_file": "DV 192_833.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 15,
+    "n_starts_normalized": 15,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.914177",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "b9fa4d4d24214702eeeadacec2aaece1f99ee148513776846d84b9e23c92b6a5"
+  }
+}

@@ -1,0 +1,122 @@
+{
+  "doc_id": "synthetic_test_009",
+  "source_pdf": "test/pdfs/synthetic_test_009.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 6,
+    "total_deeds": 10,
+    "total_pages": 32
+  },
+  "deed_count": 10,
+  "page_starts": [
+    1,
+    5,
+    7,
+    9,
+    12,
+    18,
+    20,
+    23,
+    26,
+    30
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Washington Co PA Inst# 201031651.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 6,
+      "source_file": "Allegheny 3387-275 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 8,
+      "source_file": "OR 55_190.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 11,
+      "source_file": "Washington DBV 604 Page 286 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 17,
+      "source_file": "OR 276_4740.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 6,
+      "page_start": 18,
+      "page_end": 19,
+      "source_file": "Washington DB 704_223.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 20,
+      "page_end": 22,
+      "source_file": "DB 605_186.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 8,
+      "page_start": 23,
+      "page_end": 25,
+      "source_file": "OR 133-299.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 26,
+      "page_end": 29,
+      "source_file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 10,
+      "page_start": 30,
+      "page_end": 32,
+      "source_file": "OR 137_1211.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 10,
+    "n_starts_normalized": 10,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.848274",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "467262e4e7a1798cbad35bd7f9504b272fb69424307bc083d8ccb7b9b68b4663"
+  }
+}

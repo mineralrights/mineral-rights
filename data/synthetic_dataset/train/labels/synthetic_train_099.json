@@ -1,0 +1,77 @@
+{
+  "doc_id": "synthetic_train_099",
+  "source_pdf": "train/pdfs/synthetic_train_099.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 4,
+    "total_deeds": 5,
+    "total_pages": 15
+  },
+  "deed_count": 5,
+  "page_starts": [
+    1,
+    2,
+    6,
+    10,
+    13
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 1,
+      "source_file": "Guernsey DB 290_74.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 2,
+      "page_start": 2,
+      "page_end": 5,
+      "source_file": "Washington Co PA Inst# 201031651.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 6,
+      "page_end": 9,
+      "source_file": "Greene DB 253_223 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 12,
+      "source_file": "Belmont Co OH DB 189_408.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 13,
+      "page_end": 15,
+      "source_file": "Guernsey Co OH DV 145_283.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 5,
+    "n_starts_normalized": 5,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.450167",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "12770689f4a937505df50d2719cdb8f45cf1d0f43de282a5a21d175ee528543e"
+  }
+}

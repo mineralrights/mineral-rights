@@ -1,0 +1,95 @@
+{
+  "doc_id": "synthetic_train_054",
+  "source_pdf": "train/pdfs/synthetic_train_054.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 7,
+    "total_pages": 22
+  },
+  "deed_count": 7,
+  "page_starts": [
+    1,
+    5,
+    8,
+    9,
+    12,
+    14,
+    21
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Allegheny DB 92_389.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "DB 347_434.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 8,
+      "source_file": "Guernsey DB 290_74.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 11,
+      "source_file": "Washington DBV 604 Page 286 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 13,
+      "source_file": "DB 107_12.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 14,
+      "page_end": 20,
+      "source_file": "DB 536_306.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 7
+    },
+    {
+      "index": 7,
+      "page_start": 21,
+      "page_end": 22,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 7,
+    "n_starts_normalized": 7,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.075673",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "05a5dff4001e4bcddb2629e71b6ee087cce0fee2550787d2bc7300d285fe0d3d"
+  }
+}

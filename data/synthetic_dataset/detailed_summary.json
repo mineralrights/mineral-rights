@@ -1,0 +1,31 @@
+{
+  "dataset_overview": {
+    "total_documents": 30,
+    "total_pages": 806,
+    "total_deeds": 243,
+    "documents_with_reservations": 28,
+    "average_deeds_per_document": 8.1,
+    "average_pages_per_document": 26.866666666666667,
+    "reservation_rate": 0.9333333333333333
+  },
+  "train_split": {
+    "documents": 20,
+    "pages": 558,
+    "deeds": 166,
+    "documents_with_reservations": 18,
+    "average_deeds_per_document": 8.3,
+    "average_pages_per_document": 27.9
+  },
+  "test_split": {
+    "documents": 10,
+    "pages": 248,
+    "deeds": 77,
+    "documents_with_reservations": 10,
+    "average_deeds_per_document": 7.7,
+    "average_pages_per_document": 24.8
+  },
+  "quality_metrics": {
+    "page_consistency_rate": 1.0,
+    "label_completeness": 1.0
+  }
+}

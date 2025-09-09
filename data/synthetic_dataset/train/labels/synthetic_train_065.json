@@ -1,0 +1,122 @@
+{
+  "doc_id": "synthetic_train_065",
+  "source_pdf": "train/pdfs/synthetic_train_065.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 10,
+    "total_pages": 42
+  },
+  "deed_count": 10,
+  "page_starts": [
+    1,
+    4,
+    6,
+    10,
+    14,
+    17,
+    22,
+    31,
+    35,
+    41
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "OR 133-299.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 5,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 6,
+      "page_end": 9,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 13,
+      "source_file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 16,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 17,
+      "page_end": 21,
+      "source_file": "OR 178_1073.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 7,
+      "page_start": 22,
+      "page_end": 30,
+      "source_file": "OR 239_2451.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 9
+    },
+    {
+      "index": 8,
+      "page_start": 31,
+      "page_end": 34,
+      "source_file": "Butler DB 1895_80 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 9,
+      "page_start": 35,
+      "page_end": 40,
+      "source_file": "OR 249_8.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 10,
+      "page_start": 41,
+      "page_end": 42,
+      "source_file": "DV 192_87.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 10,
+    "n_starts_normalized": 10,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.483969",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "85d538cafa80ed99fae3d83bf9801c2da6c6c42b3461cfb27635f3bd2ef7b2ff"
+  }
+}

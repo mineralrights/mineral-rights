@@ -1,0 +1,95 @@
+{
+  "doc_id": "synthetic_train_042",
+  "source_pdf": "train/pdfs/synthetic_train_042.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 7,
+    "total_pages": 24
+  },
+  "deed_count": 7,
+  "page_starts": [
+    1,
+    6,
+    9,
+    12,
+    15,
+    22,
+    23
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 5,
+      "source_file": "OR 178_1073.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 2,
+      "page_start": 6,
+      "page_end": 8,
+      "source_file": "Greene DB 280_311 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 9,
+      "page_end": 11,
+      "source_file": "OR 137_1211.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 14,
+      "source_file": "OR 178_693.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 15,
+      "page_end": 21,
+      "source_file": "DB 536_306.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 7
+    },
+    {
+      "index": 6,
+      "page_start": 22,
+      "page_end": 22,
+      "source_file": "Guernsey Co OH DV 118_352.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 1
+    },
+    {
+      "index": 7,
+      "page_start": 23,
+      "page_end": 24,
+      "source_file": "Potter DB 197_879.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 7,
+    "n_starts_normalized": 7,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.711263",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "f836f3e78471203583aee7c532c8f2cc384fd667ca9bb07c8a78b2910c4fa070"
+  }
+}

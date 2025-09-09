@@ -1,0 +1,140 @@
+{
+  "doc_id": "synthetic_test_001",
+  "source_pdf": "test/pdfs/synthetic_test_001.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 4,
+    "total_deeds": 12,
+    "total_pages": 38
+  },
+  "deed_count": 12,
+  "page_starts": [
+    1,
+    5,
+    7,
+    10,
+    11,
+    13,
+    15,
+    17,
+    18,
+    27,
+    33,
+    36
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 6,
+      "source_file": "Harrison DV 96_39.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 9,
+      "source_file": "Marshall Co WV DB 82_173.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 10,
+      "source_file": "Carroll DB 130-50.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 5,
+      "page_start": 11,
+      "page_end": 12,
+      "source_file": "DV 192_87.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 13,
+      "page_end": 14,
+      "source_file": "OR 1388_76.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 15,
+      "page_end": 16,
+      "source_file": "Monroe Co OH DB 109_330.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 17,
+      "page_end": 17,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 9,
+      "page_start": 18,
+      "page_end": 26,
+      "source_file": "OR 239_2451.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 9
+    },
+    {
+      "index": 10,
+      "page_start": 27,
+      "page_end": 32,
+      "source_file": "Somerset DB 1820_349.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 11,
+      "page_start": 33,
+      "page_end": 35,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 12,
+      "page_start": 36,
+      "page_end": 38,
+      "source_file": "Washington DB 405_547.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 12,
+    "n_starts_normalized": 12,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.503059",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "31e07151b5e993d169522a04b11441df3db67e88aac14cb6e9136ff551c08676"
+  }
+}

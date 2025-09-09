@@ -1,0 +1,86 @@
+{
+  "doc_id": "synthetic_train_014",
+  "source_pdf": "train/pdfs/synthetic_train_014.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 6,
+    "total_pages": 15
+  },
+  "deed_count": 6,
+  "page_starts": [
+    1,
+    2,
+    5,
+    8,
+    13,
+    15
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 1,
+      "source_file": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 2,
+      "page_start": 2,
+      "page_end": 4,
+      "source_file": "DB 557_938.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "DB 605_186.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 8,
+      "page_end": 12,
+      "source_file": "Brooke DB 176_514.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 5,
+      "page_start": 13,
+      "page_end": 14,
+      "source_file": "Allegheny 3387-275 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 15,
+      "page_end": 15,
+      "source_file": "Carroll DB 130-50.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 6,
+    "n_starts_normalized": 6,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.873861",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "6168f94f72463a040ee42315dadac171d1c71c3ad2f063dc6ca63d3a9e93dbb5"
+  }
+}

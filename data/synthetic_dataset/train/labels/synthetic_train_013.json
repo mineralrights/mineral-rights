@@ -1,0 +1,122 @@
+{
+  "doc_id": "synthetic_train_013",
+  "source_pdf": "train/pdfs/synthetic_train_013.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 10,
+    "total_pages": 31
+  },
+  "deed_count": 10,
+  "page_starts": [
+    1,
+    7,
+    9,
+    10,
+    13,
+    15,
+    17,
+    20,
+    23,
+    26
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 6,
+      "source_file": "Somerset DB 1820_349.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 2,
+      "page_start": 7,
+      "page_end": 8,
+      "source_file": "Potter DB 197_879.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 9,
+      "page_end": 9,
+      "source_file": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 12,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 13,
+      "page_end": 14,
+      "source_file": "Allegheny DB 2470_179 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 15,
+      "page_end": 16,
+      "source_file": "DB 107_12.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 17,
+      "page_end": 19,
+      "source_file": "DB 257_85.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 8,
+      "page_start": 20,
+      "page_end": 22,
+      "source_file": "Marshall Co WV DB 82_173.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 23,
+      "page_end": 25,
+      "source_file": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 10,
+      "page_start": 26,
+      "page_end": 31,
+      "source_file": "OR 276_4740.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 10,
+    "n_starts_normalized": 10,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.842601",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "3bc56cb0855d4d8adeb32f990eb36d2086b3ba1a98b79d2f617d7606ac5214b4"
+  }
+}

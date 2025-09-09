@@ -1,0 +1,167 @@
+{
+  "doc_id": "synthetic_train_079",
+  "source_pdf": "train/pdfs/synthetic_train_079.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 8,
+    "total_deeds": 15,
+    "total_pages": 44
+  },
+  "deed_count": 15,
+  "page_starts": [
+    1,
+    4,
+    6,
+    10,
+    12,
+    14,
+    17,
+    21,
+    23,
+    26,
+    30,
+    32,
+    35,
+    39,
+    42
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Allegheny 1910-768.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 5,
+      "source_file": "Indiana Co. PA DB 550_322.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 6,
+      "page_end": 9,
+      "source_file": "Allegheny DB 92_389.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 11,
+      "source_file": "DV 226_593.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 13,
+      "source_file": "DB 107_12.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 14,
+      "page_end": 16,
+      "source_file": "Marshall Co WV DB 82_173.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 17,
+      "page_end": 20,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 8,
+      "page_start": 21,
+      "page_end": 22,
+      "source_file": "Washington DB 384_583.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 9,
+      "page_start": 23,
+      "page_end": 25,
+      "source_file": "Harrison DV 234_357.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 10,
+      "page_start": 26,
+      "page_end": 29,
+      "source_file": "Washington 201408321 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 11,
+      "page_start": 30,
+      "page_end": 31,
+      "source_file": "Monroe Co OH DB 109_330.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 12,
+      "page_start": 32,
+      "page_end": 34,
+      "source_file": "OR 178_693.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 13,
+      "page_start": 35,
+      "page_end": 38,
+      "source_file": "Allegheny 8277_16 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 14,
+      "page_start": 39,
+      "page_end": 41,
+      "source_file": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 15,
+      "page_start": 42,
+      "page_end": 44,
+      "source_file": "Washington Co PA DV 596_69.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 15,
+    "n_starts_normalized": 15,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.902577",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "fa15ca5c6de3b7003f3e6501f4cbc371315e1e35473aaa1cb671601bb186ad5b"
+  }
+}

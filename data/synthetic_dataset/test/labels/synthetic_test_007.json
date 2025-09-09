@@ -1,0 +1,113 @@
+{
+  "doc_id": "synthetic_test_007",
+  "source_pdf": "test/pdfs/synthetic_test_007.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 4,
+    "total_deeds": 9,
+    "total_pages": 34
+  },
+  "deed_count": 9,
+  "page_starts": [
+    1,
+    5,
+    9,
+    11,
+    17,
+    20,
+    24,
+    27,
+    30
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Butler DB 1895_80 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 8,
+      "source_file": "OR 601_3875.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 9,
+      "page_end": 10,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 11,
+      "page_end": 16,
+      "source_file": "Westmoreland DV 2483_444.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 5,
+      "page_start": 17,
+      "page_end": 19,
+      "source_file": "OR 568_1267.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 20,
+      "page_end": 23,
+      "source_file": "Washington Co PA Inst# 201031651.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 7,
+      "page_start": 24,
+      "page_end": 26,
+      "source_file": "Belmont Co OH DB 189_408.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 8,
+      "page_start": 27,
+      "page_end": 29,
+      "source_file": "DB 605_186.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 30,
+      "page_end": 34,
+      "source_file": "OR 178_1073.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 9,
+    "n_starts_normalized": 9,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.768124",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "ca0c2df3a06f9b05ba771a229d13888e6d67c4a5a8b3260904488c240248a1b5"
+  }
+}

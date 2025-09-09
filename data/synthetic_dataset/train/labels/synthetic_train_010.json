@@ -1,0 +1,158 @@
+{
+  "doc_id": "synthetic_train_010",
+  "source_pdf": "train/pdfs/synthetic_train_010.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 8,
+    "total_deeds": 14,
+    "total_pages": 43
+  },
+  "deed_count": 14,
+  "page_starts": [
+    1,
+    8,
+    10,
+    13,
+    16,
+    17,
+    18,
+    20,
+    23,
+    26,
+    29,
+    30,
+    39,
+    42
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 7,
+      "source_file": "DB 536_306.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 7
+    },
+    {
+      "index": 2,
+      "page_start": 8,
+      "page_end": 9,
+      "source_file": "Monroe Co OH DB 109_330.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 10,
+      "page_end": 12,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 13,
+      "page_end": 15,
+      "source_file": "Greene DB 280_311 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 16,
+      "page_end": 16,
+      "source_file": "Guernsey Co OH DV 118_352.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 1
+    },
+    {
+      "index": 6,
+      "page_start": 17,
+      "page_end": 17,
+      "source_file": "DB 110_36.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 7,
+      "page_start": 18,
+      "page_end": 19,
+      "source_file": "DB 107_12.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 20,
+      "page_end": 22,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 23,
+      "page_end": 25,
+      "source_file": "OR 568_1267.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 10,
+      "page_start": 26,
+      "page_end": 28,
+      "source_file": "DB 593_316.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 29,
+      "page_end": 29,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 12,
+      "page_start": 30,
+      "page_end": 38,
+      "source_file": "OR 239_2451.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 9
+    },
+    {
+      "index": 13,
+      "page_start": 39,
+      "page_end": 41,
+      "source_file": "Belmont Co OH DB 189_408.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 14,
+      "page_start": 42,
+      "page_end": 43,
+      "source_file": "Allegheny DB 2470_179 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 14,
+    "n_starts_normalized": 14,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.749435",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "50e2d3ca5bc7b993605cf15c2030b3c9b788a33229623e6f8f03df73432742e7"
+  }
+}

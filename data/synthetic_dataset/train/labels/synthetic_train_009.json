@@ -1,0 +1,77 @@
+{
+  "doc_id": "synthetic_train_009",
+  "source_pdf": "train/pdfs/synthetic_train_009.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 1,
+    "total_deeds": 5,
+    "total_pages": 22
+  },
+  "deed_count": 5,
+  "page_starts": [
+    1,
+    3,
+    9,
+    12,
+    14
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "Washington DB 384_583.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 8,
+      "source_file": "Allegheny 16920-254 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 9,
+      "page_end": 11,
+      "source_file": "OR 137_1211.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 13,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 22,
+      "source_file": "OR 239_2451.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 9
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 5,
+    "n_starts_normalized": 5,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.679434",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "a1ae893b4f2eff3f41241883ac68055350dfbbec7ca77e0b50cd5d500d76aefe"
+  }
+}

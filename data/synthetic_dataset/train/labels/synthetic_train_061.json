@@ -1,0 +1,140 @@
+{
+  "doc_id": "synthetic_train_061",
+  "source_pdf": "train/pdfs/synthetic_train_061.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 8,
+    "total_deeds": 12,
+    "total_pages": 41
+  },
+  "deed_count": 12,
+  "page_starts": [
+    1,
+    4,
+    10,
+    13,
+    16,
+    19,
+    21,
+    25,
+    27,
+    30,
+    33,
+    36
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 9,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 10,
+      "page_end": 12,
+      "source_file": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 13,
+      "page_end": 15,
+      "source_file": "OR 133-299.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 16,
+      "page_end": 18,
+      "source_file": "OR 267_4756.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 19,
+      "page_end": 20,
+      "source_file": "OR 55_190.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 21,
+      "page_end": 24,
+      "source_file": "OR 133-302.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 8,
+      "page_start": 25,
+      "page_end": 26,
+      "source_file": "Westmoreland DV 1434_603 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 9,
+      "page_start": 27,
+      "page_end": 29,
+      "source_file": "DB 605_186.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 10,
+      "page_start": 30,
+      "page_end": 32,
+      "source_file": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 33,
+      "page_end": 35,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 12,
+      "page_start": 36,
+      "page_end": 41,
+      "source_file": "Somerset DB 1820_349.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 12,
+    "n_starts_normalized": 12,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.320660",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "5312d02137088a5fca74c3bf7dc32dd1761c798b5dd36d82ad31ccc5edd578ee"
+  }
+}

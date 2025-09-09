@@ -1,0 +1,158 @@
+{
+  "doc_id": "synthetic_train_058",
+  "source_pdf": "train/pdfs/synthetic_train_058.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 8,
+    "total_deeds": 14,
+    "total_pages": 42
+  },
+  "deed_count": 14,
+  "page_starts": [
+    1,
+    4,
+    8,
+    10,
+    13,
+    16,
+    18,
+    19,
+    24,
+    27,
+    30,
+    33,
+    36,
+    39
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Harrison DV 194_5.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 7,
+      "source_file": "Westmoreland 753-247 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 9,
+      "source_file": "Indiana Co. PA DB 550_322.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 12,
+      "source_file": "DB 99-241.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 13,
+      "page_end": 15,
+      "source_file": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 16,
+      "page_end": 17,
+      "source_file": "DB 304_409.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 18,
+      "page_end": 18,
+      "source_file": "Guernsey DB 290_74.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 8,
+      "page_start": 19,
+      "page_end": 23,
+      "source_file": "OR 178_1073.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 9,
+      "page_start": 24,
+      "page_end": 26,
+      "source_file": "OR 137_1211.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 10,
+      "page_start": 27,
+      "page_end": 29,
+      "source_file": "DB 347_434.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 30,
+      "page_end": 32,
+      "source_file": "DB 257_85.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 12,
+      "page_start": 33,
+      "page_end": 35,
+      "source_file": "Greene DB 280_311 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 13,
+      "page_start": 36,
+      "page_end": 38,
+      "source_file": "Armstrong DB 5269_327 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 14,
+      "page_start": 39,
+      "page_end": 42,
+      "source_file": "OR 601_3875.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 14,
+    "n_starts_normalized": 14,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.172503",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "8d5657749279b5c723106c6844f3878559b1b77a9b8377a3b3ac5e898baa93b4"
+  }
+}

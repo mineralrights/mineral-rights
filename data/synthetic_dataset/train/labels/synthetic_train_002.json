@@ -1,0 +1,59 @@
+{
+  "doc_id": "synthetic_train_002",
+  "source_pdf": "train/pdfs/synthetic_train_002.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": false,
+    "reservation_count": 0,
+    "total_deeds": 3,
+    "total_pages": 14
+  },
+  "deed_count": 3,
+  "page_starts": [
+    1,
+    6,
+    9
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 5,
+      "source_file": "Brooke DB 176_514.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 2,
+      "page_start": 6,
+      "page_end": 8,
+      "source_file": "Jefferson DB 397_111.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 9,
+      "page_end": 14,
+      "source_file": "Greene OR 534_885 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 3,
+    "n_starts_normalized": 3,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.440295",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "c941d623a2302a270601001f0adcdb7d5698480441c1f0bd69ecfd6906d3a03e"
+  }
+}

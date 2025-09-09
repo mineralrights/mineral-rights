@@ -1,0 +1,140 @@
+{
+  "doc_id": "synthetic_train_077",
+  "source_pdf": "train/pdfs/synthetic_train_077.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 6,
+    "total_deeds": 12,
+    "total_pages": 42
+  },
+  "deed_count": 12,
+  "page_starts": [
+    1,
+    7,
+    13,
+    16,
+    19,
+    20,
+    24,
+    26,
+    29,
+    34,
+    37,
+    40
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 6,
+      "source_file": "DV 192_833.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 2,
+      "page_start": 7,
+      "page_end": 12,
+      "source_file": "OR 274_678.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 13,
+      "page_end": 15,
+      "source_file": "OR 267_4756.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 16,
+      "page_end": 18,
+      "source_file": "DB 360_239.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 19,
+      "page_end": 19,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 6,
+      "page_start": 20,
+      "page_end": 23,
+      "source_file": "Greene 677-726 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 7,
+      "page_start": 24,
+      "page_end": 25,
+      "source_file": "Harrison DV 96_39.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 26,
+      "page_end": 28,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 29,
+      "page_end": 33,
+      "source_file": "Wetzel Co WV DB 312_378.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    },
+    {
+      "index": 10,
+      "page_start": 34,
+      "page_end": 36,
+      "source_file": "Belmont Co OH DB 189_408.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 37,
+      "page_end": 39,
+      "source_file": "OR 133-299.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 12,
+      "page_start": 40,
+      "page_end": 42,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 12,
+    "n_starts_normalized": 12,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.833840",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "b3f045899b04d3cb26d073e86b0aa91d099384d31ab3054ef44fb216fbbaf58d"
+  }
+}

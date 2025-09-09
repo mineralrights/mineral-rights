@@ -405,7 +405,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
         
         prompt = self.create_classification_prompt(ocr_text, high_recall_mode)
         
-        # Retry logic for network issues with timeout
+        # Retry logic for network issues
         max_retries = 3
         for attempt in range(max_retries):
             try:
@@ -416,8 +416,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
                     messages=[{
                         "role": "user", 
                         "content": prompt
-                    }],
-                    timeout=30.0  # 30 second timeout for API calls
+                    }]
                 )
                 
                 raw_response = response.content[0].text
@@ -707,8 +706,7 @@ class DocumentProcessor:
                     result = self.process_document_memory_efficient(
                         deed_pdf_path,
                         chunk_size=25,  # Smaller chunks for individual deeds
-                        max_samples=2,  # Very few samples for speed in multi-deed processing
-                        confidence_threshold=0.5,  # Lower threshold for faster processing
+                        max_samples=6,  # Fewer samples for speed
                         high_recall_mode=True
                     )
                     result['deed_number'] = i + 1
@@ -804,7 +802,7 @@ class DocumentProcessor:
         image.save(buffered, format="PNG")
         img_base64 = base64.b64encode(buffered.getvalue()).decode()
         
-        # Retry logic for network issues with timeout
+        # Retry logic for network issues
         max_retries = 3
         for attempt in range(max_retries):
             try:
@@ -827,8 +825,7 @@ class DocumentProcessor:
                                 "text": "Extract ALL text from this legal deed document. Pay special attention to any mineral rights reservations but do not make any judgment. Format as clean text. Avoid any commentary."
                             }
                         ]
-                    }],
-                    timeout=45.0  # 45 second timeout for OCR calls (longer than classification)
+                    }]
                 )
                 
                 return response.content[0].text

@@ -1,0 +1,131 @@
+{
+  "doc_id": "synthetic_test_014",
+  "source_pdf": "test/pdfs/synthetic_test_014.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 11,
+    "total_pages": 41
+  },
+  "deed_count": 11,
+  "page_starts": [
+    1,
+    2,
+    5,
+    9,
+    12,
+    15,
+    19,
+    28,
+    29,
+    34,
+    37
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 1,
+      "source_file": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 2,
+      "page_start": 2,
+      "page_end": 4,
+      "source_file": "Harrison DV 234_357.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 5,
+      "page_end": 8,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 11,
+      "source_file": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 14,
+      "source_file": "OR 178_693.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 15,
+      "page_end": 18,
+      "source_file": "Washington 201408321 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 7,
+      "page_start": 19,
+      "page_end": 27,
+      "source_file": "OR 239_2451.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 9
+    },
+    {
+      "index": 8,
+      "page_start": 28,
+      "page_end": 28,
+      "source_file": "Guernsey DB 290_74.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 9,
+      "page_start": 29,
+      "page_end": 33,
+      "source_file": "OR 178_1073.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 10,
+      "page_start": 34,
+      "page_end": 36,
+      "source_file": "DB 99-241.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 37,
+      "page_end": 41,
+      "source_file": "Wetzel Co WV DB 312_378.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 11,
+    "n_starts_normalized": 11,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.024758",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "6e5b07fdb08a27e32ce047d26e22ce25b643a98b98daf4b4edf97c0a7701f38e"
+  }
+}

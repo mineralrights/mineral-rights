@@ -1,0 +1,59 @@
+{
+  "doc_id": "synthetic_test_011",
+  "source_pdf": "test/pdfs/synthetic_test_011.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 3,
+    "total_pages": 8
+  },
+  "deed_count": 3,
+  "page_starts": [
+    1,
+    4,
+    7
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "OR 133-299.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 6,
+      "source_file": "Greene DB 280_311 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 8,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 3,
+    "n_starts_normalized": 3,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.881468",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "9d2b2e317e4ed56ada01466e82dcc8df29c2bf1d332e44373f313a1c75469610"
+  }
+}

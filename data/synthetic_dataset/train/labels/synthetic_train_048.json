@@ -1,0 +1,77 @@
+{
+  "doc_id": "synthetic_train_048",
+  "source_pdf": "train/pdfs/synthetic_train_048.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 5,
+    "total_pages": 25
+  },
+  "deed_count": 5,
+  "page_starts": [
+    1,
+    5,
+    11,
+    12,
+    20
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "OR 133-302.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 10,
+      "source_file": "Westmoreland DV 2483_444.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 11,
+      "page_end": 11,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 19,
+      "source_file": "Somerset DB 2570_102.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 8
+    },
+    {
+      "index": 5,
+      "page_start": 20,
+      "page_end": 25,
+      "source_file": "DB 800_131.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 5,
+    "n_starts_normalized": 5,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.941437",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "debb5a3b0a9678d512dcc891defe5cdfb9bd6e701acc65d8697d2f6b8927e593"
+  }
+}

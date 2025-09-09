@@ -1,0 +1,86 @@
+{
+  "doc_id": "synthetic_train_089",
+  "source_pdf": "train/pdfs/synthetic_train_089.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 4,
+    "total_deeds": 6,
+    "total_pages": 24
+  },
+  "deed_count": 6,
+  "page_starts": [
+    1,
+    4,
+    8,
+    12,
+    17,
+    22
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Jefferson DB 397_111.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 7,
+      "source_file": "Potter DB 234_1012.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 11,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 16,
+      "source_file": "Wetzel Co WV DB 312_378.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    },
+    {
+      "index": 5,
+      "page_start": 17,
+      "page_end": 21,
+      "source_file": "Harrison DV 202-635.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    },
+    {
+      "index": 6,
+      "page_start": 22,
+      "page_end": 24,
+      "source_file": "Guernsey Co OH DV 145_283.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 6,
+    "n_starts_normalized": 6,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.234867",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "75ef627527697601c9c5d0a5573797a73bcb715457786c23610c6937b1cde0d9"
+  }
+}

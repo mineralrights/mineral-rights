@@ -1,0 +1,68 @@
+{
+  "doc_id": "synthetic_test_019",
+  "source_pdf": "test/pdfs/synthetic_test_019.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 4,
+    "total_pages": 21
+  },
+  "deed_count": 4,
+  "page_starts": [
+    1,
+    6,
+    12,
+    16
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 5,
+      "source_file": "Harrison DV 202-635.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    },
+    {
+      "index": 2,
+      "page_start": 6,
+      "page_end": 11,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 12,
+      "page_end": 15,
+      "source_file": "Allegheny 8277_16 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 16,
+      "page_end": 21,
+      "source_file": "Somerset DB 1820_349.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 4,
+    "n_starts_normalized": 4,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.153179",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "e90278d8a936b8012135c23db00cefc5501e8e1c54bce009b065003443ccbc91"
+  }
+}

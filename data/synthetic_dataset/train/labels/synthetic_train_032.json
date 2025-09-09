@@ -1,0 +1,113 @@
+{
+  "doc_id": "synthetic_train_032",
+  "source_pdf": "train/pdfs/synthetic_train_032.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 6,
+    "total_deeds": 9,
+    "total_pages": 30
+  },
+  "deed_count": 9,
+  "page_starts": [
+    1,
+    3,
+    9,
+    14,
+    17,
+    21,
+    23,
+    27,
+    30
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "Potter DB 197_879.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 8,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 9,
+      "page_end": 13,
+      "source_file": "OR 178_1073.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 4,
+      "page_start": 14,
+      "page_end": 16,
+      "source_file": "Marshall Co WV DB 82_173.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 17,
+      "page_end": 20,
+      "source_file": "OR 133-302.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 6,
+      "page_start": 21,
+      "page_end": 22,
+      "source_file": "Allegheny DB 2470_179 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 23,
+      "page_end": 26,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 8,
+      "page_start": 27,
+      "page_end": 29,
+      "source_file": "Washington Co PA DV 596_69.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 30,
+      "page_end": 30,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 9,
+    "n_starts_normalized": 9,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.445672",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "93aba84b16acf75af09a5a6e683251516d68b0b97efcda149a93f9366bad4ae7"
+  }
+}

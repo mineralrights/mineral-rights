@@ -1,0 +1,77 @@
+{
+  "doc_id": "synthetic_test_018",
+  "source_pdf": "test/pdfs/synthetic_test_018.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 5,
+    "total_pages": 19
+  },
+  "deed_count": 5,
+  "page_starts": [
+    1,
+    5,
+    10,
+    14,
+    16
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Washington 201408321 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 9,
+      "source_file": "Wetzel Co WV DB 312_378.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    },
+    {
+      "index": 3,
+      "page_start": 10,
+      "page_end": 13,
+      "source_file": "Butler DB 1895_80 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 14,
+      "page_end": 15,
+      "source_file": "OR 55_194.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 16,
+      "page_end": 19,
+      "source_file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 5,
+    "n_starts_normalized": 5,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.146801",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "4091c4ea56d9eec1457cc92504ec154b6b8742fab87f976d49c66b41bb127eb7"
+  }
+}

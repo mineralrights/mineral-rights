@@ -1,0 +1,68 @@
+{
+  "doc_id": "synthetic_train_016",
+  "source_pdf": "train/pdfs/synthetic_train_016.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 4,
+    "total_pages": 9
+  },
+  "deed_count": 4,
+  "page_starts": [
+    1,
+    3,
+    4,
+    7
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "Westmoreland DV 1434_603 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 3,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 3,
+      "page_start": 4,
+      "page_end": 6,
+      "source_file": "Guernsey Co OH DV 145_283.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 7,
+      "page_end": 9,
+      "source_file": "DB 593_316.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 4,
+    "n_starts_normalized": 4,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.909432",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "c0fa4e903e24c5eaf2870b0b44ac00e0ba324261f332f9bf360c0b7e1c71302d"
+  }
+}

@@ -1,0 +1,68 @@
+{
+  "doc_id": "synthetic_train_066",
+  "source_pdf": "train/pdfs/synthetic_train_066.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 1,
+    "total_deeds": 4,
+    "total_pages": 10
+  },
+  "deed_count": 4,
+  "page_starts": [
+    1,
+    2,
+    3,
+    9
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 1,
+      "source_file": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 2,
+      "page_start": 2,
+      "page_end": 2,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 3,
+      "page_start": 3,
+      "page_end": 8,
+      "source_file": "Greene OR 534_885 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 10,
+      "source_file": "Westmoreland DV 1434_603 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 4,
+    "n_starts_normalized": 4,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.494462",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "498d7eb5862d44d35116c1b7e06b241634643ec2a7d8735cf7d9bf0361e9e1de"
+  }
+}

@@ -1,0 +1,86 @@
+{
+  "doc_id": "synthetic_train_024",
+  "source_pdf": "train/pdfs/synthetic_train_024.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 1,
+    "total_deeds": 6,
+    "total_pages": 23
+  },
+  "deed_count": 6,
+  "page_starts": [
+    1,
+    4,
+    12,
+    16,
+    19,
+    22
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Harrison DV 234_357.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 11,
+      "source_file": "Somerset DB 2570_102.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 8
+    },
+    {
+      "index": 3,
+      "page_start": 12,
+      "page_end": 15,
+      "source_file": "Butler DB 1895_80 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 16,
+      "page_end": 18,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 19,
+      "page_end": 21,
+      "source_file": "DB 557_938.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 22,
+      "page_end": 23,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 6,
+    "n_starts_normalized": 6,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.197294",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "a814f3964f4749520e34dba4685b7a25051661e90c3ad5b31aaed942fe69be05"
+  }
+}

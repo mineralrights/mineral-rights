@@ -1,0 +1,86 @@
+{
+  "doc_id": "synthetic_train_029",
+  "source_pdf": "train/pdfs/synthetic_train_029.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 6,
+    "total_pages": 19
+  },
+  "deed_count": 6,
+  "page_starts": [
+    1,
+    3,
+    5,
+    9,
+    10,
+    13
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "OR 55_190.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 4,
+      "source_file": "DB 107_12.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 5,
+      "page_end": 8,
+      "source_file": "Greene DB 253_223 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 9,
+      "source_file": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 5,
+      "page_start": 10,
+      "page_end": 12,
+      "source_file": "Marshall Co WV DB 82_173.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 13,
+      "page_end": 19,
+      "source_file": "Somerset DB 2163_624.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 7
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 6,
+    "n_starts_normalized": 6,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.308593",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "73759abbf2699f75dc9c52cc1f0f0496c8ebce40a8cceb0cce3e0276f7a315f9"
+  }
+}

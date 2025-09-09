@@ -1,0 +1,27 @@
+{
+  "dataset_info": {
+    "name": "synthetic_multi_deed_dataset",
+    "generated_at": "2025-09-08T16:59:12.422935",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42
+  },
+  "statistics": {
+    "train_documents": 100,
+    "test_documents": 25,
+    "total_documents": 125,
+    "source_single_deeds": 90,
+    "no_reservs_source": 49,
+    "reservs_source": 41
+  },
+  "structure": {
+    "train_pdfs": "data/synthetic_dataset/train/pdfs",
+    "train_labels": "data/synthetic_dataset/train/labels",
+    "test_pdfs": "data/synthetic_dataset/test/pdfs",
+    "test_labels": "data/synthetic_dataset/test/labels"
+  },
+  "label_format": {
+    "compatible_with": "Google Cloud Document AI",
+    "format_version": "1.0",
+    "description": "Each label file contains deed boundaries, page numbers, and metadata"
+  }
+}
