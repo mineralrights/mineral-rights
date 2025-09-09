@@ -24,6 +24,15 @@ export async function predictBatch(
     const row = rowFor(file.name);
     row.status = "processing";
     emit();
+    
+    // Check file size - warn if too large for Render
+    const maxSize = 10 * 1024 * 1024; // 10MB limit for Render
+    if (file.size > maxSize) {
+      row.status = "error";
+      row.explanation = `File too large (${Math.round(file.size / 1024 / 1024)}MB). Render has upload limits. Consider using a smaller file or contact support.`;
+      emit();
+      continue;
+    }
 
     // 1️⃣  upload PDF → get job_id (use job system for long-running tasks)
     const form = new FormData();
