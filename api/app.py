@@ -11,11 +11,26 @@ import psutil  # For memory monitoring
 
 #  import your pipeline ----------------------------------------------
 from src.mineral_rights.document_classifier import DocumentProcessor
+
+# Import job endpoints for long-running processing
+try:
+    from job_api_endpoints import job_router
+    JOB_ENDPOINTS_AVAILABLE = True
+except ImportError:
+    JOB_ENDPOINTS_AVAILABLE = False
+    print("⚠️ Job endpoints not available - job_manager.py and job_api_endpoints.py required")
 # ---------------------------------------------------------------------------
 
 
 ## TESTING NEW DEPLOYMENT 
 app = FastAPI(title="Mineral-Rights API")
+
+# Include job endpoints if available
+if JOB_ENDPOINTS_AVAILABLE:
+    app.include_router(job_router)
+    print("✅ Job endpoints integrated successfully")
+else:
+    print("⚠️ Job endpoints not integrated - missing dependencies")
 
 # More permissive CORS configuration
 app.add_middleware(
@@ -392,6 +407,7 @@ async def health_check():
             "status": "healthy",
             "processor_initialized": processor is not None,
             "api_key_present": bool(API_KEY),
+            "job_endpoints_available": JOB_ENDPOINTS_AVAILABLE,
             "timestamp": time.time()
         }
     except Exception as e:
@@ -476,3 +492,36 @@ class QueueWriter(io.TextIOBase):
                         pass  # Ignore if still can't add
     def flush(self):            # required by TextIOBase
         pass
+
+
+# --------------------------------------------------------------------------
+# GET /test-jobs  – Test job system endpoint
+# --------------------------------------------------------------------------
+@app.get("/test-jobs")
+async def test_job_system():
+    """Test endpoint to verify job system is working"""
+    try:
+        if not JOB_ENDPOINTS_AVAILABLE:
+            return {
+                "status": "error",
+                "message": "Job endpoints not available - missing job_manager.py or job_api_endpoints.py",
+                "job_endpoints_available": False
+            }
+        
+        # Test job manager
+        from job_manager import job_manager
+        jobs = job_manager.list_jobs()
+        
+        return {
+            "status": "success",
+            "message": "Job system is working correctly",
+            "job_endpoints_available": True,
+            "total_jobs": len(jobs),
+            "active_jobs": len([j for j in jobs if j['status'] == 'running'])
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Job system test failed: {str(e)}",
+            "job_endpoints_available": False
+        }
