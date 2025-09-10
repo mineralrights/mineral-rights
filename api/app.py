@@ -117,6 +117,7 @@ app.add_middleware(
 API_KEY = os.getenv("ANTHROPIC_API_KEY")  # or whatever key the processor needs
 DOCUMENT_AI_ENDPOINT = os.getenv("DOCUMENT_AI_ENDPOINT", "https://us-documentai.googleapis.com/v1/projects/381937358877/locations/us/processors/895767ed7f252878:process")
 DOCUMENT_AI_CREDENTIALS = os.getenv("DOCUMENT_AI_CREDENTIALS_PATH")  # Path to service account JSON
+GOOGLE_CREDENTIALS_BASE64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")  # Base64 encoded credentials
 processor = None
 
 def initialize_processor():
@@ -149,11 +150,26 @@ def initialize_processor():
             print(f"❌ anthropic import failed: {e}")
             return False
         
+        # Handle credentials - try base64 first, then file path
+        credentials_path = None
+        if GOOGLE_CREDENTIALS_BASE64:
+            # Decode base64 credentials and write to temp file
+            import base64
+            import tempfile
+            credentials_json = base64.b64decode(GOOGLE_CREDENTIALS_BASE64).decode('utf-8')
+            temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+            temp_file.write(credentials_json)
+            temp_file.close()
+            credentials_path = temp_file.name
+            print(f"✅ Created temporary credentials file: {credentials_path}")
+        elif DOCUMENT_AI_CREDENTIALS:
+            credentials_path = DOCUMENT_AI_CREDENTIALS
+        
         # Initialize processor with Document AI support
         processor = DocumentProcessor(
             api_key=API_KEY,
             document_ai_endpoint=DOCUMENT_AI_ENDPOINT,
-            document_ai_credentials=DOCUMENT_AI_CREDENTIALS
+            document_ai_credentials=credentials_path
         )
         print("✅ DocumentProcessor initialized successfully")
         return True
