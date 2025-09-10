@@ -272,6 +272,7 @@ async def predict(
                 
                 if processing_mode == "single_deed":
                     print("📄 Using single deed processing")
+                    # Single deed processing doesn't use splitting strategy
                     result = processor.process_document(tmp_path)
                     # Store result for potential retrieval
                     job_results[job_id] = result
@@ -677,6 +678,7 @@ async def create_long_running_job(
                 
                 # Process the document
                 if processing_mode == "single_deed":
+                    # Single deed processing doesn't use splitting strategy
                     result = processor.process_document(tmp_path)
                 elif processing_mode == "multi_deed":
                     result = processor.process_multi_deed_document(
