@@ -172,6 +172,12 @@ def initialize_processor():
             document_ai_credentials=credentials_path
         )
         print("✅ DocumentProcessor initialized successfully")
+        
+        # Check if Document AI service is available
+        if processor.document_ai_service:
+            print("✅ Document AI service is available")
+        else:
+            print("⚠️ Document AI service is not available - check credentials")
         return True
         
     except Exception as e:

@@ -610,7 +610,7 @@ class DocumentProcessor:
         if self.document_ai_service:
             return self._split_with_smart_chunking(pdf_path)
         else:
-            raise ValueError("Document AI service not available. Smart chunking requires Document AI.")
+            raise ValueError("Document AI service not available. Please check Google Cloud credentials and Document AI service configuration.")
     
     def _split_with_smart_chunking(self, pdf_path: str) -> List[str]:
         """Split PDF using smart chunking Document AI approach"""
