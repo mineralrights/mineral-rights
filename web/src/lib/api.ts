@@ -5,7 +5,7 @@ const API = process.env.NEXT_PUBLIC_API_URL!;   // already defined in .env.local
 export async function predictBatch(
   files: File[],
   processingMode: ProcessingMode = "single_deed",
-  splittingStrategy: SplittingStrategy = "smart_detection",
+  splittingStrategy: SplittingStrategy = "document_ai",
   onChange: (rows: PredictionRow[]) => void = () => {}
 ): Promise<PredictionRow[]> {
   // create initial rows
@@ -30,7 +30,7 @@ export async function predictBatch(
     form.append("file", file);
     form.append("processing_mode", processingMode);
     if (processingMode === "multi_deed") {
-      form.append("splitting_strategy", splittingStrategy);
+      form.append("splitting_strategy", "document_ai"); // Always use Document AI Smart Chunking
     }
     
     // Use job system for long-running processing (8+ hours support)
