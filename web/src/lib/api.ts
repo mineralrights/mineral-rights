@@ -37,12 +37,17 @@ export async function predictBatch(
     const res = await fetch(`${API}/jobs/create`, { 
       method: "POST", 
       body: form,
-      // Add timeout and retry configuration
-      signal: AbortSignal.timeout(30000) // 30 second timeout for job creation
+      // Increased timeout for Document AI processing
+      signal: AbortSignal.timeout(120000) // 2 minute timeout for job creation
     });
     if (!res.ok) {
       row.status = "error";
-      row.explanation = await res.text();
+      try {
+        const errorText = await res.text();
+        row.explanation = `Server error (${res.status}): ${errorText}`;
+      } catch (e) {
+        row.explanation = `Network error: ${res.status} ${res.statusText}`;
+      }
       emit();
       continue;
     }
@@ -150,7 +155,9 @@ export async function predictBatch(
             error.message.includes('fetch') || 
             error.message.includes('network') ||
             error.message.includes('timeout') ||
-            error.message.includes('SSL')
+            error.message.includes('SSL') ||
+            error.message.includes('ERR_SSL') ||
+            error.message.includes('Failed to fetch')
           );
           
           if (isNetworkError) {
