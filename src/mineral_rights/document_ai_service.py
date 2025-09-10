@@ -534,6 +534,11 @@ class DocumentAIServiceFallback:
             processing_time=processing_time
         )
     
+    def split_deeds_with_smart_chunking(self, pdf_path: str) -> DocumentAISplitResult:
+        """Fallback implementation of smart chunking - uses simple page-based splitting"""
+        print("⚠️ Using fallback smart chunking (simple page-based splitting)")
+        return self.split_deeds_from_pdf(pdf_path)
+    
     def create_individual_deed_pdfs(self, pdf_path: str, split_result: DocumentAISplitResult) -> List[str]:
         """Create individual PDFs using fallback method"""
         import tempfile
