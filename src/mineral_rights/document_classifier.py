@@ -933,6 +933,12 @@ class DocumentProcessor:
         combine_method: str = "early_stop",
         high_recall_mode: bool = False,
     ) -> Dict:
+        # Debug logging to see what parameters are received
+        print(f"🔍 DEBUG process_document called with:")
+        print(f"🔍   pdf_path = '{pdf_path}'")
+        print(f"🔍   page_strategy = '{page_strategy}'")
+        print(f"🔍   max_samples = {max_samples}")
+        print(f"🔍   high_recall_mode = {high_recall_mode}")
         # OPTIONAL: simple helper so we don’t have to touch every print
         def _log(msg: str):
             print(msg)

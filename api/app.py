@@ -633,6 +633,11 @@ async def create_long_running_job(
     This endpoint creates a job instead of processing immediately,
     avoiding the 22-minute timeout limit of web services.
     """
+    # Debug logging to see what parameters are received
+    print(f"🔍 DEBUG: processing_mode = '{processing_mode}'")
+    print(f"🔍 DEBUG: splitting_strategy = '{splitting_strategy}'")
+    print(f"🔍 DEBUG: filename = '{file.filename}'")
+    print(f"🔍 DEBUG: content_type = '{file.content_type}'")
     try:
         # Validate file
         if not file.filename:
