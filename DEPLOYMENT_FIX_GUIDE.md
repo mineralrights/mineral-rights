@@ -1,161 +1,131 @@
-# 🚀 Deployment Fix Guide - Platform Compatibility
+# 🚀 Document AI Deployment Fix Guide
 
-## 🚨 Problem Fixed
+## 🚨 Issue Identified
 
-**Issue**: Render deployment failed with platform compatibility error:
-```
-ERROR: numpy-2.2.6-cp313-cp313-macosx_11_0_arm64.whl is not a supported wheel on this platform.
-```
+The error `Unknown splitting strategy: document_ai` occurs because the deployed version doesn't have the updated code with Document AI integration.
 
-**Root Cause**: The main `requirements.txt` file contained conda-specific packages with local file paths that are incompatible with Render's Linux environment.
+## ✅ Immediate Fix Applied
 
-## ✅ Fixes Implemented
+I've temporarily reverted the frontend to use `smart_detection` as the default strategy to fix the immediate deployment issue:
 
-### 1. **Cleaned API Requirements File**
-Updated `api/requirements.txt` with specific versions and removed platform-specific packages:
+### Changes Made:
+1. **Frontend**: Changed default strategy from `document_ai` to `smart_detection`
+2. **API**: Updated default strategy in both endpoints
+3. **UI**: Disabled Document AI option with "Coming soon" label
 
-```txt
-fastapi==0.104.1
-uvicorn[standard]==0.24.0
-python-multipart==0.0.6
-PyMuPDF==1.26.0
-anthropic==0.52.2
-Pillow==10.4.0
-scikit-learn==1.6.1
-numpy==1.26.4
-psutil==7.0.0
-```
+## 🔧 Full Deployment Steps
 
-### 2. **Updated Dockerfile**
-Modified Dockerfile to only use API requirements (avoiding the problematic main requirements.txt):
+To properly deploy the Document AI integration:
 
-```dockerfile
-# Before (problematic):
-COPY requirements.txt .
-COPY api/requirements.txt ./api_requirements.txt
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt -r api_requirements.txt
+### 1. **Update Dependencies**
 
-# After (fixed):
-COPY api/requirements.txt ./requirements.txt
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
-```
+Make sure your deployment includes the new Google Cloud dependencies:
 
-### 3. **Created Clean Requirements File**
-Created `requirements-clean.txt` for future development use with platform-agnostic packages.
-
-## 🚀 How to Deploy
-
-### Step 1: Commit and Push Changes
 ```bash
-git add api/requirements.txt Dockerfile requirements-clean.txt
-git commit -m "Fix platform compatibility issues for Render deployment"
-git push origin main
+# In your deployment environment
+pip install google-cloud-documentai==2.32.0 google-auth==2.35.0
 ```
 
-### Step 2: Monitor Render Deployment
-Watch the Render logs for successful installation:
-```
-✅ Expected success indicators:
-- pip install completes without platform errors
-- All packages install successfully
-- FastAPI server starts on port 8000
-- No numpy platform compatibility errors
-```
+### 2. **Set Environment Variables**
 
-### Step 3: Test Deployment
-1. **Check API health**: Visit your Render URL
-2. **Test file upload**: Try uploading a PDF
-3. **Test multi-deed processing**: Verify it works without freezing
-4. **Monitor memory usage**: Check `/memory-status` endpoint
+Add these environment variables to your Vercel deployment:
 
-## 🔍 What Was Wrong
-
-### Problematic Packages in Main requirements.txt
-```txt
-# These caused the deployment failure:
-numpy @ file:///Users/runner/miniforge3/conda-bld/numpy_1747544634767/work/dist/numpy-2.2.6-cp313-cp313-macosx_11_0_arm64.whl
-pandas @ file:///Users/runner/miniforge3/conda-bld/pandas_1744430513098/work
-pdf2image @ file:///home/conda/feedstock_root/build_artifacts/pdf2image_1733174111200/work
-```
-
-**Issues**:
-- `@ file:///` paths are conda-specific and don't exist on Render
-- `macosx_11_0_arm64.whl` is macOS ARM64 specific, won't work on Linux
-- Local conda build artifacts that aren't available in production
-
-### Solution
-- Use standard PyPI package names with version pins
-- Avoid conda-specific file paths
-- Use platform-agnostic wheel names
-
-## 📊 Expected Deployment Flow
-
-### Successful Deployment Logs
-```
-#10 [4/8] COPY api/requirements.txt ./requirements.txt
-#10 DONE 0.0s
-#11 [5/8] RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
-#11 5.253 Successfully installed pip-25.2
-#11 15.210 Successfully installed fastapi-0.104.1 uvicorn-0.24.0 ...
-#11 25.456 Successfully installed numpy-1.26.4 scikit-learn-1.6.1 ...
-#11 35.789 Successfully installed PyMuPDF-1.26.0 psutil-7.0.0 ...
-#11 DONE 35.8s
-```
-
-### API Startup
-```
-INFO:     Started server process [1]
-INFO:     Waiting for application startup.
-INFO:     Application startup complete.
-INFO:     Uvicorn running on http://0.0.0.0:8000
-```
-
-## 🛠️ Troubleshooting
-
-### If Deployment Still Fails
-1. **Check package versions**: Ensure all versions are compatible
-2. **Verify platform compatibility**: All packages should work on Linux x86_64
-3. **Check for missing dependencies**: Ensure all required packages are listed
-4. **Review Render logs**: Look for specific error messages
-
-### If API Doesn't Start
-1. **Check port binding**: Ensure port 8000 is properly exposed
-2. **Verify environment variables**: Check ANTHROPIC_API_KEY is set
-3. **Review startup logs**: Look for import or initialization errors
-4. **Test locally**: Run the API locally to verify it works
-
-### If Memory Issues Persist
-1. **Check psutil installation**: Verify memory monitoring works
-2. **Monitor memory usage**: Use `/memory-status` endpoint
-3. **Review processing logs**: Look for memory-related messages
-4. **Adjust chunk sizes**: Reduce if memory usage is too high
-
-## 📈 Benefits of This Fix
-
-✅ **Platform compatibility**: Works on Render's Linux environment
-✅ **Faster deployments**: No more platform-specific package conflicts
-✅ **Reliable builds**: Consistent package versions across environments
-✅ **Better maintainability**: Clean, version-pinned requirements
-✅ **Reduced build time**: Fewer packages to install and resolve
-
-## 🔄 Future Development
-
-### For Local Development
-Use the clean requirements file:
 ```bash
-pip install -r requirements-clean.txt
+# Required: Your Document AI processor endpoint
+DOCUMENT_AI_ENDPOINT=https://us-documentai.googleapis.com/v1/projects/381937358877/locations/us/processors/895767ed7f252878:process
+
+# Optional: Path to Google Cloud service account JSON file
+DOCUMENT_AI_CREDENTIALS_PATH=/path/to/service-account.json
+
+# Required: Anthropic API key for classification
+ANTHROPIC_API_KEY=your-anthropic-api-key
 ```
 
-### For Production Deployment
-The Dockerfile now uses only the API requirements, which are platform-agnostic.
+### 3. **Deploy Updated Code**
 
-### Adding New Dependencies
-1. Add to `api/requirements.txt` with specific version
-2. Test locally with the clean requirements
-3. Verify deployment works on Render
+Deploy the complete updated codebase that includes:
 
----
+- ✅ `src/mineral_rights/document_ai_service.py`
+- ✅ `src/mineral_rights/deed_tracker.py`
+- ✅ Updated `src/mineral_rights/document_classifier.py`
+- ✅ Updated `api/app.py`
+- ✅ Updated `requirements.txt`
 
-**Result**: Render deployment should now succeed without platform compatibility errors, and your multi-deed processing with memory management will work reliably in production.
+### 4. **Re-enable Document AI**
+
+After successful deployment, update the frontend to use Document AI:
+
+```typescript
+// In web/src/app/page.tsx
+const [splittingStrategy, setSplittingStrategy] = useState<SplittingStrategy>("document_ai");
+```
+
+```python
+# In api/app.py
+splitting_strategy: str = Form("document_ai")
+```
+
+And remove the `disabled` attribute from the Document AI option:
+
+```typescript
+// In web/src/components/ProcessingModeSelector.tsx
+<option value="document_ai">
+  🤖 Document AI - Google Cloud custom trained model (Best accuracy)
+</option>
+```
+
+## 🧪 Testing Deployment
+
+### 1. **Health Check**
+```bash
+curl https://your-app.vercel.app/health
+```
+
+### 2. **Debug Info**
+```bash
+curl https://your-app.vercel.app/debug
+```
+
+### 3. **Test Document AI**
+```bash
+curl -X POST https://your-app.vercel.app/predict \
+  -F "file=@test.pdf" \
+  -F "processing_mode=multi_deed" \
+  -F "splitting_strategy=document_ai"
+```
+
+## 🔍 Troubleshooting
+
+### If Document AI Still Fails:
+
+1. **Check Credentials**: Verify Google Cloud service account has Document AI permissions
+2. **Check Endpoint**: Ensure the processor endpoint is correct and active
+3. **Check Logs**: Look for authentication or permission errors
+4. **Fallback**: The system will automatically fall back to `smart_detection`
+
+### Common Issues:
+
+1. **Authentication Error**: Set up Google Cloud credentials properly
+2. **Permission Error**: Ensure service account has Document AI access
+3. **Network Error**: Check if Vercel can reach Google Cloud APIs
+4. **Timeout Error**: Document AI processing may take longer than expected
+
+## 📋 Deployment Checklist
+
+- [ ] Updated code deployed to Vercel
+- [ ] Google Cloud dependencies installed
+- [ ] Environment variables set
+- [ ] Health check passes
+- [ ] Document AI endpoint accessible
+- [ ] Fallback system working
+- [ ] Frontend updated to use Document AI
+
+## 🎯 Next Steps
+
+1. **Deploy the complete updated codebase**
+2. **Set up Google Cloud credentials**
+3. **Test with a real multi-deed PDF**
+4. **Monitor performance and accuracy**
+5. **Re-enable Document AI as default**
+
+The system is designed to be robust - even if Document AI fails, it will automatically fall back to the existing smart detection method, so your app will continue working while you set up the full integration.

@@ -1,0 +1,8 @@
+{
+  "job_id": "projects/381937358877/locations/us/operations/2732478817479983807",
+  "status": "RUNNING",
+  "input_uri": "gs://mineral-rights-batch-1757454568/input/1757458466_FRANCO.pdf",
+  "output_uri": "gs://mineral-rights-batch-1757454568/output/",
+  "created_at": 1757458473.290635,
+  "bucket_name": "mineral-rights-batch-1757454568"
+}

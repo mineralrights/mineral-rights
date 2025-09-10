@@ -18,6 +18,8 @@ from dataclasses import dataclass
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler
 import anthropic
+from .document_ai_service import create_document_ai_service, DocumentAISplitResult
+from .deed_tracker import get_deed_tracker
 import fitz  # PyMuPDF
 from PIL import Image
 from io import BytesIO
@@ -567,114 +569,95 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
 class DocumentProcessor:
     """Complete pipeline from PDF to classification"""
     
-    def __init__(self, api_key: str = None):
+    def __init__(self, api_key: str = None, document_ai_endpoint: str = None, document_ai_credentials: str = None):
         try:
             self.classifier = OilGasRightsClassifier(api_key)
+            
+            # Initialize Document AI service if endpoint is provided
+            self.document_ai_service = None
+            if document_ai_endpoint:
+                try:
+                    self.document_ai_service = create_document_ai_service(
+                        document_ai_endpoint, 
+                        document_ai_credentials
+                    )
+                    print("✅ Document AI service initialized successfully")
+                except Exception as e:
+                    print(f"⚠️ Document AI service initialization failed: {e}")
+                    print("🔄 Will use fallback splitting methods")
+            
+            # Initialize deed tracker
+            self.deed_tracker = get_deed_tracker()
+            
             print("✅ Document processor initialized successfully")
         except Exception as e:
             print(f"❌ Failed to initialize document processor: {e}")
             raise
 
-    def split_pdf_by_deeds(self, pdf_path: str, strategy: str = "smart_detection") -> List[str]:
-        """Split PDF into individual deed PDFs based on strategy"""
+    def split_pdf_by_deeds(self, pdf_path: str, strategy: str = "document_ai") -> List[str]:
+        """Split PDF into individual deed PDFs using smart chunking Document AI"""
         
         import tempfile
         import os
         
         doc = fitz.open(pdf_path)
         total_pages = len(doc)
+        doc.close()
         
-        print(f"Splitting PDF with {total_pages} pages using strategy: {strategy}")
+        print(f"🚀 Splitting PDF with {total_pages} pages using smart chunking Document AI")
         
-        if strategy == "page_based":
-            # Simple page-based splitting: every 3 pages = 1 deed
-            deed_pdfs = []
-            pages_per_deed = 3
-            
-            for i in range(0, total_pages, pages_per_deed):
-                end_page = min(i + pages_per_deed, total_pages)
-                
-                # Create new PDF with these pages
-                new_doc = fitz.open()
-                for page_num in range(i, end_page):
-                    new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
-                
-                # Save to temporary file
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                new_doc.save(temp_file.name)
-                new_doc.close()
-                
-                deed_pdfs.append(temp_file.name)
-                print(f"Created deed {len(deed_pdfs)}: pages {i+1}-{end_page}")
-            
-            doc.close()
-            return deed_pdfs
-            
-        elif strategy == "smart_detection":
-            # Smart detection: look for deed boundaries in text
-            deed_pdfs = []
-            current_deed_start = 0
-            
-            for page_num in range(total_pages):
-                page = doc.load_page(page_num)
-                text = page.get_text().lower()
-                
-                # Look for deed boundary indicators
-                boundary_indicators = [
-                    "this deed", "witnesseth", "know all men by these presents",
-                    "grantor", "grantee", "deed of", "warranty deed",
-                    "quitclaim deed", "special warranty deed"
-                ]
-                
-                is_boundary = any(indicator in text for indicator in boundary_indicators)
-                
-                # If this looks like a new deed and we have pages, create a deed
-                if is_boundary and page_num > current_deed_start:
-                    # Create deed from current_deed_start to page_num-1
-                    new_doc = fitz.open()
-                    for p in range(current_deed_start, page_num):
-                        new_doc.insert_pdf(doc, from_page=p, to_page=p)
-                    
-                    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                    new_doc.save(temp_file.name)
-                    new_doc.close()
-                    
-                    deed_pdfs.append(temp_file.name)
-                    print(f"Created deed {len(deed_pdfs)}: pages {current_deed_start+1}-{page_num}")
-                    current_deed_start = page_num
-            
-            # Add the last deed (from current_deed_start to end)
-            if current_deed_start < total_pages:
-                new_doc = fitz.open()
-                for p in range(current_deed_start, total_pages):
-                    new_doc.insert_pdf(doc, from_page=p, to_page=p)
-                
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                new_doc.save(temp_file.name)
-                new_doc.close()
-                
-                deed_pdfs.append(temp_file.name)
-                print(f"Created deed {len(deed_pdfs)}: pages {current_deed_start+1}-{total_pages}")
-            
-            doc.close()
-            
-            # If no boundaries found, treat as single deed
-            if not deed_pdfs:
-                print("No deed boundaries detected, treating as single deed")
-                temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".pdf")
-                doc.save(temp_file.name)
-                doc.close()
-                return [temp_file.name]
-            
-            return deed_pdfs
-            
-        elif strategy == "ai_assisted":
-            # AI-assisted splitting: use Claude to analyze document structure
-            print("AI-assisted splitting not yet implemented, falling back to smart detection")
-            return self.split_pdf_by_deeds(pdf_path, "smart_detection")
-            
+        # Use smart chunking Document AI for all cases
+        if self.document_ai_service:
+            return self._split_with_smart_chunking(pdf_path)
         else:
-            raise ValueError(f"Unknown splitting strategy: {strategy}")
+            raise ValueError("Document AI service not available. Smart chunking requires Document AI.")
+    
+    def _split_with_smart_chunking(self, pdf_path: str) -> List[str]:
+        """Split PDF using smart chunking Document AI approach"""
+        import tempfile
+        import os
+        
+        print(f"🔧 Using Smart Chunking Document AI for deed detection...")
+        
+        # Use smart chunking service
+        result = self.document_ai_service.split_deeds_with_smart_chunking(pdf_path)
+        self._last_split_result = result
+        
+        print(f"📊 Smart Chunking Results:")
+        print(f"   - Total deeds detected: {result.total_deeds}")
+        print(f"   - Processing time: {result.processing_time:.2f}s")
+        print(f"   - Chunks processed: {result.raw_response.get('chunks_processed', 'N/A')}")
+        print(f"   - Systematic offset: {result.raw_response.get('systematic_offset', 'N/A')}")
+        print(f"   - Raw deeds before merge: {result.raw_response.get('raw_deeds_before_merge', 'N/A')}")
+        
+        # Log deed boundaries for interpretability
+        print(f"\n📋 Deed Boundaries Detected:")
+        for i, deed in enumerate(result.deeds):
+            start_page = min(deed.pages) + 1  # Convert to 1-indexed
+            end_page = max(deed.pages) + 1    # Convert to 1-indexed
+            print(f"   Deed {i+1}: Pages {start_page}-{end_page} (Confidence: {deed.confidence:.3f})")
+        
+        # Create individual deed PDFs
+        deed_pdfs = []
+        doc = fitz.open(pdf_path)
+        
+        for i, deed in enumerate(result.deeds):
+            # Create new PDF with deed pages
+            new_doc = fitz.open()
+            for page_num in deed.pages:  # pages are 0-indexed
+                new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
+            
+            # Save to temporary file
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f"_deed_{i+1}.pdf")
+            new_doc.save(temp_file.name)
+            new_doc.close()
+            
+            deed_pdfs.append(temp_file.name)
+            print(f"✅ Created deed {i+1} PDF: {temp_file.name}")
+        
+        doc.close()
+        return deed_pdfs
+    
 
     def cleanup_temp_files(self, file_paths: List[str]):
         """Clean up temporary files created during processing"""
@@ -687,17 +670,50 @@ class DocumentProcessor:
             except Exception as e:
                 print(f"Warning: Could not clean up {file_path}: {e}")
 
-    def process_multi_deed_document(self, pdf_path: str, strategy: str = "smart_detection") -> List[Dict]:
+    def process_multi_deed_document(self, pdf_path: str, strategy: str = "document_ai") -> List[Dict]:
         """Process PDF with multiple deeds using memory-efficient processing"""
         
         print(f"🔧 Starting multi-deed processing with strategy: {strategy}")
+        
+        # Initialize tracking variables
+        self._last_split_result = None
+        deed_boundaries = []
+        
+        # Get document info for tracking
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        doc.close()
+        
+        # Create tracking session
+        session_id = self.deed_tracker.create_session(
+            original_filename=os.path.basename(pdf_path),
+            total_pages=total_pages,
+            splitting_strategy=strategy,
+            document_ai_used=(strategy == "document_ai" and self.document_ai_service is not None)
+        )
         
         # 1. Split PDF into individual deed PDFs based on strategy
         deed_pdfs = self.split_pdf_by_deeds(pdf_path, strategy)
         print(f"📄 Split into {len(deed_pdfs)} deed files")
         
+        # 2. Extract deed boundary information if available
+        if hasattr(self, '_last_split_result') and self._last_split_result:
+            deed_boundaries = [
+                {
+                    'deed_number': deed.deed_number,
+                    'pages': deed.pages,
+                    'confidence': deed.confidence,
+                    'page_range': f"{min(deed.pages)+1}-{max(deed.pages)+1}"
+                }
+                for deed in self._last_split_result.deeds
+            ]
+            print(f"📊 Deed boundaries tracked: {len(deed_boundaries)} deeds")
+            
+            # Save deed boundaries to tracker
+            self.deed_tracker.add_deed_boundaries(session_id, deed_boundaries)
+        
         try:
-            # 2. Process each deed separately using memory-efficient processing
+            # 3. Process each deed separately using memory-efficient processing
             results = []
             for i, deed_pdf_path in enumerate(deed_pdfs):
                 print(f"Processing deed {i+1}/{len(deed_pdfs)}...")
@@ -712,6 +728,12 @@ class DocumentProcessor:
                     result['deed_number'] = i + 1
                     result['deed_file'] = deed_pdf_path
                     result['pages_in_deed'] = result.get('pages_processed', 0)
+                    
+                    # Add deed boundary information if available
+                    if i < len(deed_boundaries):
+                        result['deed_boundary_info'] = deed_boundaries[i]
+                        result['splitting_confidence'] = deed_boundaries[i]['confidence']
+                    
                     results.append(result)
                     print(f"✅ Deed {i+1} completed: {result['classification']} (confidence: {result['confidence']:.3f})")
                 except Exception as e:
@@ -725,9 +747,26 @@ class DocumentProcessor:
                         'pages_in_deed': 0,
                         'error': str(e)
                     }
+                    # Add boundary info if available
+                    if i < len(deed_boundaries):
+                        error_result['deed_boundary_info'] = deed_boundaries[i]
+                        error_result['splitting_confidence'] = deed_boundaries[i]['confidence']
+                    
                     results.append(error_result)
             
+            # 4. Save classification results to tracker
+            self.deed_tracker.add_classification_results(session_id, results)
+            
+            # 5. Finalize session and get summary
+            summary = self.deed_tracker.finalize_session(session_id)
+            
+            # 6. Add summary information to results
+            for result in results:
+                result['session_id'] = session_id
+                result['tracking_summary'] = summary
+            
             print(f"🎯 Multi-deed processing completed: {len(results)} deeds processed")
+            print(f"📊 Session {session_id} summary: {summary}")
             return results
         finally:
             # 3. Clean up temporary files

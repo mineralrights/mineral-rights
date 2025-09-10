@@ -1,0 +1,1120 @@
+{
+  "chunks_processed": 23,
+  "total_processing_time": 295.6782672405243,
+  "deeds_before_merge": 75,
+  "deeds_after_merge": 53,
+  "final_deeds": 53,
+  "deeds": [
+    {
+      "type": "DEED",
+      "confidence": 0.9810190796852112,
+      "pages": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "chunk_id": 1,
+      "chunk_start": 1,
+      "chunk_end": 15,
+      "original_pages": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9987303614616394,
+      "pages": [
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19,
+        20
+      ],
+      "chunk_id": "1+2",
+      "original_pages": [
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16,
+        17,
+        18,
+        19
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9985606670379639,
+      "pages": [
+        21,
+        22
+      ],
+      "chunk_id": 2,
+      "chunk_start": 13,
+      "chunk_end": 27,
+      "original_pages": [
+        20,
+        21
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.993962824344635,
+      "pages": [
+        23,
+        24
+      ],
+      "chunk_id": 2,
+      "chunk_start": 13,
+      "chunk_end": 27,
+      "original_pages": [
+        22,
+        23
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.998039186000824,
+      "pages": [
+        25,
+        26
+      ],
+      "chunk_id": 2,
+      "chunk_start": 13,
+      "chunk_end": 27,
+      "original_pages": [
+        24,
+        25
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9998632669448853,
+      "pages": [
+        26
+      ],
+      "chunk_id": 3,
+      "chunk_start": 25,
+      "chunk_end": 39,
+      "original_pages": [
+        25
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9987379908561707,
+      "pages": [
+        27,
+        28,
+        29
+      ],
+      "chunk_id": "2+3",
+      "original_pages": [
+        26,
+        27,
+        28
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9978563785552979,
+      "pages": [
+        30,
+        31
+      ],
+      "chunk_id": 3,
+      "chunk_start": 25,
+      "chunk_end": 39,
+      "original_pages": [
+        29,
+        30
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9947822690010071,
+      "pages": [
+        32,
+        33,
+        34,
+        35
+      ],
+      "chunk_id": 3,
+      "chunk_start": 25,
+      "chunk_end": 39,
+      "original_pages": [
+        31,
+        32,
+        33,
+        34
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9971987009048462,
+      "pages": [
+        36
+      ],
+      "chunk_id": 3,
+      "chunk_start": 25,
+      "chunk_end": 39,
+      "original_pages": [
+        35
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9937462210655212,
+      "pages": [
+        37,
+        38
+      ],
+      "chunk_id": 3,
+      "chunk_start": 25,
+      "chunk_end": 39,
+      "original_pages": [
+        36,
+        37
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9707547426223755,
+      "pages": [
+        38
+      ],
+      "chunk_id": 4,
+      "chunk_start": 37,
+      "chunk_end": 51,
+      "original_pages": [
+        37
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.992270827293396,
+      "pages": [
+        39,
+        40,
+        41,
+        42,
+        43,
+        44
+      ],
+      "chunk_id": "3+4",
+      "original_pages": [
+        38,
+        39,
+        40,
+        41,
+        42,
+        43
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9896154999732971,
+      "pages": [
+        45,
+        46
+      ],
+      "chunk_id": 4,
+      "chunk_start": 37,
+      "chunk_end": 51,
+      "original_pages": [
+        44,
+        45
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9940171241760254,
+      "pages": [
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54,
+        55
+      ],
+      "chunk_id": "4+5",
+      "original_pages": [
+        46,
+        47,
+        48,
+        49,
+        50,
+        51,
+        52,
+        53,
+        54
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9911836385726929,
+      "pages": [
+        56,
+        57
+      ],
+      "chunk_id": 5,
+      "chunk_start": 49,
+      "chunk_end": 63,
+      "original_pages": [
+        55,
+        56
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9982411861419678,
+      "pages": [
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71,
+        72
+      ],
+      "chunk_id": "5+6",
+      "original_pages": [
+        57,
+        58,
+        59,
+        60,
+        61,
+        62,
+        63,
+        64,
+        65,
+        66,
+        67,
+        68,
+        69,
+        70,
+        71
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9991865754127502,
+      "pages": [
+        73,
+        74,
+        75,
+        76,
+        77,
+        78
+      ],
+      "chunk_id": "6+7",
+      "original_pages": [
+        72,
+        73,
+        74,
+        75,
+        76,
+        77
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9994339942932129,
+      "pages": [
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111
+      ],
+      "chunk_id": "7+8+9+10",
+      "original_pages": [
+        78,
+        79,
+        80,
+        81,
+        82,
+        83,
+        84,
+        85,
+        86,
+        87,
+        88,
+        89,
+        90,
+        91,
+        92,
+        93,
+        94,
+        95,
+        96,
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9877248406410217,
+      "pages": [
+        112
+      ],
+      "chunk_id": 9,
+      "chunk_start": 97,
+      "chunk_end": 111,
+      "original_pages": [
+        111
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9996508955955505,
+      "pages": [
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123,
+        124
+      ],
+      "chunk_id": "10+11",
+      "original_pages": [
+        111,
+        112,
+        113,
+        114,
+        115,
+        116,
+        117,
+        118,
+        119,
+        120,
+        121,
+        122,
+        123
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9937736392021179,
+      "pages": [
+        125,
+        126,
+        127,
+        128
+      ],
+      "chunk_id": 11,
+      "chunk_start": 121,
+      "chunk_end": 135,
+      "original_pages": [
+        124,
+        125,
+        126,
+        127
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.999273419380188,
+      "pages": [
+        129
+      ],
+      "chunk_id": 11,
+      "chunk_start": 121,
+      "chunk_end": 135,
+      "original_pages": [
+        128
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9998421669006348,
+      "pages": [
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143,
+        144
+      ],
+      "chunk_id": "11+12",
+      "original_pages": [
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135,
+        136,
+        137,
+        138,
+        139,
+        140,
+        141,
+        142,
+        143
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9999263882637024,
+      "pages": [
+        145
+      ],
+      "chunk_id": 12,
+      "chunk_start": 133,
+      "chunk_end": 147,
+      "original_pages": [
+        144
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9966520071029663,
+      "pages": [
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154,
+        155
+      ],
+      "chunk_id": "12+13",
+      "original_pages": [
+        145,
+        146,
+        147,
+        148,
+        149,
+        150,
+        151,
+        152,
+        153,
+        154
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.999763011932373,
+      "pages": [
+        157,
+        158
+      ],
+      "chunk_id": 13,
+      "chunk_start": 145,
+      "chunk_end": 159,
+      "original_pages": [
+        156,
+        157
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9927591681480408,
+      "pages": [
+        158
+      ],
+      "chunk_id": 14,
+      "chunk_start": 157,
+      "chunk_end": 171,
+      "original_pages": [
+        157
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9961667656898499,
+      "pages": [
+        159,
+        160,
+        161
+      ],
+      "chunk_id": "13+14",
+      "original_pages": [
+        158,
+        159,
+        160
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9979015588760376,
+      "pages": [
+        162,
+        163
+      ],
+      "chunk_id": 14,
+      "chunk_start": 157,
+      "chunk_end": 171,
+      "original_pages": [
+        161,
+        162
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9893386960029602,
+      "pages": [
+        164,
+        165,
+        166,
+        167
+      ],
+      "chunk_id": 14,
+      "chunk_start": 157,
+      "chunk_end": 171,
+      "original_pages": [
+        163,
+        164,
+        165,
+        166
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9914622902870178,
+      "pages": [
+        168,
+        169
+      ],
+      "chunk_id": 14,
+      "chunk_start": 157,
+      "chunk_end": 171,
+      "original_pages": [
+        167,
+        168
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9968896508216858,
+      "pages": [
+        170,
+        171
+      ],
+      "chunk_id": "14+15",
+      "original_pages": [
+        169,
+        170
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9994747042655945,
+      "pages": [
+        172
+      ],
+      "chunk_id": 14,
+      "chunk_start": 157,
+      "chunk_end": 171,
+      "original_pages": [
+        171
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9977454543113708,
+      "pages": [
+        172
+      ],
+      "chunk_id": 15,
+      "chunk_start": 169,
+      "chunk_end": 183,
+      "original_pages": [
+        171
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9997586011886597,
+      "pages": [
+        173
+      ],
+      "chunk_id": 15,
+      "chunk_start": 169,
+      "chunk_end": 183,
+      "original_pages": [
+        172
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9967593550682068,
+      "pages": [
+        174,
+        175,
+        176,
+        177,
+        178,
+        179
+      ],
+      "chunk_id": 15,
+      "chunk_start": 169,
+      "chunk_end": 183,
+      "original_pages": [
+        173,
+        174,
+        175,
+        176,
+        177,
+        178
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9980563521385193,
+      "pages": [
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188
+      ],
+      "chunk_id": "15+16",
+      "original_pages": [
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9981576800346375,
+      "pages": [
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206,
+        207
+      ],
+      "chunk_id": "16+17+18",
+      "original_pages": [
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199,
+        200,
+        201,
+        202,
+        203,
+        204,
+        205,
+        206
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9677333831787109,
+      "pages": [
+        208
+      ],
+      "chunk_id": 17,
+      "chunk_start": 193,
+      "chunk_end": 207,
+      "original_pages": [
+        207
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9799998998641968,
+      "pages": [
+        208,
+        209
+      ],
+      "chunk_id": 18,
+      "chunk_start": 205,
+      "chunk_end": 219,
+      "original_pages": [
+        207,
+        208
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9954752326011658,
+      "pages": [
+        210,
+        211,
+        212,
+        213,
+        214,
+        215
+      ],
+      "chunk_id": 18,
+      "chunk_start": 205,
+      "chunk_end": 219,
+      "original_pages": [
+        209,
+        210,
+        211,
+        212,
+        213,
+        214
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9969350099563599,
+      "pages": [
+        216,
+        217,
+        218
+      ],
+      "chunk_id": 18,
+      "chunk_start": 205,
+      "chunk_end": 219,
+      "original_pages": [
+        215,
+        216,
+        217
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9945708513259888,
+      "pages": [
+        218
+      ],
+      "chunk_id": 19,
+      "chunk_start": 217,
+      "chunk_end": 231,
+      "original_pages": [
+        217
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9911024570465088,
+      "pages": [
+        219,
+        220,
+        221,
+        222,
+        223,
+        224
+      ],
+      "chunk_id": "18+19",
+      "original_pages": [
+        218,
+        219,
+        220,
+        221,
+        222,
+        223
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9988177418708801,
+      "pages": [
+        225,
+        226,
+        227,
+        228,
+        229,
+        230,
+        231,
+        232,
+        233,
+        234,
+        235,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243,
+        244
+      ],
+      "chunk_id": "19+20+21",
+      "original_pages": [
+        224,
+        225,
+        226,
+        227,
+        228,
+        229,
+        230,
+        231,
+        232,
+        233,
+        234,
+        235,
+        236,
+        237,
+        238,
+        239,
+        240,
+        241,
+        242,
+        243
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9840244054794312,
+      "pages": [
+        245,
+        246,
+        247,
+        248
+      ],
+      "chunk_id": 21,
+      "chunk_start": 241,
+      "chunk_end": 255,
+      "original_pages": [
+        244,
+        245,
+        246,
+        247
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.999544084072113,
+      "pages": [
+        249,
+        250,
+        251,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        259,
+        260,
+        261,
+        262,
+        263
+      ],
+      "chunk_id": "21+22",
+      "original_pages": [
+        248,
+        249,
+        250,
+        251,
+        252,
+        253,
+        254,
+        255,
+        256,
+        257,
+        258,
+        259,
+        260,
+        261,
+        262
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9982163310050964,
+      "pages": [
+        264,
+        265,
+        266,
+        267,
+        268,
+        269
+      ],
+      "chunk_id": "22+23",
+      "original_pages": [
+        263,
+        264,
+        265,
+        266,
+        267,
+        268
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.995739221572876,
+      "pages": [
+        270
+      ],
+      "chunk_id": 23,
+      "chunk_start": 265,
+      "chunk_end": 278,
+      "original_pages": [
+        269
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9994014501571655,
+      "pages": [
+        271,
+        272
+      ],
+      "chunk_id": 23,
+      "chunk_start": 265,
+      "chunk_end": 278,
+      "original_pages": [
+        270,
+        271
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9995673298835754,
+      "pages": [
+        273
+      ],
+      "chunk_id": 23,
+      "chunk_start": 265,
+      "chunk_end": 278,
+      "original_pages": [
+        272
+      ]
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.99862140417099,
+      "pages": [
+        274,
+        275,
+        276,
+        277,
+        278,
+        279
+      ],
+      "chunk_id": 23,
+      "chunk_start": 265,
+      "chunk_end": 278,
+      "original_pages": [
+        273,
+        274,
+        275,
+        276,
+        277,
+        278
+      ]
+    }
+  ]
+}

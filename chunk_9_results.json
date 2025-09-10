@@ -1,0 +1,41 @@
+{
+  "chunk_id": 9,
+  "start_page": 97,
+  "end_page": 111,
+  "processing_time": 7.780752182006836,
+  "deeds": [
+    {
+      "type": "DEED",
+      "confidence": 0.9950646758079529,
+      "pages": [
+        97,
+        98,
+        99,
+        100,
+        101,
+        102,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110
+      ],
+      "chunk_id": 9,
+      "chunk_start": 97,
+      "chunk_end": 111
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9877248406410217,
+      "pages": [
+        111
+      ],
+      "chunk_id": 9,
+      "chunk_start": 97,
+      "chunk_end": 111
+    }
+  ]
+}

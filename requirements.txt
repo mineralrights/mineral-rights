@@ -50,6 +50,8 @@ pytz @ file:///home/conda/feedstock_root/build_artifacts/pytz_1742920838005/work
 PyYAML==6.0.2
 regex==2024.11.6
 requests==2.32.3
+google-cloud-documentai==2.32.0
+google-auth==2.35.0
 safetensors==0.5.3
 scikit-learn==1.6.1
 scipy==1.15.3

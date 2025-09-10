@@ -77,3 +77,7 @@ else
     echo "   2. Update PROJECT_ID and BUCKET variables"
     echo "   3. Run: ./scripts/upload_synthetic_dataset.sh"
 fi
+
+
+
+

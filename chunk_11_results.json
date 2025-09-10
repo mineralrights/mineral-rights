@@ -1,0 +1,59 @@
+{
+  "chunk_id": 11,
+  "start_page": 121,
+  "end_page": 135,
+  "processing_time": 9.424696683883667,
+  "deeds": [
+    {
+      "type": "DEED",
+      "confidence": 0.9996508955955505,
+      "pages": [
+        121,
+        122,
+        123
+      ],
+      "chunk_id": 11,
+      "chunk_start": 121,
+      "chunk_end": 135
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9937736392021179,
+      "pages": [
+        124,
+        125,
+        126,
+        127
+      ],
+      "chunk_id": 11,
+      "chunk_start": 121,
+      "chunk_end": 135
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.999273419380188,
+      "pages": [
+        128
+      ],
+      "chunk_id": 11,
+      "chunk_start": 121,
+      "chunk_end": 135
+    },
+    {
+      "type": "DEED",
+      "confidence": 0.9975724816322327,
+      "pages": [
+        129,
+        130,
+        131,
+        132,
+        133,
+        134,
+        135
+      ],
+      "chunk_id": 11,
+      "chunk_start": 121,
+      "chunk_end": 135
+    }
+  ]
+}

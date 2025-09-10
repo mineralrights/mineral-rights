@@ -125,3 +125,10 @@ echo "   3. Import training data from: gs://$BUCKET/synthetic_dataset/train/"
 echo "   4. Import test data from: gs://$BUCKET/synthetic_dataset/test/"
 echo "   5. Train your custom model for deed boundary detection"
 echo "   6. Evaluate on the test set"
+
+
+
+
+
+
+

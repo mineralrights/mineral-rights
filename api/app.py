@@ -115,6 +115,8 @@ app.add_middleware(
 
 # 2️⃣  --- initialise once at startup ----------------------------------------
 API_KEY = os.getenv("ANTHROPIC_API_KEY")  # or whatever key the processor needs
+DOCUMENT_AI_ENDPOINT = os.getenv("DOCUMENT_AI_ENDPOINT", "https://us-documentai.googleapis.com/v1/projects/381937358877/locations/us/processors/895767ed7f252878:process")
+DOCUMENT_AI_CREDENTIALS = os.getenv("DOCUMENT_AI_CREDENTIALS_PATH")  # Path to service account JSON
 processor = None
 
 def initialize_processor():
@@ -122,6 +124,8 @@ def initialize_processor():
     try:
         print("🔧 Initializing DocumentProcessor...")
         print(f"API Key present: {'Yes' if API_KEY else 'No'}")
+        print(f"Document AI Endpoint: {DOCUMENT_AI_ENDPOINT}")
+        print(f"Document AI Credentials: {'Yes' if DOCUMENT_AI_CREDENTIALS else 'No'}")
         
         # Test imports first
         try:
@@ -145,8 +149,12 @@ def initialize_processor():
             print(f"❌ anthropic import failed: {e}")
             return False
         
-        # Initialize processor
-        processor = DocumentProcessor(API_KEY)
+        # Initialize processor with Document AI support
+        processor = DocumentProcessor(
+            api_key=API_KEY,
+            document_ai_endpoint=DOCUMENT_AI_ENDPOINT,
+            document_ai_credentials=DOCUMENT_AI_CREDENTIALS
+        )
         print("✅ DocumentProcessor initialized successfully")
         return True
         
@@ -178,7 +186,7 @@ job_results: dict[str, dict] = {}               # store completed results for re
 async def predict(
     file: UploadFile = File(...), 
     processing_mode: str = Form("single_deed"),  # FIXED: Use Form() for FormData
-    splitting_strategy: str = Form("smart_detection")  # FIXED: Use Form() for FormData
+    splitting_strategy: str = Form("document_ai")  # Using Document AI as default
 ):
     # Try to initialize processor if it's None
     if processor is None:
@@ -592,7 +600,7 @@ async def test_job_system():
 async def create_long_running_job(
     file: UploadFile = File(...),
     processing_mode: str = Form("multi_deed"),
-    splitting_strategy: str = Form("smart_detection")
+    splitting_strategy: str = Form("document_ai")
 ):
     """
     Create a long-running processing job that can run for 8+ hours
@@ -731,6 +739,103 @@ async def jobs_health_check():
         "active_jobs": len([j for j in job_manager.jobs.values() if j.status == JobStatus.RUNNING]),
         "total_jobs": len(job_manager.jobs)
     }
+
+# --------------------------------------------------------------------------
+# Deed Tracking Endpoints
+# --------------------------------------------------------------------------
+
+@app.get("/deed-tracking/sessions")
+async def list_deed_tracking_sessions():
+    """List all deed tracking sessions"""
+    try:
+        if processor is None or not hasattr(processor, 'deed_tracker'):
+            raise HTTPException(status_code=500, detail="Deed tracker not available")
+        
+        sessions = processor.deed_tracker.list_sessions()
+        return {"sessions": sessions, "total": len(sessions)}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to list sessions: {str(e)}")
+
+@app.get("/deed-tracking/sessions/{session_id}")
+async def get_deed_tracking_session(session_id: str):
+    """Get details for a specific deed tracking session"""
+    try:
+        if processor is None or not hasattr(processor, 'deed_tracker'):
+            raise HTTPException(status_code=500, detail="Deed tracker not available")
+        
+        summary = processor.deed_tracker.get_session_summary(session_id)
+        if summary is None:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return summary
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get session: {str(e)}")
+
+@app.get("/deed-tracking/sessions/{session_id}/boundaries")
+async def get_deed_boundaries(session_id: str):
+    """Get deed boundaries for a specific session"""
+    try:
+        if processor is None or not hasattr(processor, 'deed_tracker'):
+            raise HTTPException(status_code=500, detail="Deed tracker not available")
+        
+        # Load session to get boundaries
+        session = processor.deed_tracker._load_session(session_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {
+            "session_id": session_id,
+            "deed_boundaries": [
+                {
+                    "deed_number": b.deed_number,
+                    "pages": b.pages,
+                    "confidence": b.confidence,
+                    "page_range": b.page_range,
+                    "detected_at": b.detected_at,
+                    "splitting_strategy": b.splitting_strategy,
+                    "document_ai_used": b.document_ai_used
+                }
+                for b in session.deed_boundaries
+            ]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get boundaries: {str(e)}")
+
+@app.get("/deed-tracking/sessions/{session_id}/results")
+async def get_deed_classification_results(session_id: str):
+    """Get classification results for a specific session"""
+    try:
+        if processor is None or not hasattr(processor, 'deed_tracker'):
+            raise HTTPException(status_code=500, detail="Deed tracker not available")
+        
+        # Load session to get results
+        session = processor.deed_tracker._load_session(session_id)
+        if session is None:
+            raise HTTPException(status_code=404, detail="Session not found")
+        
+        return {
+            "session_id": session_id,
+            "classification_results": [
+                {
+                    "deed_number": r.deed_number,
+                    "classification": r.classification,
+                    "confidence": r.confidence,
+                    "pages_in_deed": r.pages_in_deed,
+                    "processing_time": r.processing_time,
+                    "error": r.error,
+                    "deed_boundary_info": r.deed_boundary_info
+                }
+                for r in session.classification_results
+            ]
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get results: {str(e)}")
 
 @app.post("/jobs/test")
 async def test_job_creation():
