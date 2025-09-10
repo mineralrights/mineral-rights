@@ -279,11 +279,13 @@ async def predict(
                     
                 elif processing_mode == "multi_deed":
                     print(f"📑 Using multi-deed processing with strategy: '{splitting_strategy}'")
+                    log_q.put_nowait("🚀 Starting Document AI Smart Chunking...")
                     try:
                         # Check if processor is still valid
                         if processor is None:
                             raise Exception("Processor became None during processing")
                         
+                        log_q.put_nowait("🔧 Initializing Document AI processing...")
                         deed_results = processor.process_multi_deed_document(
                             tmp_path, 
                             strategy=splitting_strategy

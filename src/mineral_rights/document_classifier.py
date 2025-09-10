@@ -608,6 +608,7 @@ class DocumentProcessor:
         
         # Use smart chunking Document AI for all cases
         if self.document_ai_service:
+            print("✅ Document AI service is available - starting smart chunking")
             return self._split_with_smart_chunking(pdf_path)
         else:
             raise ValueError("Document AI service not available. Please check Google Cloud credentials and Document AI service configuration.")
@@ -620,8 +621,10 @@ class DocumentProcessor:
         print(f"🔧 Using Smart Chunking Document AI for deed detection...")
         
         # Use smart chunking service
+        print("📡 Calling Document AI service for smart chunking...")
         result = self.document_ai_service.split_deeds_with_smart_chunking(pdf_path)
         self._last_split_result = result
+        print("✅ Document AI smart chunking completed successfully")
         
         print(f"📊 Smart Chunking Results:")
         print(f"   - Total deeds detected: {result.total_deeds}")
