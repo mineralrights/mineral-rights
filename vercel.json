@@ -4,9 +4,6 @@
       "maxDuration": 30
     }
   },
-  "env": {
-    "__NEXT_USE_UNDICI": "false"
-  },
   "headers": [
     {
       "source": "/api/(.*)",
