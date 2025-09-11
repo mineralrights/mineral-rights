@@ -23,7 +23,7 @@ export default function ProcessingModeSelector({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Document Type
         </label>
-        <div className="flex gap-4">
+        <div className="space-y-3">
           <label className="flex items-center">
             <input
               type="radio"
@@ -47,7 +47,20 @@ export default function ProcessingModeSelector({
               className="mr-2"
             />
             <span className="text-sm">
-              <strong>Multiple Deeds</strong> - Multiple deeds in one PDF
+              <strong>Multiple Deeds</strong> - Multiple deeds in one PDF (uses Document AI)
+            </span>
+          </label>
+          <label className="flex items-center">
+            <input
+              type="radio"
+              name="processingMode"
+              value="page_by_page"
+              checked={processingMode === "page_by_page"}
+              onChange={(e) => onProcessingModeChange(e.target.value as ProcessingMode)}
+              className="mr-2"
+            />
+            <span className="text-sm">
+              <strong>Page-by-Page</strong> - Treat each page as a separate deed
             </span>
           </label>
         </div>
@@ -72,6 +85,31 @@ export default function ProcessingModeSelector({
               ✅ Memory-efficient processing<br/>
               ✅ Automatic offset correction<br/>
               ✅ Real-time progress logging
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Page-by-Page Description */}
+      {processingMode === "page_by_page" && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Processing Method
+          </label>
+          <div className="bg-green-50 border border-green-200 rounded-md p-3">
+            <div className="flex items-center">
+              <span className="text-green-600 font-medium">📄 Page-by-Page Classification</span>
+            </div>
+            <p className="text-sm text-green-700 mt-1">
+              Treats each page as a separate deed and classifies each page individually for mineral rights reservations. 
+              Perfect for long PDFs where you want to know exactly which pages contain reservations.
+            </p>
+            <div className="mt-2 text-xs text-green-600">
+              ✅ No Document AI required - works with any PDF<br/>
+              ✅ Reports exact page numbers with reservations<br/>
+              ✅ Memory-efficient processing<br/>
+              ✅ Fast processing for large documents<br/>
+              ✅ Ideal for 300+ page documents
             </div>
           </div>
         </div>

@@ -471,6 +471,35 @@ async def predict(
                         error_msg = f"Multi-deed processing failed: {str(e)}"
                         log_q.put_nowait(f"__ERROR__{error_msg}")
                         # Don't re-raise, let the finally block handle cleanup
+                        
+                elif processing_mode == "page_by_page":
+                    print("📄 Using page-by-page processing (treating each page as a deed)")
+                    log_q.put_nowait("🚀 Starting page-by-page classification...")
+                    try:
+                        # Check if processor is still valid
+                        if processor is None:
+                            raise Exception("Processor became None during processing")
+                        
+                        log_q.put_nowait("🔧 Processing each page individually...")
+                        result = processor.process_document_page_by_page(
+                            tmp_path,
+                            max_samples=6,  # Fewer samples for speed
+                            high_recall_mode=True
+                        )
+                        
+                        # Store result for potential retrieval
+                        job_results[job_id] = result
+                        log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
+                        print(f"✅ Page-by-page processing completed successfully: {result['total_pages']} pages processed")
+                        print(f"🎯 Pages with reservations: {result['pages_with_reservations']}")
+                        
+                    except Exception as e:
+                        print(f"❌ Page-by-page processing error: {e}")
+                        traceback.print_exc()
+                        error_msg = f"Page-by-page processing failed: {str(e)}"
+                        log_q.put_nowait(f"__ERROR__{error_msg}")
+                        # Don't re-raise, let the finally block handle cleanup
+                        
                 else:
                     raise ValueError(f"Unknown processing_mode: '{processing_mode}'")
                     
@@ -852,6 +881,12 @@ async def create_long_running_job(
                     result = processor.process_multi_deed_document(
                         tmp_path, 
                         strategy=splitting_strategy
+                    )
+                elif processing_mode == "page_by_page":
+                    result = processor.process_document_page_by_page(
+                        tmp_path,
+                        max_samples=6,  # Fewer samples for speed
+                        high_recall_mode=True
                     )
                 else:
                     raise ValueError(f"Unknown processing_mode: {processing_mode}")

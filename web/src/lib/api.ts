@@ -1,4 +1,4 @@
-import { PredictionRow, ProcessingMode, SplittingStrategy, DeedResult } from "./types";
+import { PredictionRow, ProcessingMode, SplittingStrategy, DeedResult, PageResult } from "./types";
 
 // Robust API configuration with multiple fallbacks
 const API_BASE = process.env.NEXT_PUBLIC_API_URL!;   // Railway backend: https://mineral-rights-production.up.railway.app
@@ -213,7 +213,7 @@ export async function predictBatch(
               row.prediction = result.classification === 1 ? "has_reservation" : "no_reservation";
               row.confidence = result.confidence;
               row.explanation = result.detailed_samples?.[0]?.reasoning || "";
-            } else {
+            } else if (processingMode === "multi_deed") {
               row.totalDeeds = result.total_deeds;
               row.deedResults = result.deed_results.map((deedResult: any): DeedResult => ({
                 deed_number: deedResult.deed_number,
@@ -228,6 +228,24 @@ export async function predictBatch(
               const reservationsFound = result.summary?.reservations_found || 0;
               row.prediction = reservationsFound > 0 ? "has_reservation" : "no_reservation";
               row.explanation = `${reservationsFound}/${result.total_deeds} deeds have reservations`;
+            } else if (processingMode === "page_by_page") {
+              row.totalPages = result.total_pages;
+              row.pagesWithReservations = result.pages_with_reservations || [];
+              row.pageResults = result.page_results?.map((pageResult: any): PageResult => ({
+                page_number: pageResult.page_number,
+                classification: pageResult.classification,
+                confidence: pageResult.confidence,
+                prediction: pageResult.classification === 1 ? "has_reservation" : "no_reservation",
+                explanation: pageResult.reasoning || "",
+                text_length: pageResult.text_length,
+                processing_time: pageResult.processing_time,
+                has_reservations: pageResult.has_reservations
+              })) || [];
+              
+              const reservationsFound = result.total_pages_with_reservations || 0;
+              row.prediction = reservationsFound > 0 ? "has_reservation" : "no_reservation";
+              row.confidence = result.confidence;
+              row.explanation = `${reservationsFound}/${result.total_pages} pages have reservations`;
             }
             
             row.status = "done";

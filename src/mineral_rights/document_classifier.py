@@ -1276,6 +1276,222 @@ class DocumentProcessor:
             'requires_manual_review': len(unread_pages) > 0,
         }
 
+    def process_document_page_by_page(self, pdf_path: str, max_samples: int = 6, 
+                                    confidence_threshold: float = 0.7,
+                                    max_tokens_per_page: int = 8000, 
+                                    high_recall_mode: bool = True) -> Dict:
+        """
+        Process document page by page, treating each page as a separate deed.
+        Returns which pages contain mineral rights reservations.
+        """
+        import time
+        import gc
+        import psutil
+        import os
+        
+        print("Using page-by-page classification (treating each page as a deed)")
+        print(f"📊 Max samples per page: {max_samples}")
+        
+        # Memory monitoring
+        process = psutil.Process(os.getpid())
+        initial_memory = process.memory_info().rss / 1024 / 1024  # MB
+        print(f"💾 Initial memory usage: {initial_memory:.1f} MB")
+        
+        # Open PDF and get total pages
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        
+        print(f"Document has {total_pages} pages")
+        print(f"⏰ Session started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Process each page individually
+        page_results = []
+        pages_with_reservations = []
+        start_time = time.time()
+        
+        for page_num in range(total_pages):
+            page_start_time = time.time()
+            current_page = page_num + 1
+            
+            print(f"\n--- PROCESSING PAGE {current_page}/{total_pages} ---")
+            
+            try:
+                # Convert page to image
+                page = doc.load_page(page_num)
+                mat = fitz.Matrix(2, 2)  # 2x zoom for quality
+                pix = page.get_pixmap(matrix=mat)
+                img_data = pix.tobytes("png")
+                image = Image.open(BytesIO(img_data))
+                
+                # Clear page objects immediately
+                page = None
+                pix = None
+                del page, pix
+                
+                # Extract text from current page
+                print(f"Extracting text from page {current_page}...")
+                page_text = self.extract_text_with_claude(image, max_tokens_per_page)
+                print(f"Extracted {len(page_text)} characters from page {current_page}")
+                
+                # Clear image immediately
+                image.close()
+                image = None
+                del image, img_data
+                
+                # Classify current page as if it were a deed
+                print(f"Classifying page {current_page} for oil and gas reservations...")
+                classification_result = self.classifier.classify_document(
+                    page_text, max_samples, confidence_threshold, high_recall_mode
+                )
+                
+                # Track page processing time
+                page_time = time.time() - page_start_time
+                
+                # Get reasoning from first sample
+                first_reasoning = (
+                    classification_result.all_samples[0].reasoning
+                    if classification_result.all_samples else "No reasoning available"
+                )
+                
+                page_result = {
+                    'page_number': current_page,
+                    'text_length': len(page_text),
+                    'classification': classification_result.predicted_class,
+                    'confidence': classification_result.confidence,
+                    'votes': classification_result.votes,
+                    'samples_used': classification_result.samples_used,
+                    'early_stopped': classification_result.early_stopped,
+                    'page_text': page_text,
+                    'reasoning': first_reasoning,
+                    'processing_time': page_time,
+                    'has_reservations': classification_result.predicted_class == 1
+                }
+                
+                page_results.append(page_result)
+                
+                # Track pages with reservations
+                if classification_result.predicted_class == 1:
+                    pages_with_reservations.append(current_page)
+                    print(f"🎯 PAGE {current_page}: HAS OIL AND GAS RESERVATIONS (confidence: {classification_result.confidence:.3f})")
+                else:
+                    print(f"📄 PAGE {current_page}: No oil and gas reservations (confidence: {classification_result.confidence:.3f})")
+                
+                print(f"Page {current_page} processed in {page_time:.1f} seconds")
+                
+                # Clear page text to save memory
+                page_text = None
+                del page_text
+                
+                # Memory management every 10 pages
+                if current_page % 10 == 0:
+                    current_memory = process.memory_info().rss / 1024 / 1024
+                    memory_increase = current_memory - initial_memory
+                    print(f"💾 Memory after page {current_page}: {current_memory:.1f} MB (change: {memory_increase:+.1f} MB)")
+                    
+                    # Force garbage collection if memory increase is significant
+                    if memory_increase > 200:  # More than 200MB increase
+                        print("🧹 Running garbage collection...")
+                        gc.collect()
+                        after_gc_memory = process.memory_info().rss / 1024 / 1024
+                        gc_reduction = current_memory - after_gc_memory
+                        print(f"🧹 GC freed: {gc_reduction:.1f} MB")
+                
+                # Progress update every 5 pages
+                if current_page % 5 == 0:
+                    elapsed_time = time.time() - start_time
+                    avg_time_per_page = elapsed_time / current_page
+                    remaining_pages = total_pages - current_page
+                    estimated_remaining_time = avg_time_per_page * remaining_pages
+                    
+                    hours = int(elapsed_time // 3600)
+                    minutes = int((elapsed_time % 3600) // 60)
+                    
+                    print(f"📊 Progress: {current_page}/{total_pages} pages processed ({current_page/total_pages*100:.1f}%)")
+                    print(f"⏱️  Elapsed: {hours}h {minutes}m | Est. remaining: {estimated_remaining_time/60:.1f} minutes")
+                    print(f"📈 Avg time per page: {avg_time_per_page:.1f} seconds")
+                    print(f"🎯 Pages with reservations so far: {len(pages_with_reservations)}")
+                
+            except Exception as e:
+                print(f"❌ Error processing page {current_page}: {e}")
+                # Add error result
+                error_result = {
+                    'page_number': current_page,
+                    'text_length': 0,
+                    'classification': 0,
+                    'confidence': 0.0,
+                    'votes': {0: 0.0, 1: 0.0},
+                    'samples_used': 0,
+                    'early_stopped': False,
+                    'page_text': f"[ERROR: Could not process page {current_page}]",
+                    'reasoning': f"Error: {str(e)}",
+                    'processing_time': 0.0,
+                    'has_reservations': False,
+                    'error': str(e)
+                }
+                page_results.append(error_result)
+                continue
+        
+        # Close document
+        doc.close()
+        
+        # Calculate final statistics
+        total_processing_time = time.time() - start_time
+        successful_pages = [p for p in page_results if 'error' not in p]
+        failed_pages = [p for p in page_results if 'error' in p]
+        
+        # Overall classification: 1 if ANY page has reservations, 0 otherwise
+        overall_classification = 1 if pages_with_reservations else 0
+        
+        # Overall confidence: average of all page confidences
+        page_confidences = [p['confidence'] for p in successful_pages if 'confidence' in p]
+        overall_confidence = sum(page_confidences) / len(page_confidences) if page_confidences else 0.0
+        
+        # Final memory check
+        final_memory = process.memory_info().rss / 1024 / 1024
+        memory_change = final_memory - initial_memory
+        print(f"💾 Final memory: {final_memory:.1f} MB (change: {memory_change:+.1f} MB)")
+        
+        # Final garbage collection
+        print("🧹 Running final garbage collection...")
+        gc.collect()
+        
+        print(f"\n✅ PAGE-BY-PAGE ANALYSIS COMPLETE:")
+        print(f"📊 Total pages processed: {total_pages}")
+        print(f"🎯 Pages with oil and gas reservations: {len(pages_with_reservations)}")
+        print(f"📄 Pages without reservations: {total_pages - len(pages_with_reservations)}")
+        print(f"❌ Pages with errors: {len(failed_pages)}")
+        print(f"⏱️  Total processing time: {total_processing_time/60:.1f} minutes")
+        
+        if pages_with_reservations:
+            print(f"🎯 RESERVATIONS FOUND ON PAGES: {', '.join(map(str, pages_with_reservations))}")
+        else:
+            print("📄 NO OIL AND GAS RESERVATIONS FOUND ON ANY PAGE")
+        
+        return {
+            'document_path': pdf_path,
+            'processing_mode': 'page_by_page',
+            'total_pages': total_pages,
+            'pages_processed': len(successful_pages),
+            'pages_with_errors': len(failed_pages),
+            'classification': overall_classification,
+            'confidence': overall_confidence,
+            'pages_with_reservations': pages_with_reservations,
+            'total_pages_with_reservations': len(pages_with_reservations),
+            'page_results': page_results,
+            'total_processing_time': total_processing_time,
+            'average_time_per_page': total_processing_time / total_pages if total_pages > 0 else 0,
+            'memory_usage_mb': final_memory,
+            'memory_change_mb': memory_change,
+            'high_recall_mode': high_recall_mode,
+            'max_samples_per_page': max_samples,
+            'summary': {
+                'has_reservations': len(pages_with_reservations) > 0,
+                'reservation_pages': pages_with_reservations,
+                'total_pages': total_pages,
+                'success_rate': len(successful_pages) / total_pages if total_pages > 0 else 0
+            }
+        }
+
     def process_document_memory_efficient(self, pdf_path: str, max_samples: int = 8, 
                                         confidence_threshold: float = 0.7,
                                         max_tokens_per_page: int = 8000, 
