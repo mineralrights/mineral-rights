@@ -286,8 +286,8 @@ async def root():
 
 @app.get("/heartbeat")
 async def heartbeat():
-    """Keep the service alive during long jobs"""
-    return {"status": "alive", "timestamp": time.time()}
+    """Simple heartbeat endpoint for Railway health checks"""
+    return {"status": "alive"}
 
 if __name__ == "__main__":
     import uvicorn

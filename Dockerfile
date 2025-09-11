@@ -19,9 +19,13 @@ RUN pip install --upgrade pip && \
 # Copy application code (API + classifier)
 COPY api ./api
 COPY src ./src
+COPY start.sh ./start.sh
+
+# Make start script executable
+RUN chmod +x start.sh
 
 # Expose the default FastAPI port
 EXPOSE 8000
 
-# Start the service with extended timeouts for very long-running processes (8+ hours)
-CMD ["uvicorn", "api.app:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-keep-alive", "28800", "--timeout-graceful-shutdown", "28800"] 
+# Start the service with startup delay and extended timeouts
+CMD ["./start.sh"] 
