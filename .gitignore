@@ -61,6 +61,14 @@ Thumbs.db
 .env.test.local
 .env.production.local
 
+# Google Cloud Service Account files
+*service-account*.json
+*service-account*.txt
+*service-account*.base64
+real-service-account*
+proper-service-account*
+clean-service-account*
+
 # Temporary files
 *.tmp
 *.temp

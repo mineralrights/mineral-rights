@@ -1,0 +1,18 @@
+[build]
+builder = "dockerfile"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "uvicorn api.app:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 28800 --timeout-graceful-shutdown 28800"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 3
+
+[environments.production]
+variables = { PORT = "8000" }
+
+# SSL/TLS configuration
+[environments.production.variables]
+SSL_VERIFY = "false"
+CORS_ORIGINS = "*"
