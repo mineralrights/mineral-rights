@@ -98,18 +98,19 @@ app = FastAPI(title="Mineral-Rights API")
 # Job system is now built into the main app
 print("✅ Long-running job system integrated")
 
-# More permissive CORS configuration
+# CORS configuration for Vercel frontend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
         "https://localhost:3000", 
         "https://mineral-rights-4o8gr9h79-lauragomezjurados-projects.vercel.app",
-        # Allow all Vercel domains
-        "*"  # Temporarily allow all origins for debugging
+        "https://mineral-rights-3n3mc6fj6-lauragomezjurados-projects.vercel.app",  # Current Vercel domain
+        "https://*.vercel.app",  # Allow all Vercel domains
+        "*"  # Allow all origins for debugging
     ],
-    allow_credentials=True,
-    allow_methods=["*"],
+    allow_credentials=False,  # Set to False when using wildcard origins
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
 
