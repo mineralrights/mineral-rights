@@ -71,6 +71,38 @@ export async function sendHeartbeat(): Promise<boolean> {
   }
 }
 
+// Connection test function
+export async function testConnection(): Promise<{success: boolean, message: string, details?: any}> {
+  try {
+    console.log("🔍 Testing connection to backend...");
+    const response = await robustFetch(`${API_CONFIG.baseUrl}/health`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log("✅ Backend connection successful:", data);
+      return {
+        success: true,
+        message: "Backend connection successful",
+        details: data
+      };
+    } else {
+      console.error("❌ Backend health check failed:", response.status);
+      return {
+        success: false,
+        message: `Backend health check failed (${response.status})`,
+        details: { status: response.status, statusText: response.statusText }
+      };
+    }
+  } catch (error) {
+    console.error("❌ Backend connection failed:", error);
+    return {
+      success: false,
+      message: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      details: error
+    };
+  }
+}
+
 // Main prediction function using SSE streaming
 export async function predictBatch(
   files: File[],
