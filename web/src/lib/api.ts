@@ -88,6 +88,16 @@ export async function testConnection(): Promise<{success: boolean, message: stri
   }
 }
 
+export async function sendHeartbeat(): Promise<boolean> {
+  try {
+    const response = await robustFetch(`${API_CONFIG.baseUrl}/heartbeat`);
+    return response.ok;
+  } catch (error) {
+    console.warn("Heartbeat failed:", error);
+    return false;
+  }
+}
+
 // Enhanced error handling for client experience
 function handleClientError(error: any, context: string): string {
   console.error(`❌ ${context}:`, error);
@@ -179,6 +189,16 @@ export async function predictBatch(
             emit();
             reject(new Error("Job timeout"));
             return;
+          }
+          
+          // Send heartbeat every 2 minutes to keep Railway alive during long jobs
+          if (minutes % 2 === 0 && minutes > 0) {
+            try {
+              await sendHeartbeat();
+              console.log(`💓 Sent heartbeat to keep service alive (${minutes}m elapsed)`);
+            } catch (error) {
+              console.warn("⚠️ Heartbeat failed:", error);
+            }
           }
           
           // Poll job status with retry logic

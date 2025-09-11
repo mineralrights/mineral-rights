@@ -110,6 +110,56 @@ class SimpleJobManager:
 # Global job manager
 job_manager = SimpleJobManager()
 
+# Heartbeat system to keep Railway alive during long jobs
+import threading
+import requests
+
+class HeartbeatManager:
+    def __init__(self):
+        self.active_jobs = set()
+        self.heartbeat_thread = None
+        self.running = False
+        
+    def start_heartbeat(self, job_id: str):
+        """Start heartbeat for a job"""
+        self.active_jobs.add(job_id)
+        if not self.running:
+            self.running = True
+            self.heartbeat_thread = threading.Thread(target=self._heartbeat_loop, daemon=True)
+            self.heartbeat_thread.start()
+            print(f"💓 Started heartbeat system for job {job_id}")
+    
+    def stop_heartbeat(self, job_id: str):
+        """Stop heartbeat for a job"""
+        self.active_jobs.discard(job_id)
+        if not self.active_jobs and self.running:
+            self.running = False
+            print(f"💓 Stopped heartbeat system (no active jobs)")
+    
+    def _heartbeat_loop(self):
+        """Background thread that sends heartbeats"""
+        while self.running and self.active_jobs:
+            try:
+                # Send heartbeat to ourselves to keep Railway awake
+                import os
+                port = os.getenv("PORT", "8000")
+                heartbeat_url = f"http://localhost:{port}/heartbeat"
+                
+                response = requests.get(heartbeat_url, timeout=5)
+                if response.status_code == 200:
+                    print(f"💓 Heartbeat sent - {len(self.active_jobs)} active jobs")
+                else:
+                    print(f"⚠️ Heartbeat failed: {response.status_code}")
+                    
+            except Exception as e:
+                print(f"⚠️ Heartbeat error: {e}")
+            
+            # Wait 30 seconds before next heartbeat
+            time.sleep(30)
+
+# Global heartbeat manager
+heartbeat_manager = HeartbeatManager()
+
 # ---------------------------------------------------------------------------
 
 
@@ -781,6 +831,9 @@ async def create_long_running_job(
                 print(f"🚀 Starting job {job_id} processing...")
                 job_manager.update_job_status(job_id, JobStatus.RUNNING)
                 
+                # Start heartbeat to keep Railway alive during long jobs
+                heartbeat_manager.start_heartbeat(job_id)
+                
                 # Check if file exists and has content
                 if not os.path.exists(tmp_path):
                     raise ValueError(f"Temporary file not found: {tmp_path}")
@@ -826,6 +879,9 @@ async def create_long_running_job(
                 traceback.print_exc()
                 job_manager.update_job_status(job_id, JobStatus.FAILED, error=str(e))
             finally:
+                # Stop heartbeat for this job
+                heartbeat_manager.stop_heartbeat(job_id)
+                
                 # Clean up temp file
                 try:
                     if os.path.exists(tmp_path):
@@ -892,6 +948,11 @@ async def list_jobs():
     """List all jobs"""
     jobs = job_manager.list_jobs()
     return {"jobs": jobs, "total": len(jobs)}
+
+@app.get("/heartbeat")
+async def heartbeat():
+    """Keep the service alive during long jobs"""
+    return {"status": "alive", "timestamp": time.time()}
 
 @app.get("/jobs/health")
 async def jobs_health_check():
