@@ -623,15 +623,27 @@ class DocumentProcessor:
         # Use smart chunking service
         print("📡 Calling Document AI service for smart chunking...")
         result = self.document_ai_service.split_deeds_with_smart_chunking(pdf_path)
+        print(f"🔍 DEBUG: Document AI result type: {type(result)}")
+        print(f"🔍 DEBUG: Document AI result: {result}")
+        if result is None:
+            raise ValueError("Document AI service returned None result")
         self._last_split_result = result
         print("✅ Document AI smart chunking completed successfully")
         
         print(f"📊 Smart Chunking Results:")
         print(f"   - Total deeds detected: {result.total_deeds}")
         print(f"   - Processing time: {result.processing_time:.2f}s")
-        print(f"   - Chunks processed: {result.raw_response.get('chunks_processed', 'N/A')}")
-        print(f"   - Systematic offset: {result.raw_response.get('systematic_offset', 'N/A')}")
-        print(f"   - Raw deeds before merge: {result.raw_response.get('raw_deeds_before_merge', 'N/A')}")
+        chunks_processed = "N/A"
+        if hasattr(result, 'raw_response') and result.raw_response is not None:
+            chunks_processed = result.raw_response.get('chunks_processed', 'N/A')
+        print(f"   - Chunks processed: {chunks_processed}")
+        systematic_offset = "N/A"
+        raw_deeds_before_merge = "N/A"
+        if hasattr(result, 'raw_response') and result.raw_response is not None:
+            systematic_offset = result.raw_response.get('systematic_offset', 'N/A')
+            raw_deeds_before_merge = result.raw_response.get('raw_deeds_before_merge', 'N/A')
+        print(f"   - Systematic offset: {systematic_offset}")
+        print(f"   - Raw deeds before merge: {raw_deeds_before_merge}")
         
         # Log deed boundaries for interpretability
         print(f"\n📋 Deed Boundaries Detected:")
