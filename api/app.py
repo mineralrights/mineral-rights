@@ -804,13 +804,19 @@ async def create_long_running_job(
         print(f"💾 Saved to temp file: {tmp_path}")
         
         # Create job
-        job_id = job_manager.create_job(
-            file.filename,
-            processing_mode,
-            splitting_strategy
-        )
-        
-        print(f"🎯 Created job: {job_id}")
+        print(f"🔄 Creating job for {file.filename}...")
+        try:
+            job_id = job_manager.create_job(
+                file.filename,
+                processing_mode,
+                splitting_strategy
+            )
+            print(f"🎯 Created job: {job_id}")
+        except Exception as job_error:
+            print(f"❌ Job creation failed: {job_error}")
+            import traceback
+            traceback.print_exc()
+            raise
         
         # Start processing in background
         def process_job():
