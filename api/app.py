@@ -145,11 +145,13 @@ DOCUMENT_AI_ENDPOINT = os.getenv("DOCUMENT_AI_ENDPOINT", "https://us-documentai.
 DOCUMENT_AI_CREDENTIALS = os.getenv("DOCUMENT_AI_CREDENTIALS_PATH")  # Path to service account JSON
 GOOGLE_CREDENTIALS_BASE64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")  # Base64 encoded credentials
 
-# Debug environment variables
+# Debug environment variables - FORCE DEPLOY
+print("🚀 FORCE DEPLOY - Debug environment variables")
 print(f"🔍 DEBUG: ANTHROPIC_API_KEY present: {'Yes' if API_KEY else 'No'}")
 print(f"🔍 DEBUG: DOCUMENT_AI_ENDPOINT: {DOCUMENT_AI_ENDPOINT}")
 print(f"🔍 DEBUG: GOOGLE_CREDENTIALS_BASE64 present: {'Yes' if GOOGLE_CREDENTIALS_BASE64 else 'No'}")
 print(f"🔍 DEBUG: All env vars: {list(os.environ.keys())}")
+print("🚀 END FORCE DEPLOY DEBUG")
 processor = None
 
 def initialize_processor():
