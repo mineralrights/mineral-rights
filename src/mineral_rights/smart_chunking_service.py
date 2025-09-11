@@ -12,6 +12,7 @@ from typing import List, Tuple, Dict, Any, Optional
 from dataclasses import dataclass
 from google.cloud import documentai
 from google.api_core import client_options
+from google.oauth2 import service_account
 
 @dataclass
 class DeedDetectionResult:
@@ -42,9 +43,22 @@ class SmartChunkingService:
         self.processor_version = processor_version
         self.credentials_path = credentials_path
         
-        # Initialize Document AI client
+        # Initialize Document AI client with credentials
         opts = client_options.ClientOptions(api_endpoint="us-documentai.googleapis.com")
-        self.client = documentai.DocumentProcessorServiceClient(client_options=opts)
+        
+        if self.credentials_path and os.path.exists(self.credentials_path):
+            # Use service account file
+            credentials = service_account.Credentials.from_service_account_file(
+                self.credentials_path,
+                scopes=['https://www.googleapis.com/auth/cloud-platform']
+            )
+            self.client = documentai.DocumentProcessorServiceClient(credentials=credentials, client_options=opts)
+            print(f"✅ SmartChunkingService initialized with credentials: {self.credentials_path}")
+        else:
+            # Use default credentials (e.g., from environment)
+            self.client = documentai.DocumentProcessorServiceClient(client_options=opts)
+            print("✅ SmartChunkingService initialized with default credentials")
+            
         self.processor_name = f"projects/{project_id}/locations/{location}/processors/{processor_id}/processorVersions/{processor_version}"
     
     def create_smart_chunks(self, pdf_path: str, chunk_size: int = 15, overlap: int = 3) -> List[Tuple[int, int]]:
