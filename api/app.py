@@ -50,13 +50,13 @@ def initialize_processor():
         if not api_key:
             print("❌ ANTHROPIC_API_KEY not found in environment")
             return False
-        
+            
         # Get Document AI endpoint
         document_ai_endpoint = os.getenv("DOCUMENT_AI_ENDPOINT")
         if not document_ai_endpoint:
             print("❌ DOCUMENT_AI_ENDPOINT not found in environment")
             return False
-        
+            
         print(f"API Key present: {'Yes' if api_key else 'No'}")
         print(f"Document AI Endpoint: {document_ai_endpoint}")
         
@@ -129,18 +129,18 @@ async def predict(
     if processor is None:
         if not initialize_processor():
             raise HTTPException(status_code=500, detail="Model not initialized")
-    
+
     # Memory monitoring
     process = psutil.Process(os.getpid())
     initial_memory = process.memory_info().rss / 1024 / 1024
     print(f"💾 Memory usage: {initial_memory:.1f} MB")
-    
+
     # Save file
     contents = await file.read()
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
         tmp.write(contents)
         tmp_path = tmp.name
-    
+
     # Create job
     job_id = str(uuid.uuid4())
     log_q: asyncio.Queue[str] = asyncio.Queue(maxsize=500)
@@ -179,7 +179,7 @@ async def predict(
                 log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
                 print("✅ Processing completed successfully")
                 log_q.put_nowait("__END__")
-                
+                    
         except Exception as e:
             print(f"❌ Processing failed: {e}")
             import traceback
@@ -194,21 +194,21 @@ async def predict(
                     print(f"🧹 Cleaned up temp file")
             except Exception as cleanup_error:
                 print(f"⚠️ Cleanup error: {cleanup_error}")
-    
+
     # Start background thread
-    thread = threading.Thread(target=run, daemon=True)
-    thread.start()
+        thread = threading.Thread(target=run, daemon=True)
+        thread.start()
     
-    return {"job_id": job_id}
+        return {"job_id": job_id}
 
 @app.get("/stream/{job_id}")
 async def stream(job_id: str):
     """Stream processing logs and results via Server-Sent Events"""
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Unknown job_id")
-    
+
     queue = jobs[job_id]
-    
+
     async def event_generator():
         last_heartbeat = time.time()
         heartbeat_interval = 5  # Send heartbeat every 5 seconds
@@ -233,7 +233,7 @@ async def stream(job_id: str):
                     session_duration = current_time - session_start
                     yield f"data: __HEARTBEAT__{current_time}|{session_duration}\n\n"
                     last_heartbeat = current_time
-    
+
     return StreamingResponse(
         event_generator(),
         media_type="text/event-stream",
