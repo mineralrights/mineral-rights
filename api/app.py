@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, HTTPException, Form
+from fastapi import FastAPI, UploadFile, File, HTTPException, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 import tempfile, os, traceback
 from typing import List, Optional
@@ -138,6 +138,19 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
     allow_headers=["*"],
 )
+
+# Add cache-busting middleware to prevent SSL/cache issues
+@app.middleware("http")
+async def add_cache_busting_headers(request: Request, call_next):
+    response = await call_next(request)
+    # Add headers to prevent caching and SSL issues
+    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    return response
 
 # 2️⃣  --- initialise once at startup ----------------------------------------
 API_KEY = os.getenv("ANTHROPIC_API_KEY")  # or whatever key the processor needs

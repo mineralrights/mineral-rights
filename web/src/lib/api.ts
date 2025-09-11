@@ -33,13 +33,19 @@ export async function predictBatch(
       form.append("splitting_strategy", "document_ai"); // Always use Document AI Smart Chunking
     }
     
-    // Use job system for long-running processing (8+ hours support)
-    const res = await fetch(`${API}/jobs/create`, { 
-      method: "POST", 
-      body: form,
-      // Increased timeout for Document AI processing
-      signal: AbortSignal.timeout(120000) // 2 minute timeout for job creation
-    });
+  // Use job system for long-running processing (8+ hours support)
+  const res = await fetch(`${API}/jobs/create?t=${Date.now()}`, { 
+    method: "POST", 
+    body: form,
+    // Increased timeout for Document AI processing
+    signal: AbortSignal.timeout(120000), // 2 minute timeout for job creation
+    // Add cache-busting headers
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0'
+    }
+  });
     if (!res.ok) {
       row.status = "error";
       try {
@@ -75,9 +81,14 @@ export async function predictBatch(
           }
           
           // Poll job status with retry logic
-          const statusResponse = await fetch(`${API}/jobs/${job_id}/status`, {
-            signal: AbortSignal.timeout(30000) // 30 second timeout for status checks
-          });
+    const statusResponse = await fetch(`${API}/jobs/${job_id}/status?t=${Date.now()}`, {
+        signal: AbortSignal.timeout(30000), // 30 second timeout for status checks
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+    });
           if (!statusResponse.ok) {
             throw new Error(`Failed to get job status: ${statusResponse.status}`);
           }
@@ -95,9 +106,14 @@ export async function predictBatch(
           
           if (jobStatus.status === "completed") {
             // Get the result
-            const resultResponse = await fetch(`${API}/jobs/${job_id}/result`, {
-              signal: AbortSignal.timeout(60000) // 1 minute timeout for result retrieval
-            });
+    const resultResponse = await fetch(`${API}/jobs/${job_id}/result?t=${Date.now()}`, {
+        signal: AbortSignal.timeout(60000), // 1 minute timeout for result retrieval
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0'
+        }
+    });
             if (!resultResponse.ok) {
               throw new Error(`Failed to get job result: ${resultResponse.status}`);
             }
