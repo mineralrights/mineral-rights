@@ -84,8 +84,11 @@ class SimpleJobManager:
                 # Use Upstash REST API
                 response = requests.post(
                     f"{self._upstash_client['url']}/set/{self._job_key(job.id)}",
-                    headers={"Authorization": f"Bearer {self._upstash_client['token']}"},
-                    json=json.dumps(data),
+                    headers={
+                        "Authorization": f"Bearer {self._upstash_client['token']}",
+                        "Content-Type": "application/json"
+                    },
+                    data=json.dumps(data),
                     params={"ex": 86400}  # 24 hours expiry
                 )
                 if response.status_code == 200:
@@ -110,9 +113,9 @@ class SimpleJobManager:
                     headers={"Authorization": f"Bearer {self._upstash_client['token']}"}
                 )
                 if response.status_code == 200:
-                    raw = response.text.strip('"')  # Remove quotes from response
-                    if raw and raw != "null":
-                        data = json.loads(raw)
+                    result = response.json()
+                    if result and result != "null":
+                        data = json.loads(result)
                         return JobInfo(
                             id=data["id"],
                             filename=data["filename"],
