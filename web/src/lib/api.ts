@@ -198,12 +198,22 @@ export async function predictBatch(
           const jobStatus = await statusResponse.json();
           console.log(`📊 Job ${job_id} status: ${jobStatus.status} (${hours}h ${minutes}m)`);
           
-          // Update progress
-          const progressMsg = `Processing... (${hours}h ${minutes}m) - Status: ${jobStatus.status}`;
-          const lastStep = row.steps![row.steps!.length - 1];
-          if (!lastStep || !lastStep.includes(progressMsg)) {
-            row.steps!.push(progressMsg);
-            emit();
+          // Update progress - use job logs if available, otherwise fall back to status
+          if (jobStatus.logs && jobStatus.logs.length > 0) {
+            // Use the actual classification logs
+            const newLogs = jobStatus.logs.slice(row.steps!.length);
+            if (newLogs.length > 0) {
+              row.steps!.push(...newLogs);
+              emit();
+            }
+          } else {
+            // Fallback to status message
+            const progressMsg = `Processing... (${hours}h ${minutes}m) - Status: ${jobStatus.status}`;
+            const lastStep = row.steps![row.steps!.length - 1];
+            if (!lastStep || !lastStep.includes(progressMsg)) {
+              row.steps!.push(progressMsg);
+              emit();
+            }
           }
           
           if (jobStatus.status === "completed") {

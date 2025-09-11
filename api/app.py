@@ -791,10 +791,18 @@ async def create_long_running_job(
                 
                 print(f"📁 Processing file: {tmp_path} (size: {file_size} bytes)")
                 
-                # Process the document
+                # Create a log capture function to update job logs
+                def log_capture(message: str):
+                    """Capture log messages and store them in the job"""
+                    print(message)  # Still print to console
+                    job = job_manager.get_job(job_id)
+                    if job and job.logs is not None:
+                        job.logs.append(message)
+                
+                # Process the document with log capture
                 if processing_mode == "single_deed":
-                    # Single deed processing doesn't use splitting strategy
-                    result = processor.process_document(tmp_path)
+                    # Single deed processing with log capture
+                    result = processor.process_document(tmp_path, log_fn=log_capture)
                 elif processing_mode == "multi_deed":
                     result = processor.process_multi_deed_document(
                         tmp_path, 
