@@ -54,22 +54,92 @@ class SimpleJobManager:
         upstash_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
 
         self._upstash_client = None
-        # Temporarily disable Redis to get the app working
-        print("⚠️ Redis temporarily disabled - using in-memory storage")
-        self._upstash_client = None
-
         self.jobs: dict[str, JobInfo] = {}
+        
+        # Try to initialize Redis for job persistence
+        if upstash_url and upstash_token:
+            try:
+                print("🔄 Initializing Redis for job persistence...")
+                # Use Upstash Redis REST API
+                self._upstash_client = {
+                    'url': upstash_url,
+                    'token': upstash_token
+                }
+                print("✅ Redis initialized for job persistence")
+            except Exception as e:
+                print(f"⚠️ Redis initialization failed: {e}")
+                print("⚠️ Falling back to in-memory storage (jobs will be lost on restart)")
+                self._upstash_client = None
+        else:
+            print("⚠️ No Redis credentials found - using in-memory storage")
+            print("⚠️ Jobs will be lost on server restart")
 
     def _job_key(self, job_id: str) -> str:
         return f"jobs:{job_id}"
 
     def _save_job(self, job: JobInfo):
-        # Use in-memory storage
+        # Save to in-memory storage
         self.jobs[job.id] = job
+        
+        # Also save to Redis if available
+        if self._upstash_client:
+            try:
+                import requests
+                import json
+                
+                job_data = asdict(job)
+                job_json = json.dumps(job_data)
+                
+                response = requests.post(
+                    f"{self._upstash_client['url']}/set/{self._job_key(job.id)}",
+                    headers={
+                        'Authorization': f"Bearer {self._upstash_client['token']}",
+                        'Content-Type': 'application/json'
+                    },
+                    data=job_json,
+                    timeout=5
+                )
+                
+                if response.status_code == 200:
+                    print(f"✅ Job {job.id} saved to Redis")
+                else:
+                    print(f"⚠️ Failed to save job {job.id} to Redis: {response.status_code}")
+                    
+            except Exception as e:
+                print(f"⚠️ Redis save error for job {job.id}: {e}")
 
     def _load_job(self, job_id: str) -> Optional[JobInfo]:
-        # Use in-memory storage
-        return self.jobs.get(job_id)
+        # First try in-memory storage
+        if job_id in self.jobs:
+            return self.jobs[job_id]
+        
+        # If not in memory, try Redis
+        if self._upstash_client:
+            try:
+                import requests
+                import json
+                
+                response = requests.get(
+                    f"{self._upstash_client['url']}/get/{self._job_key(job_id)}",
+                    headers={
+                        'Authorization': f"Bearer {self._upstash_client['token']}"
+                    },
+                    timeout=5
+                )
+                
+                if response.status_code == 200:
+                    job_data = response.json()
+                    if job_data and job_data != "null":
+                        job = JobInfo(**job_data)
+                        # Cache in memory for faster access
+                        self.jobs[job_id] = job
+                        print(f"✅ Job {job_id} loaded from Redis")
+                        return job
+                        
+            except Exception as e:
+                print(f"⚠️ Redis load error for job {job_id}: {e}")
+        
+        return None
 
     def create_job(self, filename: str, processing_mode: str, splitting_strategy: str) -> str:
         import time, json
