@@ -90,13 +90,16 @@ class SimpleJobManager:
                 job_data = asdict(job)
                 job_json = json.dumps(job_data)
                 
+                # Upstash Redis REST API format
                 response = requests.post(
-                    f"{self._upstash_client['url']}/set/{self._job_key(job.id)}",
+                    self._upstash_client['url'],
                     headers={
                         'Authorization': f"Bearer {self._upstash_client['token']}",
                         'Content-Type': 'application/json'
                     },
-                    data=job_json,
+                    json={
+                        "command": ["SET", self._job_key(job.id), job_json]
+                    },
                     timeout=5
                 )
                 
@@ -119,17 +122,23 @@ class SimpleJobManager:
                 import requests
                 import json
                 
-                response = requests.get(
-                    f"{self._upstash_client['url']}/get/{self._job_key(job_id)}",
+                # Upstash Redis REST API format
+                response = requests.post(
+                    self._upstash_client['url'],
                     headers={
-                        'Authorization': f"Bearer {self._upstash_client['token']}"
+                        'Authorization': f"Bearer {self._upstash_client['token']}",
+                        'Content-Type': 'application/json'
+                    },
+                    json={
+                        "command": ["GET", self._job_key(job_id)]
                     },
                     timeout=5
                 )
                 
                 if response.status_code == 200:
-                    job_data = response.json()
-                    if job_data and job_data != "null":
+                    result = response.json()
+                    if result and result.get("result") and result["result"] != "null":
+                        job_data = json.loads(result["result"])
                         job = JobInfo(**job_data)
                         # Cache in memory for faster access
                         self.jobs[job_id] = job
