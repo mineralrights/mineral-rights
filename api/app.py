@@ -64,65 +64,11 @@ class SimpleJobManager:
         return f"jobs:{job_id}"
 
     def _save_job(self, job: JobInfo):
-        import json
-        import requests
-        
-        if self._upstash_client:
-            try:
-                data = asdict(job)
-                data["status"] = job.status.value
-                
-                # Use Upstash REST API
-                response = requests.post(
-                    f"{self._upstash_client['url']}/set/{self._job_key(job.id)}",
-                    headers={
-                        "Authorization": f"Bearer {self._upstash_client['token']}",
-                        "Content-Type": "application/json"
-                    },
-                    json=data,
-                    params={"ex": 86400}  # 24 hours expiry
-                )
-                if response.status_code == 200:
-                    return
-                else:
-                    print(f"⚠️ Upstash Redis save failed: {response.status_code} - {response.text}")
-            except Exception as e:
-                print(f"⚠️ Failed to persist job to Upstash Redis: {e}")
-        
-        # Fallback to memory
+        # Use in-memory storage
         self.jobs[job.id] = job
 
     def _load_job(self, job_id: str) -> Optional[JobInfo]:
-        import json
-        import requests
-        
-        if self._upstash_client:
-            try:
-                # Use Upstash REST API
-                response = requests.get(
-                    f"{self._upstash_client['url']}/get/{self._job_key(job_id)}",
-                    headers={"Authorization": f"Bearer {self._upstash_client['token']}"}
-                )
-                if response.status_code == 200:
-                    result = response.json()
-                    if result and result != "null":
-                        data = json.loads(result)
-                        return JobInfo(
-                            id=data["id"],
-                            filename=data["filename"],
-                            processing_mode=data["processing_mode"],
-                            splitting_strategy=data["splitting_strategy"],
-                            status=JobStatus(data["status"]),
-                            created_at=data.get("created_at"),
-                            started_at=data.get("started_at"),
-                            completed_at=data.get("completed_at"),
-                            result=data.get("result"),
-                            error=data.get("error"),
-                            logs=data.get("logs", []),
-                        )
-            except Exception as e:
-                print(f"⚠️ Failed to load job from Upstash Redis: {e}")
-        
+        # Use in-memory storage
         return self.jobs.get(job_id)
 
     def create_job(self, filename: str, processing_mode: str, splitting_strategy: str) -> str:
