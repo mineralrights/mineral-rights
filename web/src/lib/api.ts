@@ -144,16 +144,14 @@ export async function predictBatch(
     row.status = "processing";
     emit();
 
-    // 1️⃣  upload PDF → get job_id (use job system for long-running tasks)
+    // 1️⃣  upload PDF → get job_id (use simple SSE streaming)
     const form = new FormData();
     form.append("file", file);
     form.append("processing_mode", processingMode);
-    if (processingMode === "multi_deed") {
-      form.append("splitting_strategy", "document_ai"); // Always use Document AI Smart Chunking
-    }
+    form.append("splitting_strategy", "document_ai");
     
-  // Use job system for long-running processing (8+ hours support)
-  const res = await robustFetch(`${API_CONFIG.baseUrl}/jobs/create`, { 
+  // Use simple SSE streaming for processing
+  const res = await robustFetch(`${API_CONFIG.baseUrl}/predict`, { 
     method: "POST", 
     body: form
   });
