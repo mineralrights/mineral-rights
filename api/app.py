@@ -785,6 +785,7 @@ async def create_long_running_job(
     print(f"🔍 DEBUG: splitting_strategy = '{splitting_strategy}'")
     print(f"🔍 DEBUG: filename = '{file.filename}'")
     print(f"🔍 DEBUG: content_type = '{file.content_type}'")
+    print(f"🔍 DEBUG: file size = {file.size if hasattr(file, 'size') else 'unknown'}")
     try:
         # Validate file
         if not file.filename:
