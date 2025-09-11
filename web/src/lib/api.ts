@@ -3,47 +3,89 @@ import { PredictionRow, DeedResult, PageResult, ProcessingMode, SplittingStrateg
 // API configuration
 const API_CONFIG = {
   baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-production.up.railway.app',
+  // Add fallback URLs for SSL issues
+  fallbackUrls: [
+    'https://mineral-rights-production.up.railway.app',
+    'http://mineral-rights-production.up.railway.app', // HTTP fallback
+  ]
 };
 
-// Robust fetch with retry logic and cache busting
+// Robust fetch with retry logic, SSL fallback, and cache busting
 async function robustFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second
   
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      // Add cache busting parameters
-      const separator = url.includes('?') ? '&' : '?';
-      const cacheBustUrl = `${url}${separator}t=${Date.now()}&r=${Math.random()}`;
-      
-      // Add cache busting headers
-      const headers = {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-        ...options.headers,
-      };
-      
-      const response = await fetch(cacheBustUrl, {
-        ...options,
-        headers,
-        signal: AbortSignal.timeout(30000), // 30 second timeout
-      });
-      
-      return response;
-    } catch (error) {
-      console.warn(`Fetch attempt ${attempt} failed:`, error);
-      
-      if (attempt === maxRetries) {
-        throw error;
+  // Try different URL variants for SSL issues
+  const urlVariants = [
+    url, // Original URL
+    url.replace('https://', 'http://'), // HTTP fallback
+  ];
+  
+  for (const currentUrl of urlVariants) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        // Add cache busting parameters
+        const separator = currentUrl.includes('?') ? '&' : '?';
+        const cacheBustUrl = `${currentUrl}${separator}t=${Date.now()}&r=${Math.random()}`;
+        
+        // Add cache busting headers and SSL-friendly headers
+        const headers = {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
+          'Connection': 'keep-alive',
+          'User-Agent': 'Mozilla/5.0 (compatible; MineralRightsApp/1.0)',
+          ...options.headers,
+        };
+        
+        // Create fetch options with SSL-friendly settings
+        const fetchOptions: RequestInit = {
+          ...options,
+          headers,
+          signal: AbortSignal.timeout(30000), // 30 second timeout
+          // Add mode and credentials for CORS
+          mode: 'cors',
+          credentials: 'omit', // Don't send credentials to avoid SSL issues
+        };
+        
+        console.log(`🔄 Attempting fetch to: ${cacheBustUrl} (attempt ${attempt})`);
+        const response = await fetch(cacheBustUrl, fetchOptions);
+        
+        console.log(`✅ Fetch successful: ${response.status} ${response.statusText}`);
+        return response;
+        
+      } catch (error) {
+        console.warn(`❌ Fetch attempt ${attempt} failed for ${currentUrl}:`, error);
+        
+        // Check if it's an SSL error and we should try HTTP
+        const isSSLError = error instanceof Error && (
+          error.message.includes('SSL') || 
+          error.message.includes('TLS') ||
+          error.message.includes('ERR_SSL') ||
+          error.message.includes('certificate') ||
+          error.message.includes('handshake')
+        );
+        
+        if (isSSLError && currentUrl.startsWith('https://')) {
+          console.log(`🔒 SSL error detected, will try HTTP fallback`);
+          break; // Try next URL variant (HTTP)
+        }
+        
+        if (attempt === maxRetries) {
+          // If this was the last attempt for this URL variant, try next variant
+          if (currentUrl === urlVariants[urlVariants.length - 1]) {
+            throw error; // All variants exhausted
+          }
+          break; // Try next URL variant
+        }
+        
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
       }
-      
-      // Wait before retrying
-      await new Promise(resolve => setTimeout(resolve, retryDelay * attempt));
     }
   }
   
-  throw new Error('All fetch attempts failed');
+  throw new Error('All fetch attempts failed across all URL variants');
 }
 
 // Client-side error handling
