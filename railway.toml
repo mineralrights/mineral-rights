@@ -10,9 +10,4 @@ restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
 [environments.production]
-variables = { PORT = "8000" }
-
-# SSL/TLS configuration
-[environments.production.variables]
-SSL_VERIFY = "false"
-CORS_ORIGINS = "*"
+variables = { PORT = "8000", SSL_VERIFY = "false", CORS_ORIGINS = "*" }
