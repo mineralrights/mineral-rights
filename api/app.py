@@ -127,32 +127,38 @@ class HeartbeatManager:
             self.running = True
             self.heartbeat_thread = threading.Thread(target=self._heartbeat_loop, daemon=True)
             self.heartbeat_thread.start()
-            print(f"💓 Started heartbeat system for job {job_id}")
+            print(f"💓 Started keep-alive system for job {job_id}")
     
     def stop_heartbeat(self, job_id: str):
         """Stop heartbeat for a job"""
         self.active_jobs.discard(job_id)
         if not self.active_jobs and self.running:
             self.running = False
-            print(f"💓 Stopped heartbeat system (no active jobs)")
+            print(f"💓 Stopped keep-alive system (no active jobs)")
     
     def _heartbeat_loop(self):
-        """Background thread that sends heartbeats"""
+        """Background thread that keeps the service active"""
         while self.running and self.active_jobs:
             try:
-                # Send heartbeat to ourselves to keep Railway awake
-                import os
-                port = os.getenv("PORT", "8000")
-                heartbeat_url = f"http://localhost:{port}/heartbeat"
+                # Simple keep-alive: just log activity to keep the process busy
+                print(f"💓 Keep-alive: {len(self.active_jobs)} active jobs - {time.strftime('%Y-%m-%d %H:%M:%S')}")
                 
-                response = requests.get(heartbeat_url, timeout=5)
-                if response.status_code == 200:
-                    print(f"💓 Heartbeat sent - {len(self.active_jobs)} active jobs")
-                else:
-                    print(f"⚠️ Heartbeat failed: {response.status_code}")
-                    
+                # Also try to make a simple HTTP request to keep Railway awake
+                import os
+                railway_url = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+                if railway_url:
+                    try:
+                        heartbeat_url = f"https://{railway_url}/heartbeat"
+                        response = requests.get(heartbeat_url, timeout=5)
+                        if response.status_code == 200:
+                            print(f"💓 External heartbeat successful")
+                        else:
+                            print(f"⚠️ External heartbeat failed: {response.status_code}")
+                    except Exception as e:
+                        print(f"⚠️ External heartbeat error: {e}")
+                
             except Exception as e:
-                print(f"⚠️ Heartbeat error: {e}")
+                print(f"⚠️ Keep-alive error: {e}")
             
             # Wait 30 seconds before next heartbeat
             time.sleep(30)
@@ -851,6 +857,24 @@ async def create_long_running_job(
                     job = job_manager.get_job(job_id)
                     if job and job.logs is not None:
                         job.logs.append(message)
+                    
+                    # Also trigger a keep-alive heartbeat every few log messages
+                    if hasattr(log_capture, 'counter'):
+                        log_capture.counter += 1
+                    else:
+                        log_capture.counter = 1
+                    
+                    # Send heartbeat every 10 log messages to keep Railway awake
+                    if log_capture.counter % 10 == 0:
+                        try:
+                            import os
+                            railway_url = os.getenv("RAILWAY_PUBLIC_DOMAIN")
+                            if railway_url:
+                                heartbeat_url = f"https://{railway_url}/heartbeat"
+                                requests.get(heartbeat_url, timeout=3)
+                                print(f"💓 Processing heartbeat sent (log #{log_capture.counter})")
+                        except Exception as e:
+                            print(f"⚠️ Processing heartbeat failed: {e}")
                 
                 # Process the document with log capture
                 if processing_mode == "single_deed":
