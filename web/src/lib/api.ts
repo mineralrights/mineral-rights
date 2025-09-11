@@ -38,7 +38,7 @@ export async function predictBatch(
       method: "POST", 
       body: form,
       // Increased timeout for Document AI processing
-      signal: AbortSignal.timeout(600000) // 10 minute timeout for job creation
+      signal: AbortSignal.timeout(120000) // 2 minute timeout for job creation
     });
     if (!res.ok) {
       row.status = "error";
@@ -76,7 +76,7 @@ export async function predictBatch(
           
           // Poll job status with retry logic
           const statusResponse = await fetch(`${API}/jobs/${job_id}/status`, {
-            signal: AbortSignal.timeout(120000) // 2 minute timeout for status checks
+            signal: AbortSignal.timeout(30000) // 30 second timeout for status checks
           });
           if (!statusResponse.ok) {
             throw new Error(`Failed to get job status: ${statusResponse.status}`);
@@ -96,7 +96,7 @@ export async function predictBatch(
           if (jobStatus.status === "completed") {
             // Get the result
             const resultResponse = await fetch(`${API}/jobs/${job_id}/result`, {
-              signal: AbortSignal.timeout(180000) // 3 minute timeout for result retrieval
+              signal: AbortSignal.timeout(60000) // 1 minute timeout for result retrieval
             });
             if (!resultResponse.ok) {
               throw new Error(`Failed to get job result: ${resultResponse.status}`);
