@@ -13,184 +13,15 @@ from dataclasses import dataclass, asdict
 
 #  import your pipeline ----------------------------------------------
 from src.mineral_rights.document_classifier import DocumentProcessor
+from redis_job_manager import job_manager, JobStatus
 
 # Long-running job support built into main app
 JOB_ENDPOINTS_AVAILABLE = True
 print("✅ Long-running job support enabled - RAILWAY DEPLOYMENT TEST")
 
 # --------------------------------------------------------------------------
-# Job System Classes (Built-in)
+# Job System - Now using DurableJobManager from redis_job_manager.py
 # --------------------------------------------------------------------------
-class JobStatus(Enum):
-    PENDING = "pending"
-    RUNNING = "running"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-
-@dataclass
-class JobInfo:
-    id: str
-    filename: str
-    processing_mode: str
-    splitting_strategy: str
-    status: JobStatus
-    created_at: float
-    started_at: Optional[float] = None
-    completed_at: Optional[float] = None
-    result: Optional[dict] = None
-    error: Optional[str] = None
-    logs: List[str] = None
-
-class SimpleJobManager:
-    """Job manager backed by Redis for persistence across restarts/instances"""
-
-    def __init__(self):
-        # Lazy import to avoid dependency during type checking
-        import os, json
-        import requests
-
-        upstash_url = os.getenv("UPSTASH_REDIS_REST_URL")
-        upstash_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
-
-        self._upstash_client = None
-        self.jobs: dict[str, JobInfo] = {}
-        
-        # Try to initialize Redis for job persistence
-        if upstash_url and upstash_token:
-            try:
-                print("🔄 Initializing Redis for job persistence...")
-                # Use Upstash Redis REST API
-                self._upstash_client = {
-                    'url': upstash_url,
-                    'token': upstash_token
-                }
-                print("✅ Redis initialized for job persistence")
-            except Exception as e:
-                print(f"⚠️ Redis initialization failed: {e}")
-                print("⚠️ Falling back to in-memory storage (jobs will be lost on restart)")
-                self._upstash_client = None
-        else:
-            print("⚠️ No Redis credentials found - using in-memory storage")
-            print("⚠️ Jobs will be lost on server restart")
-
-    def _job_key(self, job_id: str) -> str:
-        return f"jobs:{job_id}"
-
-    def _save_job(self, job: JobInfo):
-        # Save to in-memory storage
-        self.jobs[job.id] = job
-        
-        # Also save to Redis if available
-        if self._upstash_client:
-            try:
-                import requests
-                import json
-                
-                job_data = asdict(job)
-                job_json = json.dumps(job_data)
-                
-                # Upstash Redis REST API format
-                response = requests.post(
-                    self._upstash_client['url'],
-                    headers={
-                        'Authorization': f"Bearer {self._upstash_client['token']}",
-                        'Content-Type': 'application/json'
-                    },
-                    json={
-                        "command": ["SET", self._job_key(job.id), job_json]
-                    },
-                    timeout=5
-                )
-                
-                if response.status_code == 200:
-                    print(f"✅ Job {job.id} saved to Redis")
-                else:
-                    print(f"⚠️ Failed to save job {job.id} to Redis: {response.status_code}")
-                    
-            except Exception as e:
-                print(f"⚠️ Redis save error for job {job.id}: {e}")
-
-    def _load_job(self, job_id: str) -> Optional[JobInfo]:
-        # First try in-memory storage
-        if job_id in self.jobs:
-            return self.jobs[job_id]
-        
-        # If not in memory, try Redis
-        if self._upstash_client:
-            try:
-                import requests
-                import json
-                
-                # Upstash Redis REST API format
-                response = requests.post(
-                    self._upstash_client['url'],
-                    headers={
-                        'Authorization': f"Bearer {self._upstash_client['token']}",
-                        'Content-Type': 'application/json'
-                    },
-                    json={
-                        "command": ["GET", self._job_key(job_id)]
-                    },
-                    timeout=5
-                )
-                
-                if response.status_code == 200:
-                    result = response.json()
-                    if result and result.get("result") and result["result"] != "null":
-                        job_data = json.loads(result["result"])
-                        job = JobInfo(**job_data)
-                        # Cache in memory for faster access
-                        self.jobs[job_id] = job
-                        print(f"✅ Job {job_id} loaded from Redis")
-                        return job
-                        
-            except Exception as e:
-                print(f"⚠️ Redis load error for job {job_id}: {e}")
-        
-        return None
-
-    def create_job(self, filename: str, processing_mode: str, splitting_strategy: str) -> str:
-        import time, json
-        job_id = f"job_{int(time.time())}_{hash(filename) % 10000}"
-        job_info = JobInfo(
-            id=job_id,
-            filename=filename,
-            processing_mode=processing_mode,
-            splitting_strategy=splitting_strategy,
-            status=JobStatus.PENDING,
-            created_at=time.time(),
-            logs=[],
-        )
-        print(f"🔍 Creating job: {job_id}")
-        self._save_job(job_info)
-        print(f"🔍 Job saved, total jobs: {len(self.jobs)}")
-        return job_id
-
-    def get_job(self, job_id: str) -> Optional[JobInfo]:
-        return self._load_job(job_id)
-
-    def update_job_status(self, job_id: str, status: JobStatus, result: Optional[dict] = None, error: Optional[str] = None):
-        job = self._load_job(job_id)
-        if not job:
-            return
-        job.status = status
-        if status == JobStatus.RUNNING:
-            job.started_at = time.time()
-        elif status in [JobStatus.COMPLETED, JobStatus.FAILED]:
-            job.completed_at = time.time()
-        if result is not None:
-            job.result = result
-        if error is not None:
-            job.error = error
-        self._save_job(job)
-
-    def list_jobs(self) -> List[dict]:
-        # For simplicity, only returns in-memory jobs if Redis is used
-        return [asdict(job) for job in self.jobs.values()]
-
-# Global job manager
-job_manager = SimpleJobManager()
 
 # ---------------------------------------------------------------------------
 
@@ -842,15 +673,15 @@ async def create_long_running_job(
         
         print(f"💾 Saved to temp file: {tmp_path}")
         
-        # Create job
-        print(f"🔄 Creating job for {file.filename}...")
+        # Create job with durable persistence
+        print(f"🔄 Creating durable job for {file.filename}...")
         try:
             job_id = job_manager.create_job(
                 file.filename,
                 processing_mode,
                 splitting_strategy
             )
-            print(f"🎯 Created job: {job_id}")
+            print(f"🎯 Created durable job: {job_id}")
         except Exception as job_error:
             print(f"❌ Job creation failed: {job_error}")
             import traceback
@@ -861,7 +692,7 @@ async def create_long_running_job(
         def process_job():
             try:
                 print(f"🚀 Starting job {job_id} processing...")
-                job_manager.update_job_status(job_id, JobStatus.RUNNING)
+                job_manager.update_job_status(job_id, JobStatus.RUNNING, progress=0)
                 
                 # Check if file exists and has content
                 if not os.path.exists(tmp_path):
@@ -892,7 +723,7 @@ async def create_long_running_job(
                     raise ValueError(f"Unknown processing_mode: {processing_mode}")
                 
                 print(f"✅ Job {job_id} completed successfully")
-                job_manager.update_job_status(job_id, JobStatus.COMPLETED, result=result)
+                job_manager.update_job_status(job_id, JobStatus.COMPLETED, progress=100, result=result)
                 
             except Exception as e:
                 print(f"❌ Job {job_id} failed: {e}")
@@ -931,31 +762,60 @@ async def create_long_running_job(
 
 @app.get("/jobs/{job_id}/status")
 async def get_job_status(job_id: str):
-    """Get the current status of a processing job"""
+    """Get the current status of a processing job - NEVER returns 404"""
     from fastapi.responses import JSONResponse
+    
     job = job_manager.get_job(job_id)
     if not job:
-        return JSONResponse({"detail": "Job not found"}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
+        # Return 200 with unknown state instead of 404
+        return JSONResponse({
+            "id": job_id,
+            "status": "unknown",
+            "state": "not_found",
+            "reason": "Job not found in Redis or memory"
+        }, headers={"Access-Control-Allow-Origin": "*"})
 
     # Ensure Enum is serialized to its value
     data = asdict(job)
     if isinstance(job.status, JobStatus):
         data["status"] = job.status.value
+    
+    # Add result if available
+    if job.status == JobStatus.COMPLETED and not data.get("result"):
+        result = job_manager.get_job_result(job_id)
+        if result:
+            data["result"] = result
+    
     return JSONResponse(data, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/jobs/{job_id}/result")
 async def get_job_result(job_id: str):
     """Get the result of a completed job"""
     from fastapi.responses import JSONResponse
+    
     job = job_manager.get_job(job_id)
     if not job:
-        return JSONResponse({"detail": "Job not found"}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
+        return JSONResponse({
+            "error": "Job not found",
+            "state": "not_found"
+        }, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
 
     if job.status != JobStatus.COMPLETED:
         status_value = job.status.value if isinstance(job.status, JobStatus) else str(job.status)
-        return JSONResponse({"detail": f"Job not completed yet. Current status: {status_value}"}, status_code=202, headers={"Access-Control-Allow-Origin": "*"})
+        return JSONResponse({
+            "error": f"Job not completed yet. Current status: {status_value}",
+            "status": status_value
+        }, status_code=202, headers={"Access-Control-Allow-Origin": "*"})
 
-    result_data = job.result if isinstance(job.result, dict) else {"result": job.result}
+    # Try to get result from job or separate result key
+    result = job.result or job_manager.get_job_result(job_id)
+    if not result:
+        return JSONResponse({
+            "error": "Job completed but result not found",
+            "status": "completed"
+        }, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
+
+    result_data = result if isinstance(result, dict) else {"result": result}
     return JSONResponse(result_data, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/jobs/")

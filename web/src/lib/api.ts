@@ -182,13 +182,23 @@ export async function predictBatch(
           }
           
           // Poll job status with retry logic
-    const statusResponse = await robustFetch(`${API_CONFIG.baseUrl}/jobs/${job_id}/status`);
+          const statusResponse = await robustFetch(`${API_CONFIG.baseUrl}/jobs/${job_id}/status`);
           if (!statusResponse.ok) {
             throw new Error(`Failed to get job status: ${statusResponse.status}`);
           }
           
           const jobStatus = await statusResponse.json();
           console.log(`📊 Job ${job_id} status: ${jobStatus.status} (${hours}h ${minutes}m)`);
+          
+          // Handle unknown/not found state gracefully
+          if (jobStatus.status === "unknown" || jobStatus.state === "not_found") {
+            console.warn(`⚠️ Job ${job_id} not found in Redis - may have expired or been lost`);
+            row.status = "error";
+            row.explanation = `Job not found: ${jobStatus.reason || 'Job may have expired or been lost'}`;
+            emit();
+            reject(new Error("Job not found"));
+            return;
+          }
           
           // Update progress
           const progressMsg = `Processing... (${hours}h ${minutes}m) - Status: ${jobStatus.status}`;
