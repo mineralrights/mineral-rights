@@ -60,10 +60,29 @@ def initialize_processor():
         print(f"API Key present: {'Yes' if api_key else 'No'}")
         print(f"Document AI Endpoint: {document_ai_endpoint}")
         
-        # Initialize processor with explicit parameters
+        # Handle Google credentials
+        credentials_path = None
+        google_credentials_base64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")
+        
+        if google_credentials_base64:
+            try:
+                import base64
+                import tempfile
+                # Decode base64 credentials
+                credentials_json = base64.b64decode(google_credentials_base64).decode('utf-8')
+                temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
+                temp_file.write(credentials_json)
+                temp_file.close()
+                credentials_path = temp_file.name
+                print(f"✅ Created temporary credentials file from base64")
+            except Exception as e:
+                print(f"⚠️ Failed to decode base64 credentials: {e}")
+        
+        # Initialize processor with explicit parameters including credentials
         processor = DocumentProcessor(
             api_key=api_key,
-            document_ai_endpoint=document_ai_endpoint
+            document_ai_endpoint=document_ai_endpoint,
+            document_ai_credentials=credentials_path
         )
         
         print("✅ DocumentProcessor initialized successfully")
