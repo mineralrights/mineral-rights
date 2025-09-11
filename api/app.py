@@ -94,8 +94,20 @@ def initialize_processor():
         traceback.print_exc()
         return False
 
-# Initialize on startup
-initialize_processor()
+# Initialize processor on startup (non-blocking)
+@app.on_event("startup")
+async def startup_event():
+    """Initialize processor on startup"""
+    print("🚀 Starting up Mineral Rights API...")
+    try:
+        # Try to initialize processor, but don't fail startup if it fails
+        if initialize_processor():
+            print("✅ Processor initialized successfully")
+        else:
+            print("⚠️ Processor initialization failed, will retry on first request")
+    except Exception as e:
+        print(f"⚠️ Processor initialization error: {e}")
+        print("⚠️ Will retry on first request")
 
 # Simple in-memory job registry for SSE streaming
 jobs: dict[str, asyncio.Queue[str]] = {}
@@ -250,11 +262,27 @@ async def stream(job_id: str):
 @app.get("/health")
 async def health():
     """Health check endpoint"""
-    return {
-        "status": "healthy",
-        "processor_initialized": processor is not None,
-        "timestamp": time.time()
-    }
+    try:
+        return {
+            "status": "healthy",
+            "processor_initialized": processor is not None,
+            "timestamp": time.time(),
+            "api_key_present": bool(os.getenv("ANTHROPIC_API_KEY")),
+            "document_ai_endpoint_present": bool(os.getenv("DOCUMENT_AI_ENDPOINT")),
+            "google_credentials_present": bool(os.getenv("GOOGLE_CREDENTIALS_BASE64"))
+        }
+    except Exception as e:
+        print(f"❌ Health check error: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "timestamp": time.time()
+        }
+
+@app.get("/")
+async def root():
+    """Root endpoint for basic connectivity test"""
+    return {"message": "Mineral Rights API is running", "timestamp": time.time()}
 
 @app.get("/heartbeat")
 async def heartbeat():
