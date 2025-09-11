@@ -13,6 +13,9 @@ from dataclasses import dataclass, asdict
 
 #  import your pipeline ----------------------------------------------
 from src.mineral_rights.document_classifier import DocumentProcessor
+import sys
+import os
+sys.path.append(os.path.dirname(__file__))
 from redis_job_manager import job_manager, JobStatus
 
 # Long-running job support built into main app
