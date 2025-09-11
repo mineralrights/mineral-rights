@@ -1,4 +1,4 @@
-import { PredictionRow, DeedResult, PageResult, ProcessingMode, SplittingStrategy } from '../types';
+import { PredictionRow, DeedResult, PageResult, ProcessingMode, SplittingStrategy } from './types';
 
 // API configuration
 const API_CONFIG = {
