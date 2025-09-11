@@ -1,6 +1,115 @@
 import { PredictionRow, ProcessingMode, SplittingStrategy, DeedResult } from "./types";
 
-const API = process.env.NEXT_PUBLIC_API_URL!;   // Railway backend: https://mineral-rights-production.up.railway.app
+// Robust API configuration with multiple fallbacks
+const API_BASE = process.env.NEXT_PUBLIC_API_URL!;   // Railway backend: https://mineral-rights-production.up.railway.app
+
+// Client-proof API configuration
+const API_CONFIG = {
+  baseUrl: API_BASE,
+  timeout: 120000, // 2 minutes
+  retries: 3,
+  cacheBust: true,
+  fallbackUrls: [
+    API_BASE,
+    // Add backup URLs if needed
+  ]
+};
+
+// Robust fetch wrapper with automatic retries and fallbacks
+async function robustFetch(url: string, options: RequestInit = {}, retryCount = 0): Promise<Response> {
+  const cacheBustUrl = API_CONFIG.cacheBust ? `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}&r=${Math.random()}` : url;
+  
+  const fetchOptions: RequestInit = {
+    ...options,
+    headers: {
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache',
+      'Expires': '0',
+      'X-Requested-With': 'XMLHttpRequest',
+      ...options.headers
+    }
+  };
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.timeout);
+    
+    const response = await fetch(cacheBustUrl, {
+      ...fetchOptions,
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeoutId);
+    return response;
+    
+  } catch (error) {
+    console.warn(`Fetch attempt ${retryCount + 1} failed:`, error);
+    
+    // Retry with exponential backoff
+    if (retryCount < API_CONFIG.retries) {
+      const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+      await new Promise(resolve => setTimeout(resolve, delay));
+      return robustFetch(url, options, retryCount + 1);
+    }
+    
+    throw error;
+  }
+}
+
+// Client-proof connection test
+export async function testConnection(): Promise<{success: boolean, message: string, details?: any}> {
+  try {
+    console.log("🔍 Testing connection to backend...");
+    const response = await robustFetch(`${API_CONFIG.baseUrl}/health`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log("✅ Backend connection successful:", data);
+      return {
+        success: true,
+        message: "Backend connection successful",
+        details: data
+      };
+    } else {
+      console.error("❌ Backend health check failed:", response.status);
+      return {
+        success: false,
+        message: `Backend health check failed (${response.status})`,
+        details: { status: response.status, statusText: response.statusText }
+      };
+    }
+  } catch (error) {
+    console.error("❌ Backend connection failed:", error);
+    return {
+      success: false,
+      message: `Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      details: error
+    };
+  }
+}
+
+// Enhanced error handling for client experience
+function handleClientError(error: any, context: string): string {
+  console.error(`❌ ${context}:`, error);
+  
+  if (error.name === 'AbortError') {
+    return "Request timed out. Please try again or contact support if the issue persists.";
+  }
+  
+  if (error.message?.includes('Failed to fetch')) {
+    return "Unable to connect to the server. Please check your internet connection and try again.";
+  }
+  
+  if (error.message?.includes('SSL') || error.message?.includes('TLS')) {
+    return "Connection security issue detected. Please try refreshing the page or using a different browser.";
+  }
+  
+  if (error.message?.includes('CORS')) {
+    return "Cross-origin request blocked. Please contact support.";
+  }
+  
+  return `An error occurred: ${error.message || 'Unknown error'}. Please try again or contact support.`;
+}
 
 export async function predictBatch(
   files: File[],
@@ -34,25 +143,17 @@ export async function predictBatch(
     }
     
   // Use job system for long-running processing (8+ hours support)
-  const res = await fetch(`${API}/jobs/create?t=${Date.now()}`, { 
+  const res = await robustFetch(`${API_CONFIG.baseUrl}/jobs/create`, { 
     method: "POST", 
-    body: form,
-    // Increased timeout for Document AI processing
-    signal: AbortSignal.timeout(120000), // 2 minute timeout for job creation
-    // Add cache-busting headers
-    headers: {
-      'Cache-Control': 'no-cache, no-store, must-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    }
+    body: form
   });
     if (!res.ok) {
       row.status = "error";
       try {
         const errorText = await res.text();
-        row.explanation = `Server error (${res.status}): ${errorText}`;
+        row.explanation = handleClientError(new Error(`Server error (${res.status}): ${errorText}`), "Job creation");
       } catch (e) {
-        row.explanation = `Network error: ${res.status} ${res.statusText}`;
+        row.explanation = handleClientError(new Error(`Network error: ${res.status} ${res.statusText}`), "Job creation");
       }
       emit();
       continue;
@@ -81,14 +182,7 @@ export async function predictBatch(
           }
           
           // Poll job status with retry logic
-    const statusResponse = await fetch(`${API}/jobs/${job_id}/status?t=${Date.now()}`, {
-        signal: AbortSignal.timeout(30000), // 30 second timeout for status checks
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-    });
+    const statusResponse = await robustFetch(`${API_CONFIG.baseUrl}/jobs/${job_id}/status`);
           if (!statusResponse.ok) {
             throw new Error(`Failed to get job status: ${statusResponse.status}`);
           }
@@ -106,14 +200,7 @@ export async function predictBatch(
           
           if (jobStatus.status === "completed") {
             // Get the result
-    const resultResponse = await fetch(`${API}/jobs/${job_id}/result?t=${Date.now()}`, {
-        signal: AbortSignal.timeout(60000), // 1 minute timeout for result retrieval
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0'
-        }
-    });
+    const resultResponse = await robustFetch(`${API_CONFIG.baseUrl}/jobs/${job_id}/result`);
             if (!resultResponse.ok) {
               throw new Error(`Failed to get job result: ${resultResponse.status}`);
             }
