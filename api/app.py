@@ -83,7 +83,9 @@ class SimpleJobManager:
             created_at=time.time(),
             logs=[],
         )
+        print(f"🔍 Creating job: {job_id}")
         self._save_job(job_info)
+        print(f"🔍 Job saved, total jobs: {len(self.jobs)}")
         return job_id
 
     def get_job(self, job_id: str) -> Optional[JobInfo]:
