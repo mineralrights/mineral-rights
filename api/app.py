@@ -94,20 +94,7 @@ def initialize_processor():
         traceback.print_exc()
         return False
 
-# Initialize processor on startup (non-blocking)
-@app.on_event("startup")
-async def startup_event():
-    """Initialize processor on startup"""
-    print("🚀 Starting up Mineral Rights API...")
-    try:
-        # Try to initialize processor, but don't fail startup if it fails
-        if initialize_processor():
-            print("✅ Processor initialized successfully")
-        else:
-            print("⚠️ Processor initialization failed, will retry on first request")
-    except Exception as e:
-        print(f"⚠️ Processor initialization error: {e}")
-        print("⚠️ Will retry on first request")
+# Processor will be initialized on first request, not during startup
 
 # Simple in-memory job registry for SSE streaming
 jobs: dict[str, asyncio.Queue[str]] = {}
