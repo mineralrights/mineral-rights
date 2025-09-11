@@ -817,15 +817,16 @@ async def create_long_running_job(
 @app.get("/jobs/{job_id}/status")
 async def get_job_status(job_id: str):
     """Get the current status of a processing job"""
-    # Add CORS header explicitly for status endpoint
+    from fastapi.responses import JSONResponse
     job = job_manager.get_job(job_id)
     if not job:
-        # Return a minimal CORS-friendly response for 404
-        from fastapi.responses import JSONResponse
         return JSONResponse({"detail": "Job not found"}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
 
-    from fastapi.responses import JSONResponse
-    return JSONResponse(asdict(job), headers={"Access-Control-Allow-Origin": "*"})
+    # Ensure Enum is serialized to its value
+    data = asdict(job)
+    if isinstance(job.status, JobStatus):
+        data["status"] = job.status.value
+    return JSONResponse(data, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/jobs/{job_id}/result")
 async def get_job_result(job_id: str):
@@ -836,9 +837,11 @@ async def get_job_result(job_id: str):
         return JSONResponse({"detail": "Job not found"}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
 
     if job.status != JobStatus.COMPLETED:
-        return JSONResponse({"detail": f"Job not completed yet. Current status: {job.status.value}"}, status_code=202, headers={"Access-Control-Allow-Origin": "*"})
+        status_value = job.status.value if isinstance(job.status, JobStatus) else str(job.status)
+        return JSONResponse({"detail": f"Job not completed yet. Current status: {status_value}"}, status_code=202, headers={"Access-Control-Allow-Origin": "*"})
 
-    return JSONResponse(job.result, headers={"Access-Control-Allow-Origin": "*"})
+    result_data = job.result if isinstance(job.result, dict) else {"result": job.result}
+    return JSONResponse(result_data, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/jobs/")
 async def list_jobs():
