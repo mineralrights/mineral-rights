@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/app.py": {
-      "maxDuration": 900
-    }
-  },
   "headers": [
     {
       "source": "/api/(.*)",
