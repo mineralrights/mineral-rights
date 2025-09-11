@@ -1,6 +1,6 @@
 import { PredictionRow, ProcessingMode, SplittingStrategy, DeedResult } from "./types";
 
-const API = process.env.NEXT_PUBLIC_API_URL!;   // already defined in .env.local
+const API = process.env.NEXT_PUBLIC_API_URL!;   // Railway backend: https://mineral-rights-production.up.railway.app
 
 export async function predictBatch(
   files: File[],
