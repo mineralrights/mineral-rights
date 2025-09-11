@@ -13,18 +13,102 @@ from dataclasses import dataclass, asdict
 
 #  import your pipeline ----------------------------------------------
 from src.mineral_rights.document_classifier import DocumentProcessor
-import sys
-import os
-sys.path.append(os.path.dirname(__file__))
-from redis_job_manager import job_manager, JobStatus
 
 # Long-running job support built into main app
 JOB_ENDPOINTS_AVAILABLE = True
-print("✅ Long-running job support enabled - RAILWAY DEPLOYMENT TEST")
+print("✅ Long-running job support enabled - SIMPLE VERSION")
 
 # --------------------------------------------------------------------------
-# Job System - Now using DurableJobManager from redis_job_manager.py
+# Simple Job System (In-Memory)
 # --------------------------------------------------------------------------
+from enum import Enum
+from dataclasses import dataclass, asdict
+from typing import Optional, Dict, Any
+import time
+import uuid
+
+class JobStatus(Enum):
+    PENDING = "pending"
+    RUNNING = "running"
+    COMPLETED = "completed"
+    FAILED = "failed"
+    CANCELLED = "cancelled"
+
+@dataclass
+class JobInfo:
+    id: str
+    filename: str
+    processing_mode: str
+    splitting_strategy: str
+    status: JobStatus
+    created_at: float
+    started_at: Optional[float] = None
+    completed_at: Optional[float] = None
+    result: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+    logs: list = None
+
+    def __post_init__(self):
+        if self.logs is None:
+            self.logs = []
+
+class SimpleJobManager:
+    """Simple in-memory job manager - works reliably for Railway"""
+    
+    def __init__(self):
+        self.jobs: Dict[str, JobInfo] = {}
+        print("✅ Simple job manager initialized (in-memory)")
+    
+    def create_job(self, filename: str, processing_mode: str, splitting_strategy: str) -> str:
+        """Create a new job"""
+        job_id = f"job_{int(time.time())}_{uuid.uuid4().hex[:8]}"
+        
+        job = JobInfo(
+            id=job_id,
+            filename=filename,
+            processing_mode=processing_mode,
+            splitting_strategy=splitting_strategy,
+            status=JobStatus.PENDING,
+            created_at=time.time(),
+            logs=[]
+        )
+        
+        self.jobs[job_id] = job
+        print(f"✅ Created job: {job_id}")
+        return job_id
+    
+    def get_job(self, job_id: str) -> Optional[JobInfo]:
+        """Get job by ID"""
+        return self.jobs.get(job_id)
+    
+    def update_job_status(self, job_id: str, status: JobStatus, 
+                         result: Optional[Dict[str, Any]] = None, 
+                         error: Optional[str] = None):
+        """Update job status"""
+        job = self.jobs.get(job_id)
+        if not job:
+            print(f"⚠️ Job {job_id} not found for status update")
+            return
+        
+        job.status = status
+        if status == JobStatus.RUNNING and job.started_at is None:
+            job.started_at = time.time()
+        elif status in [JobStatus.COMPLETED, JobStatus.FAILED]:
+            job.completed_at = time.time()
+        
+        if result is not None:
+            job.result = result
+        if error is not None:
+            job.error = error
+        
+        print(f"✅ Updated job {job_id} status to {status.value}")
+    
+    def list_jobs(self) -> list:
+        """List all jobs"""
+        return [asdict(job) for job in self.jobs.values()]
+
+# Global job manager
+job_manager = SimpleJobManager()
 
 # ---------------------------------------------------------------------------
 
@@ -676,15 +760,15 @@ async def create_long_running_job(
         
         print(f"💾 Saved to temp file: {tmp_path}")
         
-        # Create job with durable persistence
-        print(f"🔄 Creating durable job for {file.filename}...")
+        # Create job
+        print(f"🔄 Creating job for {file.filename}...")
         try:
             job_id = job_manager.create_job(
                 file.filename,
                 processing_mode,
                 splitting_strategy
             )
-            print(f"🎯 Created durable job: {job_id}")
+            print(f"🎯 Created job: {job_id}")
         except Exception as job_error:
             print(f"❌ Job creation failed: {job_error}")
             import traceback
@@ -695,7 +779,7 @@ async def create_long_running_job(
         def process_job():
             try:
                 print(f"🚀 Starting job {job_id} processing...")
-                job_manager.update_job_status(job_id, JobStatus.RUNNING, progress=0)
+                job_manager.update_job_status(job_id, JobStatus.RUNNING)
                 
                 # Check if file exists and has content
                 if not os.path.exists(tmp_path):
@@ -726,7 +810,7 @@ async def create_long_running_job(
                     raise ValueError(f"Unknown processing_mode: {processing_mode}")
                 
                 print(f"✅ Job {job_id} completed successfully")
-                job_manager.update_job_status(job_id, JobStatus.COMPLETED, progress=100, result=result)
+                job_manager.update_job_status(job_id, JobStatus.COMPLETED, result=result)
                 
             except Exception as e:
                 print(f"❌ Job {job_id} failed: {e}")
@@ -765,29 +849,17 @@ async def create_long_running_job(
 
 @app.get("/jobs/{job_id}/status")
 async def get_job_status(job_id: str):
-    """Get the current status of a processing job - NEVER returns 404"""
+    """Get the current status of a processing job"""
     from fastapi.responses import JSONResponse
     
     job = job_manager.get_job(job_id)
     if not job:
-        # Return 200 with unknown state instead of 404
-        return JSONResponse({
-            "id": job_id,
-            "status": "unknown",
-            "state": "not_found",
-            "reason": "Job not found in Redis or memory"
-        }, headers={"Access-Control-Allow-Origin": "*"})
+        return JSONResponse({"detail": "Job not found"}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
 
     # Ensure Enum is serialized to its value
     data = asdict(job)
     if isinstance(job.status, JobStatus):
         data["status"] = job.status.value
-    
-    # Add result if available
-    if job.status == JobStatus.COMPLETED and not data.get("result"):
-        result = job_manager.get_job_result(job_id)
-        if result:
-            data["result"] = result
     
     return JSONResponse(data, headers={"Access-Control-Allow-Origin": "*"})
 
@@ -798,27 +870,13 @@ async def get_job_result(job_id: str):
     
     job = job_manager.get_job(job_id)
     if not job:
-        return JSONResponse({
-            "error": "Job not found",
-            "state": "not_found"
-        }, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
+        return JSONResponse({"detail": "Job not found"}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
 
     if job.status != JobStatus.COMPLETED:
         status_value = job.status.value if isinstance(job.status, JobStatus) else str(job.status)
-        return JSONResponse({
-            "error": f"Job not completed yet. Current status: {status_value}",
-            "status": status_value
-        }, status_code=202, headers={"Access-Control-Allow-Origin": "*"})
+        return JSONResponse({"detail": f"Job not completed yet. Current status: {status_value}"}, status_code=202, headers={"Access-Control-Allow-Origin": "*"})
 
-    # Try to get result from job or separate result key
-    result = job.result or job_manager.get_job_result(job_id)
-    if not result:
-        return JSONResponse({
-            "error": "Job completed but result not found",
-            "status": "completed"
-        }, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
-
-    result_data = result if isinstance(result, dict) else {"result": result}
+    result_data = job.result if isinstance(job.result, dict) else {"result": job.result}
     return JSONResponse(result_data, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/jobs/")
