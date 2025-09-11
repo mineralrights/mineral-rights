@@ -43,15 +43,71 @@ class JobInfo:
     logs: List[str] = None
 
 class SimpleJobManager:
-    """Simple in-memory job manager for long-running tasks"""
-    
+    """Job manager backed by Redis for persistence across restarts/instances"""
+
     def __init__(self):
+        # Lazy import to avoid dependency during type checking
+        import os, json
+        from redis import Redis
+
+        redis_url = os.getenv("REDIS_URL") or os.getenv("UPSTASH_REDIS_REST_URL")
+        redis_password = os.getenv("REDIS_PASSWORD") or os.getenv("UPSTASH_REDIS_REST_TOKEN")
+
+        self._redis: Optional[Redis] = None
+        try:
+            if redis_url and redis_url.startswith("redis://"):
+                self._redis = Redis.from_url(redis_url, password=redis_password, decode_responses=True)
+            elif redis_url and redis_url.startswith("rediss://"):
+                self._redis = Redis.from_url(redis_url, password=redis_password, ssl=True, decode_responses=True)
+        except Exception as e:
+            print(f"⚠️ Redis initialization failed: {e}. Falling back to in-memory store.")
+            self._redis = None
+
         self.jobs: dict[str, JobInfo] = {}
-        
+
+    def _job_key(self, job_id: str) -> str:
+        return f"jobs:{job_id}"
+
+    def _save_job(self, job: JobInfo):
+        import json
+        if self._redis:
+            try:
+                data = asdict(job)
+                data["status"] = job.status.value
+                self._redis.set(self._job_key(job.id), json.dumps(data), ex=60 * 60 * 24)
+                return
+            except Exception as e:
+                print(f"⚠️ Failed to persist job to Redis: {e}")
+        # Fallback to memory
+        self.jobs[job.id] = job
+
+    def _load_job(self, job_id: str) -> Optional[JobInfo]:
+        import json
+        if self._redis:
+            try:
+                raw = self._redis.get(self._job_key(job_id))
+                if raw:
+                    data = json.loads(raw)
+                    return JobInfo(
+                        id=data["id"],
+                        filename=data["filename"],
+                        processing_mode=data["processing_mode"],
+                        splitting_strategy=data["splitting_strategy"],
+                        status=JobStatus(data["status"]),
+                        created_at=data.get("created_at"),
+                        started_at=data.get("started_at"),
+                        completed_at=data.get("completed_at"),
+                        result=data.get("result"),
+                        error=data.get("error"),
+                        logs=data.get("logs", []),
+                    )
+            except Exception as e:
+                print(f"⚠️ Failed to load job from Redis: {e}")
+        return self.jobs.get(job_id)
+
     def create_job(self, filename: str, processing_mode: str, splitting_strategy: str) -> str:
-        """Create a new job"""
+        import time, json
         job_id = f"job_{int(time.time())}_{hash(filename) % 10000}"
-        
         job_info = JobInfo(
             id=job_id,
             filename=filename,
@@ -59,31 +115,31 @@ class SimpleJobManager:
             splitting_strategy=splitting_strategy,
             status=JobStatus.PENDING,
             created_at=time.time(),
-            logs=[]
+            logs=[],
         )
-        self.jobs[job_id] = job_info
+        self._save_job(job_info)
         return job_id
-    
+
     def get_job(self, job_id: str) -> Optional[JobInfo]:
-        """Get job by ID"""
-        return self.jobs.get(job_id)
-    
+        return self._load_job(job_id)
+
     def update_job_status(self, job_id: str, status: JobStatus, result: Optional[dict] = None, error: Optional[str] = None):
-        """Update job status"""
-        if job_id in self.jobs:
-            job = self.jobs[job_id]
-            job.status = status
-            if status == JobStatus.RUNNING:
-                job.started_at = time.time()
-            elif status in [JobStatus.COMPLETED, JobStatus.FAILED]:
-                job.completed_at = time.time()
-            if result:
-                job.result = result
-            if error:
-                job.error = error
-    
+        job = self._load_job(job_id)
+        if not job:
+            return
+        job.status = status
+        if status == JobStatus.RUNNING:
+            job.started_at = time.time()
+        elif status in [JobStatus.COMPLETED, JobStatus.FAILED]:
+            job.completed_at = time.time()
+        if result is not None:
+            job.result = result
+        if error is not None:
+            job.error = error
+        self._save_job(job)
+
     def list_jobs(self) -> List[dict]:
-        """List all jobs"""
+        # For simplicity, only returns in-memory jobs if Redis is used
         return [asdict(job) for job in self.jobs.values()]
 
 # Global job manager
@@ -761,26 +817,28 @@ async def create_long_running_job(
 @app.get("/jobs/{job_id}/status")
 async def get_job_status(job_id: str):
     """Get the current status of a processing job"""
+    # Add CORS header explicitly for status endpoint
     job = job_manager.get_job(job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    
-    return asdict(job)
+        # Return a minimal CORS-friendly response for 404
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"detail": "Job not found"}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
+
+    from fastapi.responses import JSONResponse
+    return JSONResponse(asdict(job), headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/jobs/{job_id}/result")
 async def get_job_result(job_id: str):
     """Get the result of a completed job"""
+    from fastapi.responses import JSONResponse
     job = job_manager.get_job(job_id)
     if not job:
-        raise HTTPException(status_code=404, detail="Job not found")
-    
+        return JSONResponse({"detail": "Job not found"}, status_code=404, headers={"Access-Control-Allow-Origin": "*"})
+
     if job.status != JobStatus.COMPLETED:
-        raise HTTPException(
-            status_code=202, 
-            detail=f"Job not completed yet. Current status: {job.status.value}"
-        )
-    
-    return job.result
+        return JSONResponse({"detail": f"Job not completed yet. Current status: {job.status.value}"}, status_code=202, headers={"Access-Control-Allow-Origin": "*"})
+
+    return JSONResponse(job.result, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/jobs/")
 async def list_jobs():
