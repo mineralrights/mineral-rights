@@ -16,7 +16,7 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 
 # Long-running job support built into main app
 JOB_ENDPOINTS_AVAILABLE = True
-print("✅ Long-running job support enabled")
+print("✅ Long-running job support enabled - RAILWAY DEPLOYMENT TEST")
 
 # --------------------------------------------------------------------------
 # Job System Classes (Built-in)
