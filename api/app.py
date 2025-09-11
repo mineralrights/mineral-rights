@@ -54,18 +54,9 @@ class SimpleJobManager:
         upstash_token = os.getenv("UPSTASH_REDIS_REST_TOKEN")
 
         self._upstash_client = None
-        try:
-            if upstash_url and upstash_token:
-                self._upstash_client = {
-                    "url": upstash_url,
-                    "token": upstash_token
-                }
-                print(f"✅ Upstash Redis client initialized: {upstash_url}")
-            else:
-                print("⚠️ Upstash Redis credentials not found. Falling back to in-memory store.")
-        except Exception as e:
-            print(f"⚠️ Upstash Redis initialization failed: {e}. Falling back to in-memory store.")
-            self._upstash_client = None
+        # Temporarily disable Redis to get the app working
+        print("⚠️ Redis temporarily disabled - using in-memory storage")
+        self._upstash_client = None
 
         self.jobs: dict[str, JobInfo] = {}
 
@@ -88,7 +79,7 @@ class SimpleJobManager:
                         "Authorization": f"Bearer {self._upstash_client['token']}",
                         "Content-Type": "application/json"
                     },
-                    data=json.dumps(data),
+                    json=data,
                     params={"ex": 86400}  # 24 hours expiry
                 )
                 if response.status_code == 200:
