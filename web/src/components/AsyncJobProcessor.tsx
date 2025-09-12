@@ -50,7 +50,7 @@ export default function AsyncJobProcessor({ onResults, onError }: AsyncJobProces
 
       // Process the results
       if (finalStatus.result) {
-        const results = convertJobResultToPredictionRows(finalStatus.result, processingMode);
+        const results = convertJobResultToPredictionRows(finalStatus.result || {}, processingMode);
         onResults(results);
       } else {
         throw new Error('No results returned from job');
@@ -74,49 +74,42 @@ export default function AsyncJobProcessor({ onResults, onError }: AsyncJobProces
     if (processingMode === 'single_deed') {
       // Single deed result
       const row: PredictionRow = {
-        id: '1',
         filename: 'document.pdf',
-        page: 1,
-        text: result.text || '',
-        hasReservation: result.has_reservation || false,
+        status: 'done',
+        prediction: result.has_reservation ? 'has_reservation' : 'no_reservation',
         confidence: result.confidence || 0,
-        reasoning: result.reasoning || '',
-        processingMode: 'single_deed',
-        splittingStrategy: 'document_ai'
+        explanation: result.reasoning || '',
+        processingMode: 'single_deed'
       };
       rows.push(row);
     } else if (processingMode === 'multi_deed') {
       // Multi-deed result
-      if (result.deeds && Array.isArray(result.deeds)) {
-        result.deeds.forEach((deed: any, index: number) => {
+      if (result.deed_results && Array.isArray(result.deed_results)) {
+        result.deed_results.forEach((deed: any, index: number) => {
           const row: PredictionRow = {
-            id: `deed_${index + 1}`,
-            filename: 'document.pdf',
-            page: deed.pages ? Math.min(...deed.pages) + 1 : index + 1,
-            text: deed.text || '',
-            hasReservation: deed.has_reservation || false,
+            filename: `deed-${deed.deed_number}.pdf`,
+            status: 'done',
+            prediction: deed.prediction,
             confidence: deed.confidence || 0,
-            reasoning: deed.reasoning || '',
+            explanation: deed.explanation || '',
             processingMode: 'multi_deed',
-            splittingStrategy: 'document_ai'
+            deedResults: [deed]
           };
           rows.push(row);
         });
       }
     } else if (processingMode === 'page_by_page') {
       // Page-by-page result
-      if (result.pages && Array.isArray(result.pages)) {
-        result.pages.forEach((page: any, index: number) => {
+      if (result.page_results && Array.isArray(result.page_results)) {
+        result.page_results.forEach((page: any, index: number) => {
           const row: PredictionRow = {
-            id: `page_${index + 1}`,
-            filename: 'document.pdf',
-            page: index + 1,
-            text: page.text || '',
-            hasReservation: page.has_reservation || false,
+            filename: `page-${page.page_number}.pdf`,
+            status: 'done',
+            prediction: page.has_reservations ? 'has_reservation' : 'no_reservation',
             confidence: page.confidence || 0,
-            reasoning: page.reasoning || '',
+            explanation: page.explanation || '',
             processingMode: 'page_by_page',
-            splittingStrategy: 'document_ai'
+            pageResults: [page]
           };
           rows.push(row);
         });
