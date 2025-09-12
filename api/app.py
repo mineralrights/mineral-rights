@@ -19,14 +19,29 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 # Initialize FastAPI app
 app = FastAPI(title="Mineral-Rights API - Simple SSE Version")
 
-# CORS configuration - Simple and permissive
+# CORS configuration - Explicit and robust
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # Allow all origins
     allow_credentials=False,
-    allow_methods=["*"],
-    allow_headers=["*"],
-    expose_headers=["*"]
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],  # Explicit methods
+    allow_headers=[
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "Cache-Control",
+        "Pragma",
+        "Expires",
+        "User-Agent",
+        "X-Requested-With",
+        "Origin",
+        "Access-Control-Request-Method",
+        "Access-Control-Request-Headers"
+    ],
+    expose_headers=["*"],
+    max_age=3600  # Cache preflight for 1 hour
 )
 
 # Add cache-busting middleware
@@ -128,8 +143,12 @@ async def predict(
     print(f"🔍 Filename: {file.filename}")
     
     if processor is None:
-        if not initialize_processor():
-            raise HTTPException(status_code=500, detail="Model not initialized")
+        try:
+            if not initialize_processor():
+                raise HTTPException(status_code=500, detail="Model not initialized")
+        except Exception as e:
+            print(f"❌ Processor initialization failed: {e}")
+            raise HTTPException(status_code=500, detail=f"Model initialization failed: {str(e)}")
 
     # Memory monitoring
     process = psutil.Process(os.getpid())
@@ -276,6 +295,12 @@ async def root():
 async def heartbeat():
     """Simple heartbeat endpoint for Railway health checks"""
     return {"status": "alive"}
+
+@app.get("/test")
+async def test():
+    """Simple test endpoint that doesn't require processor initialization"""
+    return {"message": "Test endpoint working", "timestamp": time.time()}
+
 
 if __name__ == "__main__":
     import uvicorn
