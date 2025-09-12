@@ -10,16 +10,13 @@ const API_CONFIG = {
   ]
 };
 
-// Robust fetch with retry logic, SSL fallback, and cache busting
+// Simple fetch with retry logic (no HTTP fallback to avoid mixed content)
 async function robustFetch(url: string, options: RequestInit = {}): Promise<Response> {
   const maxRetries = 3;
   const retryDelay = 1000; // 1 second
   
-  // Try different URL variants for SSL issues
-  const urlVariants = [
-    url, // Original URL
-    url.replace('https://', 'http://'), // HTTP fallback
-  ];
+  // Only use HTTPS - no HTTP fallback to avoid mixed content errors
+  const urlVariants = [url];
   
   for (const currentUrl of urlVariants) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -55,28 +52,10 @@ async function robustFetch(url: string, options: RequestInit = {}): Promise<Resp
         return response;
         
       } catch (error) {
-        console.warn(`❌ Fetch attempt ${attempt} failed for ${currentUrl}:`, error);
-        
-        // Check if it's an SSL error and we should try HTTP
-        const isSSLError = error instanceof Error && (
-          error.message.includes('SSL') || 
-          error.message.includes('TLS') ||
-          error.message.includes('ERR_SSL') ||
-          error.message.includes('certificate') ||
-          error.message.includes('handshake')
-        );
-        
-        if (isSSLError && currentUrl.startsWith('https://')) {
-          console.log(`🔒 SSL error detected, will try HTTP fallback`);
-          break; // Try next URL variant (HTTP)
-        }
+        console.warn(`❌ Fetch attempt ${attempt} failed:`, error);
         
         if (attempt === maxRetries) {
-          // If this was the last attempt for this URL variant, try next variant
-          if (currentUrl === urlVariants[urlVariants.length - 1]) {
-            throw error; // All variants exhausted
-          }
-          break; // Try next URL variant
+          throw error; // All attempts exhausted
         }
         
         // Wait before retrying

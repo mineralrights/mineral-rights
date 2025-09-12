@@ -19,13 +19,14 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 # Initialize FastAPI app
 app = FastAPI(title="Mineral-Rights API - Simple SSE Version")
 
-# CORS configuration
+# CORS configuration - Simple and permissive
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=False,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "HEAD"],
+    allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Add cache-busting middleware
