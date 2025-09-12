@@ -145,8 +145,9 @@ class DocumentAIService:
             
             print(f"📄 PDF has {total_pages} pages")
             
-            # Use chunking if PDF is too large (30 pages max per chunk) and not forced to single chunk
-            if total_pages > 30 and not force_single_chunk:
+            # Use chunking if PDF is too large (50 pages max per chunk) and not forced to single chunk
+            # Increased from 30 to 50 to reduce API calls and processing time
+            if total_pages > 50 and not force_single_chunk:
                 print("📦 PDF is large, using chunking approach")
                 return self._process_with_chunking(pdf_path, start_time)
             else:
@@ -183,10 +184,31 @@ class DocumentAIService:
                 skip_human_review=True
             )
             
-            # Process the document
+            # Process the document with timeout handling
             print("📤 Sending request to Document AI...")
-            result = self.client.process_document(request=request)
-            document = result.document
+            try:
+                # Add timeout to prevent hanging requests
+                import signal
+                
+                def timeout_handler(signum, frame):
+                    raise TimeoutError("Document AI request timed out")
+                
+                # Set 60 second timeout
+                signal.signal(signal.SIGALRM, timeout_handler)
+                signal.alarm(60)
+                
+                result = self.client.process_document(request=request)
+                document = result.document
+                
+                # Cancel timeout
+                signal.alarm(0)
+                
+            except TimeoutError:
+                print("⏰ Document AI request timed out after 60 seconds")
+                raise Exception("Document AI processing timed out")
+            except Exception as e:
+                print(f"❌ Document AI request failed: {e}")
+                raise
             
             # Parse the results
             deeds = self._parse_document_ai_response(document, pdf_path)
@@ -215,8 +237,8 @@ class DocumentAIService:
     def _process_with_chunking(self, pdf_path: str, start_time: float) -> DocumentAISplitResult:
         """Process a large PDF by splitting it into chunks"""
         try:
-            # Split PDF into chunks
-            chunks = self._split_pdf_into_chunks(pdf_path, max_pages=15)
+            # Split PDF into chunks (increased chunk size to reduce API calls)
+            chunks = self._split_pdf_into_chunks(pdf_path, max_pages=25)
             
             print(f"📦 Created {len(chunks)} chunks")
             
@@ -226,6 +248,7 @@ class DocumentAIService:
             
             for i, chunk_path in enumerate(chunks):
                 print(f"\n📄 Processing chunk {i+1}/{len(chunks)}: {chunk_path}")
+                print(f"⏱️ Progress: {((i+1)/len(chunks)*100):.1f}% complete")
                 
                 try:
                     # Read chunk content
@@ -248,16 +271,37 @@ class DocumentAIService:
                         skip_human_review=True
                     )
                     
-                    # Process the document
-                    result = self.client.process_document(request=request)
-                    document = result.document
+                    # Process the document with timeout
+                    print(f"📤 Sending chunk {i+1} to Document AI...")
+                    try:
+                        import signal
+                        
+                        def timeout_handler(signum, frame):
+                            raise TimeoutError("Document AI request timed out")
+                        
+                        # Set 60 second timeout per chunk
+                        signal.signal(signal.SIGALRM, timeout_handler)
+                        signal.alarm(60)
+                        
+                        result = self.client.process_document(request=request)
+                        document = result.document
+                        
+                        # Cancel timeout
+                        signal.alarm(0)
+                        
+                    except TimeoutError:
+                        print(f"⏰ Chunk {i+1} timed out after 60 seconds")
+                        raise Exception(f"Document AI processing timed out for chunk {i+1}")
+                    except Exception as e:
+                        print(f"❌ Chunk {i+1} processing failed: {e}")
+                        raise
                     
                     # Parse the results for this chunk
-                    chunk_deeds = self._parse_document_ai_response(document, chunk_path, chunk_offset=i*15)
+                    chunk_deeds = self._parse_document_ai_response(document, chunk_path, chunk_offset=i*25)
                     
                     # Adjust page numbers to account for chunk offset
                     for deed in chunk_deeds:
-                        deed.pages = [p + (i * 15) for p in deed.pages]
+                        deed.pages = [p + (i * 25) for p in deed.pages]
                         deed.deed_number = len(all_deeds) + deed.deed_number
                     
                     all_deeds.extend(chunk_deeds)

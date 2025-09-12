@@ -708,8 +708,15 @@ class DocumentProcessor:
         )
         
         # 1. Split PDF into individual deed PDFs based on strategy
-        deed_pdfs = self.split_pdf_by_deeds(pdf_path, strategy)
-        print(f"📄 Split into {len(deed_pdfs)} deed files")
+        try:
+            print(f"🔧 Attempting to split PDF with strategy: {strategy}")
+            deed_pdfs = self.split_pdf_by_deeds(pdf_path, strategy)
+            print(f"📄 Split into {len(deed_pdfs)} deed files")
+        except Exception as e:
+            print(f"⚠️ Document AI splitting failed: {e}")
+            print("🔄 Falling back to simple page-based splitting")
+            deed_pdfs = self.split_pdf_by_deeds(pdf_path, "simple")
+            print(f"📄 Fallback split into {len(deed_pdfs)} deed files")
         
         # 2. Extract deed boundary information if available
         if hasattr(self, '_last_split_result') and self._last_split_result:
