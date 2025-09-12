@@ -42,7 +42,11 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# Start the FastAPI application
+# Get Railway's PORT environment variable
+PORT=${PORT:-8000}
+echo "Railway PORT environment variable: $PORT"
+
+# Start the FastAPI application on Railway's port
 echo "🚀 Starting Mineral Rights API from $(pwd)..."
-echo "Command: uvicorn api.app:app --host 0.0.0.0 --port 8000"
-uvicorn api.app:app --host 0.0.0.0 --port 8000 --timeout-keep-alive 28800 --timeout-graceful-shutdown 28800 --access-log
+echo "Command: uvicorn api.app:app --host 0.0.0.0 --port $PORT"
+uvicorn api.app:app --host 0.0.0.0 --port $PORT --timeout-keep-alive 28800 --timeout-graceful-shutdown 28800 --access-log
