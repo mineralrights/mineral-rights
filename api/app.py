@@ -216,10 +216,10 @@ async def predict(
                 print(f"⚠️ Cleanup error: {cleanup_error}")
 
     # Start background thread
-        thread = threading.Thread(target=run, daemon=True)
-        thread.start()
-    
-        return {"job_id": job_id}
+    thread = threading.Thread(target=run, daemon=True)
+    thread.start()
+
+    return {"job_id": job_id}
 
 @app.get("/stream/{job_id}")
 async def stream(job_id: str):

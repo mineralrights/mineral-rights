@@ -10,6 +10,16 @@ import asyncio
 from typing import Dict, Optional
 import psutil
 
+# Try to import the real processor
+try:
+    from src.mineral_rights.document_classifier import DocumentProcessor
+    PROCESSOR_AVAILABLE = True
+    print("✅ DocumentProcessor imported successfully")
+except ImportError as e:
+    print(f"⚠️ DocumentProcessor not available: {e}")
+    PROCESSOR_AVAILABLE = False
+    DocumentProcessor = None
+
 # Initialize FastAPI app
 app = FastAPI(title="Mineral-Rights API - Simple Async Version")
 
@@ -34,7 +44,14 @@ jobs: Dict[str, Dict] = {}
 @app.get("/health")
 async def health():
     """Health check endpoint"""
-    return {"status": "healthy", "timestamp": time.time()}
+    return {
+        "status": "healthy", 
+        "timestamp": time.time(),
+        "processor_available": PROCESSOR_AVAILABLE,
+        "api_key_present": bool(os.getenv("ANTHROPIC_API_KEY")),
+        "document_ai_endpoint_present": bool(os.getenv("DOCUMENT_AI_ENDPOINT")),
+        "google_credentials_present": bool(os.getenv("GOOGLE_CREDENTIALS_BASE64"))
+    }
 
 @app.get("/heartbeat")
 async def heartbeat():
@@ -47,12 +64,14 @@ async def root():
     return {
         "message": "Mineral Rights API - Simple Async Version",
         "version": "1.0",
+        "processor_available": PROCESSOR_AVAILABLE,
         "endpoints": {
             "health": "/health",
             "heartbeat": "/heartbeat",
-            "create_job": "POST /jobs",
+            "create_job": "POST /predict",
             "get_job": "GET /jobs/{job_id}",
-            "list_jobs": "GET /jobs"
+            "list_jobs": "GET /jobs",
+            "stream": "GET /stream/{job_id}"
         }
     }
 
@@ -69,10 +88,7 @@ async def predict(
     job_id = str(uuid.uuid4())
     
     try:
-        # For now, just simulate the job creation
-        # In a real implementation, this would upload to Cloud Storage
-        # and queue the job for processing
-        
+        # Create job data
         job_data = {
             "job_id": job_id,
             "filename": file.filename,
@@ -82,13 +98,17 @@ async def predict(
             "created_at": time.time(),
             "updated_at": time.time(),
             "progress": 0,
-            "logs": []
+            "logs": [],
+            "file_content": None  # Store file content for processing
         }
+        
+        # Read and store file content
+        file_content = await file.read()
+        job_data["file_content"] = file_content
         
         # Store in memory (in production, this would be Firestore)
         jobs[job_id] = job_data
         
-        # Simulate queuing the job
         print(f"✅ Job {job_id} created and queued")
         
         return {
@@ -167,27 +187,71 @@ async def stream_job(job_id: str):
             yield f"data: Job {job_id} started\n\n"
             await asyncio.sleep(1)
             
-            # Simulate processing steps
             yield f"data: 📄 Processing file: {job_data['filename']}\n\n"
-            await asyncio.sleep(2)
-            
-            yield f"data: 🔍 Analyzing document structure\n\n"
-            await asyncio.sleep(2)
-            
-            yield f"data: 🤖 Running AI classification\n\n"
-            await asyncio.sleep(3)
-            
-            # Simulate result
-            result = {
-                "classification": 1,  # 1 = has reservation, 0 = no reservation
-                "confidence": 0.85,
-                "detailed_samples": [{
-                    "reasoning": "Document contains mineral rights reservation clause in paragraph 3."
-                }]
-            }
-            
-            yield f"data: __RESULT__{json.dumps(result)}\n\n"
             await asyncio.sleep(1)
+            
+            try:
+                if PROCESSOR_AVAILABLE and DocumentProcessor:
+                    yield f"data: 🔍 Initializing document processor\n\n"
+                    await asyncio.sleep(1)
+                    
+                    # Initialize processor
+                    processor = DocumentProcessor()
+                    yield f"data: ✅ Processor initialized\n\n"
+                    await asyncio.sleep(1)
+                    
+                    yield f"data: 🤖 Running AI classification\n\n"
+                    await asyncio.sleep(1)
+                    
+                    # Process the file
+                    file_content = job_data["file_content"]
+                    processing_mode = job_data["processing_mode"]
+                    
+                    # Save file temporarily for processing
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+                        tmp_file.write(file_content)
+                        tmp_file_path = tmp_file.name
+                    
+                    try:
+                        # Run the actual processing
+                        result = processor.process_document(
+                            tmp_file_path, 
+                            processing_mode=processing_mode
+                        )
+                        
+                        yield f"data: ✅ Processing completed\n\n"
+                        await asyncio.sleep(1)
+                        
+                    finally:
+                        # Clean up temp file
+                        if os.path.exists(tmp_file_path):
+                            os.unlink(tmp_file_path)
+                    
+                else:
+                    yield f"data: ⚠️ Using simulation mode (processor not available)\n\n"
+                    await asyncio.sleep(1)
+                    
+                    yield f"data: 🔍 Analyzing document structure\n\n"
+                    await asyncio.sleep(2)
+                    
+                    yield f"data: 🤖 Running AI classification\n\n"
+                    await asyncio.sleep(3)
+                    
+                    # Simulate result
+                    result = {
+                        "classification": 1,  # 1 = has reservation, 0 = no reservation
+                        "confidence": 0.85,
+                        "detailed_samples": [{
+                            "reasoning": "Document contains mineral rights reservation clause in paragraph 3."
+                        }]
+                    }
+                
+                yield f"data: __RESULT__{json.dumps(result)}\n\n"
+                await asyncio.sleep(1)
+                
+            except Exception as e:
+                yield f"data: ❌ Error: {str(e)}\n\n"
+                return
             
             yield f"data: __END__\n\n"
         
