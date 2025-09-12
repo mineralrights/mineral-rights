@@ -2,11 +2,11 @@ import { PredictionRow, DeedResult, PageResult, ProcessingMode, SplittingStrateg
 
 // API configuration
 const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-production.up.railway.app',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-api-1081023230228.us-central1.run.app',
   // Add fallback URLs for SSL issues
   fallbackUrls: [
-    'https://mineral-rights-production.up.railway.app',
-    'http://mineral-rights-production.up.railway.app', // HTTP fallback
+    'https://mineral-rights-api-1081023230228.us-central1.run.app',
+    'https://mineral-rights-production.up.railway.app', // Railway fallback
   ]
 };
 
