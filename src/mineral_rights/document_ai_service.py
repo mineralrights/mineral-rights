@@ -145,9 +145,8 @@ class DocumentAIService:
             
             print(f"📄 PDF has {total_pages} pages")
             
-            # Use chunking if PDF is too large (50 pages max per chunk) and not forced to single chunk
-            # Increased from 30 to 50 to reduce API calls and processing time
-            if total_pages > 50 and not force_single_chunk:
+            # Use chunking if PDF is too large (30 pages max per chunk) and not forced to single chunk
+            if total_pages > 30 and not force_single_chunk:
                 print("📦 PDF is large, using chunking approach")
                 return self._process_with_chunking(pdf_path, start_time)
             else:
@@ -237,8 +236,8 @@ class DocumentAIService:
     def _process_with_chunking(self, pdf_path: str, start_time: float) -> DocumentAISplitResult:
         """Process a large PDF by splitting it into chunks"""
         try:
-            # Split PDF into chunks (increased chunk size to reduce API calls)
-            chunks = self._split_pdf_into_chunks(pdf_path, max_pages=25)
+            # Split PDF into chunks
+            chunks = self._split_pdf_into_chunks(pdf_path, max_pages=15)
             
             print(f"📦 Created {len(chunks)} chunks")
             
@@ -297,11 +296,11 @@ class DocumentAIService:
                         raise
                     
                     # Parse the results for this chunk
-                    chunk_deeds = self._parse_document_ai_response(document, chunk_path, chunk_offset=i*25)
+                    chunk_deeds = self._parse_document_ai_response(document, chunk_path, chunk_offset=i*15)
                     
                     # Adjust page numbers to account for chunk offset
                     for deed in chunk_deeds:
-                        deed.pages = [p + (i * 25) for p in deed.pages]
+                        deed.pages = [p + (i * 15) for p in deed.pages]
                         deed.deed_number = len(all_deeds) + deed.deed_number
                     
                     all_deeds.extend(chunk_deeds)

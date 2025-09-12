@@ -1,146 +1,72 @@
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import tempfile
+#!/usr/bin/env python3
+"""
+Async Mineral Rights API
+Uses Cloud Run Jobs for long-running processing tasks
+"""
+
 import os
 import time
-import json
 import uuid
 import asyncio
-from typing import Dict, Optional
-import psutil
-from google.cloud import storage, tasks_v2
-from google.cloud import firestore
-import base64
+from typing import Dict, Any, List
+from pathlib import Path
 
-# Import your pipeline and job queue
-from src.mineral_rights.document_classifier import DocumentProcessor
-from api.job_queue import JobQueue
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from google.cloud import firestore
+from google.cloud import storage
 
 # Initialize FastAPI app
-app = FastAPI(title="Mineral-Rights API - Async Job Pattern")
+app = FastAPI(title="Mineral Rights API - Async", version="2.0")
 
-# CORS configuration
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://mineral-rights-perc6q1ij-lauragomezjurados-projects.vercel.app",
-        "http://localhost:3000",
-        "https://*.vercel.app"  # Allow all Vercel deployments
-    ],
+    allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"],
-    max_age=3600
+    max_age=3600,
 )
 
-# Global processor
-processor = None
-
 # Initialize Google Cloud clients
-storage_client = None
-tasks_client = None
-firestore_client = None
-job_queue = None
+db = firestore.Client()
+storage_client = storage.Client()
 
-def initialize_processor():
-    global processor
-    try:
-        print("🔧 Initializing DocumentProcessor...")
-        
-        # Get API key from environment
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            print("❌ ANTHROPIC_API_KEY not found in environment")
-            return False
-            
-        # Get Document AI endpoint
-        document_ai_endpoint = os.getenv("DOCUMENT_AI_ENDPOINT")
-        if not document_ai_endpoint:
-            print("❌ DOCUMENT_AI_ENDPOINT not found in environment")
-            return False
-            
-        print(f"API Key present: {'Yes' if api_key else 'No'}")
-        print(f"Document AI Endpoint: {document_ai_endpoint}")
-        
-        # Handle Google credentials
-        credentials_path = None
-        google_credentials_base64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")
-        
-        if google_credentials_base64:
-            try:
-                # Decode base64 credentials
-                credentials_json = base64.b64decode(google_credentials_base64).decode('utf-8')
-                temp_file = tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False)
-                temp_file.write(credentials_json)
-                temp_file.close()
-                credentials_path = temp_file.name
-                print(f"✅ Created temporary credentials file from base64")
-            except Exception as e:
-                print(f"⚠️ Failed to decode base64 credentials: {e}")
-        
-        # Initialize processor
-        processor = DocumentProcessor(
-            api_key=api_key,
-            document_ai_endpoint=document_ai_endpoint,
-            document_ai_credentials=credentials_path
-        )
-        
-        print("✅ DocumentProcessor initialized successfully")
-        return True
-        
-    except Exception as e:
-        print(f"❌ Failed to initialize DocumentProcessor: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-def initialize_cloud_clients():
-    global storage_client, tasks_client, firestore_client, job_queue
-    try:
-        storage_client = storage.Client()
-        tasks_client = tasks_v2.CloudTasksClient()
-        firestore_client = firestore.Client()
-        job_queue = JobQueue()
-        print("✅ Google Cloud clients initialized")
-        return True
-    except Exception as e:
-        print(f"❌ Failed to initialize Google Cloud clients: {e}")
-        return False
-
-# Initialize on startup
-@app.on_event("startup")
-async def startup_event():
-    print("🚀 Starting Mineral Rights API...")
-    initialize_cloud_clients()
-
-@app.get("/health")
-async def health():
-    """Health check endpoint"""
-    return {"status": "healthy", "timestamp": time.time()}
-
-@app.get("/heartbeat")
-async def heartbeat():
-    """Simple heartbeat endpoint"""
-    return {"status": "ok", "timestamp": time.time()}
+# Configuration
+PROJECT_ID = os.getenv('GOOGLE_CLOUD_PROJECT', 'mineral-rights-app')
+LOCATION = os.getenv('GOOGLE_CLOUD_LOCATION', 'us-central1')
+BUCKET_NAME = os.getenv('GCS_BUCKET_NAME', 'mineral-rights-documents')
+QUEUE_NAME = os.getenv('TASK_QUEUE_NAME', 'mineral-rights-queue')
 
 @app.get("/")
 async def root():
     """Root endpoint"""
     return {
-        "message": "Mineral Rights API - Async Job Pattern",
+        "message": "Mineral Rights API - Async Version",
         "version": "2.0",
         "endpoints": {
             "health": "/health",
-            "heartbeat": "/heartbeat",
-            "create_job": "POST /jobs",
+            "create_job": "POST /predict",
             "get_job": "GET /jobs/{job_id}",
             "list_jobs": "GET /jobs"
         }
     }
 
-@app.post("/jobs")
+@app.get("/health")
+async def health():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": time.time(),
+        "api_key_present": bool(os.getenv("ANTHROPIC_API_KEY")),
+        "document_ai_endpoint_present": bool(os.getenv("DOCUMENT_AI_ENDPOINT")),
+        "google_credentials_present": bool(os.getenv("GOOGLE_CREDENTIALS_BASE64")),
+        "gcs_bucket_present": bool(os.getenv("GCS_BUCKET_NAME"))
+    }
+
+@app.post("/predict")
 async def create_job(
     file: UploadFile = File(...),
     processing_mode: str = Form("single_deed"),
@@ -153,40 +79,49 @@ async def create_job(
     job_id = str(uuid.uuid4())
     
     try:
-        # Upload file to Cloud Storage
-        bucket_name = os.getenv("GCS_BUCKET_NAME", "mineral-rights-storage")
-        file_path = f"uploads/{job_id}/{file.filename}"
-        
-        # Read file contents
-        contents = await file.read()
-        
-        # Upload to GCS
-        bucket = storage_client.bucket(bucket_name)
-        blob = bucket.blob(file_path)
-        blob.upload_from_string(contents, content_type=file.content_type)
-        
-        print(f"✅ File uploaded to GCS: gs://{bucket_name}/{file_path}")
-        
-        # Create job record in Firestore
+        # Create job data
         job_data = {
             "job_id": job_id,
             "filename": file.filename,
-            "file_path": file_path,
             "processing_mode": processing_mode,
             "splitting_strategy": splitting_strategy,
             "status": "queued",
             "created_at": time.time(),
             "updated_at": time.time(),
             "progress": 0,
-            "logs": []
+            "logs": [f"📋 Job created at {time.strftime('%Y-%m-%d %H:%M:%S')}"]
         }
         
-        # Store in Firestore
-        doc_ref = firestore_client.collection("jobs").document(job_id)
-        doc_ref.set(job_data)
+        # Save job to Firestore
+        job_ref = db.collection('jobs').document(job_id)
+        job_ref.set(job_data)
         
-        # Queue the job for processing
-        await job_queue.queue_job(job_id, file_path, processing_mode, splitting_strategy)
+        # Upload file to Cloud Storage
+        bucket = storage_client.bucket(BUCKET_NAME)
+        blob_name = f"uploads/{job_id}/{file.filename}"
+        blob = bucket.blob(blob_name)
+        
+        # Read file content
+        file_content = await file.read()
+        blob.upload_from_string(file_content, content_type=file.content_type)
+        
+        print(f"📁 File uploaded to Cloud Storage: {blob_name}")
+        
+        # Update job with file info
+        job_ref.update({
+            "file_path": blob_name,
+            "file_size": len(file_content),
+            "logs": firestore.ArrayUnion([f"📁 File uploaded to Cloud Storage"])
+        })
+        
+        # For now, just mark as queued - we'll process it manually
+        # In a full implementation, this would trigger a Cloud Run Job
+        job_ref.update({
+            "status": "queued",
+            "logs": firestore.ArrayUnion([f"📤 Job queued for processing (manual trigger required)"])
+        })
+        
+        print(f"✅ Job {job_id} created and queued")
         
         return {
             "job_id": job_id,
@@ -196,23 +131,28 @@ async def create_job(
         
     except Exception as e:
         print(f"❌ Failed to create job: {e}")
+        # Clean up job if it was created
+        try:
+            db.collection('jobs').document(job_id).delete()
+        except:
+            pass
         raise HTTPException(status_code=500, detail=f"Failed to create job: {str(e)}")
 
 @app.get("/jobs/{job_id}")
 async def get_job(job_id: str):
     """Get job status and results"""
     try:
-        doc_ref = firestore_client.collection("jobs").document(job_id)
-        doc = doc_ref.get()
+        job_ref = db.collection('jobs').document(job_id)
+        job_doc = job_ref.get()
         
-        if not doc.exists:
+        if not job_doc.exists:
             raise HTTPException(status_code=404, detail="Job not found")
         
-        job_data = doc.to_dict()
+        job_data = job_doc.to_dict()
         
         # Remove sensitive data
-        if "file_path" in job_data:
-            del job_data["file_path"]
+        if 'file_path' in job_data:
+            del job_data['file_path']
         
         return job_data
         
@@ -223,30 +163,46 @@ async def get_job(job_id: str):
         raise HTTPException(status_code=500, detail=f"Failed to get job: {str(e)}")
 
 @app.get("/jobs")
-async def list_jobs(limit: int = 10, status: Optional[str] = None):
+async def list_jobs(limit: int = 10):
     """List recent jobs"""
     try:
-        query = firestore_client.collection("jobs").order_by("created_at", direction=firestore.Query.DESCENDING).limit(limit)
+        jobs_ref = db.collection('jobs')
+        jobs = jobs_ref.order_by('created_at', direction=firestore.Query.DESCENDING).limit(limit).stream()
         
-        if status:
-            query = query.where("status", "==", status)
-        
-        docs = query.stream()
-        jobs = []
-        
-        for doc in docs:
-            job_data = doc.to_dict()
+        job_list = []
+        for job in jobs:
+            job_data = job.to_dict()
             # Remove sensitive data
-            if "file_path" in job_data:
-                del job_data["file_path"]
-            jobs.append(job_data)
+            if 'file_path' in job_data:
+                del job_data['file_path']
+            job_list.append(job_data)
         
-        return {"jobs": jobs, "count": len(jobs)}
+        return {
+            "jobs": job_list,
+            "count": len(job_list)
+        }
         
     except Exception as e:
         print(f"❌ Failed to list jobs: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to list jobs: {str(e)}")
 
+@app.get("/heartbeat")
+async def heartbeat():
+    """Simple heartbeat endpoint"""
+    return {"status": "alive", "timestamp": time.time()}
+
+@app.get("/test")
+async def test():
+    """Test endpoint to verify async API is working"""
+    return {
+        "message": "Async API is working",
+        "timestamp": time.time(),
+        "environment": {
+            "gcs_bucket": os.getenv("GCS_BUCKET_NAME"),
+            "project_id": os.getenv("GOOGLE_CLOUD_PROJECT"),
+            "location": os.getenv("GOOGLE_CLOUD_LOCATION")
+        }
+    }
 
 if __name__ == "__main__":
     import uvicorn

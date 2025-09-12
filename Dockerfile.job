@@ -1,31 +1,30 @@
-# Dockerfile for Cloud Run Job Worker
+# Dockerfile for Mineral Rights Job Worker
 FROM python:3.11-slim
 
-# Prevent Python from buffering stdout/stderr
-ENV PYTHONUNBUFFERED=1
-
+# Set working directory
 WORKDIR /app
 
 # Install system dependencies
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        build-essential \
-        curl \
-        && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
 
-# Copy and install Python dependencies
-COPY api/requirements.txt ./requirements.txt
-RUN pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Copy requirements first for better caching
+COPY requirements.txt .
 
-# Copy application code
-COPY api ./api
-COPY src ./src
+# Install Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Create non-root user for security
-RUN useradd --create-home --shell /bin/bash app && \
-    chown -R app:app /app
-USER app
+# Copy the entire project
+COPY . .
 
-# Set the entrypoint to the job worker
-ENTRYPOINT ["python", "/app/api/job_worker.py"]
+# Set environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Create output directory
+RUN mkdir -p /app/deed_tracking
+
+# Default command for job worker
+CMD ["python", "api/job_worker.py"]

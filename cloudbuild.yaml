@@ -27,7 +27,7 @@ steps:
       '--cpu', '2',
       '--timeout', '300',
       '--max-instances', '10',
-      '--set-env-vars', 'GCS_BUCKET_NAME=mineral-rights-storage-$PROJECT_ID'
+      '--set-env-vars', 'GCS_BUCKET_NAME=mineral-rights-storage-$PROJECT_ID,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=us-central1,TASK_QUEUE_NAME=mineral-rights-queue'
     ]
 
   # Build the job worker image
@@ -55,7 +55,8 @@ steps:
       '--max-retries', '3',
       '--parallelism', '1',
       '--task-count', '1',
-      '--task-timeout', '3600'
+      '--task-timeout', '3600',
+      '--set-env-vars', 'GCS_BUCKET_NAME=mineral-rights-storage-$PROJECT_ID,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=us-central1'
     ]
 
 # Store images in Container Registry
