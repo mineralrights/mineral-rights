@@ -23,13 +23,46 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 
 # Initialize Google Cloud clients
 db = firestore.Client()
-storage_client = storage.Client()
+
+# Initialize storage client with credentials if available
+def get_storage_client():
+    """Get storage client with proper credentials"""
+    if os.getenv('GOOGLE_CREDENTIALS_BASE64'):
+        # Decode base64 credentials and create temporary file
+        credentials_b64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
+        credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+        
+        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as cred_file:
+            cred_file.write(credentials_json)
+            credentials_path = cred_file.name
+        
+        # Set environment variable for Google Cloud libraries
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = credentials_path
+        
+        # Create storage client with credentials
+        from google.oauth2 import service_account
+        credentials = service_account.Credentials.from_service_account_file(
+            credentials_path,
+            scopes=['https://www.googleapis.com/auth/cloud-platform']
+        )
+        return storage.Client(credentials=credentials)
+    else:
+        return storage.Client()
 
 def process_job(job_id: str) -> Dict[str, Any]:
     """Process a single job from Firestore"""
     print(f"🚀 Starting job processing for {job_id}")
     
+    # Debug: Check environment variables
+    print(f"🔍 Environment variables check:")
+    print(f"  - ANTHROPIC_API_KEY: {'SET' if os.getenv('ANTHROPIC_API_KEY') else 'NOT SET'}")
+    print(f"  - DOCUMENT_AI_ENDPOINT: {'SET' if os.getenv('DOCUMENT_AI_ENDPOINT') else 'NOT SET'}")
+    print(f"  - GOOGLE_CREDENTIALS_BASE64: {'SET' if os.getenv('GOOGLE_CREDENTIALS_BASE64') else 'NOT SET'}")
+    
     try:
+        # Initialize storage client
+        storage_client = get_storage_client()
+        
         # Get job from Firestore
         job_ref = db.collection('jobs').document(job_id)
         job_doc = job_ref.get()
@@ -66,17 +99,35 @@ def process_job(job_id: str) -> Dict[str, Any]:
         # Handle base64-encoded credentials
         credentials_path = None
         if os.getenv('GOOGLE_CREDENTIALS_BASE64'):
-            # Decode base64 credentials and create temporary file
-            credentials_b64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
-            credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
-            
-            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as cred_file:
-                cred_file.write(credentials_json)
-                credentials_path = cred_file.name
-            
-            print(f"✅ Created temporary credentials file: {credentials_path}")
+            print(f"🔍 Found GOOGLE_CREDENTIALS_BASE64 environment variable")
+            try:
+                # Decode base64 credentials and create temporary file
+                credentials_b64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
+                print(f"🔍 Base64 credentials length: {len(credentials_b64)}")
+                
+                credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+                print(f"🔍 Decoded credentials length: {len(credentials_json)}")
+                
+                with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as cred_file:
+                    cred_file.write(credentials_json)
+                    credentials_path = cred_file.name
+                
+                print(f"✅ Created temporary credentials file: {credentials_path}")
+                print(f"🔍 File exists: {os.path.exists(credentials_path)}")
+                print(f"🔍 File size: {os.path.getsize(credentials_path)} bytes")
+                
+            except Exception as e:
+                print(f"❌ Error handling base64 credentials: {e}")
+                traceback.print_exc()
+        else:
+            print(f"⚠️ GOOGLE_CREDENTIALS_BASE64 environment variable not found")
         
         # Initialize DocumentProcessor
+        print(f"🔍 Initializing DocumentProcessor with:")
+        print(f"  - ANTHROPIC_API_KEY: {'SET' if os.getenv('ANTHROPIC_API_KEY') else 'NOT SET'}")
+        print(f"  - DOCUMENT_AI_ENDPOINT: {os.getenv('DOCUMENT_AI_ENDPOINT')}")
+        print(f"  - credentials_path: {credentials_path}")
+        
         processor = DocumentProcessor(
             api_key=os.getenv('ANTHROPIC_API_KEY'),
             document_ai_endpoint=os.getenv('DOCUMENT_AI_ENDPOINT'),
@@ -84,6 +135,7 @@ def process_job(job_id: str) -> Dict[str, Any]:
         )
         
         print("✅ DocumentProcessor initialized")
+        print(f"🔍 Document AI service available: {processor.document_ai_service is not None}")
         
         # Process the document based on mode
         processing_mode = job_data.get('processing_mode', 'single_deed')
