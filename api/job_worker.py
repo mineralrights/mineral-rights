@@ -10,6 +10,7 @@ import time
 import json
 import tempfile
 import traceback
+import base64
 from typing import Dict, Any
 from pathlib import Path
 
@@ -62,11 +63,24 @@ def process_job(job_id: str) -> Dict[str, Any]:
         
         print(f"📁 Downloaded file to {tmp_path}")
         
+        # Handle base64-encoded credentials
+        credentials_path = None
+        if os.getenv('GOOGLE_CREDENTIALS_BASE64'):
+            # Decode base64 credentials and create temporary file
+            credentials_b64 = os.getenv('GOOGLE_CREDENTIALS_BASE64')
+            credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+            
+            with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as cred_file:
+                cred_file.write(credentials_json)
+                credentials_path = cred_file.name
+            
+            print(f"✅ Created temporary credentials file: {credentials_path}")
+        
         # Initialize DocumentProcessor
         processor = DocumentProcessor(
             api_key=os.getenv('ANTHROPIC_API_KEY'),
             document_ai_endpoint=os.getenv('DOCUMENT_AI_ENDPOINT'),
-            document_ai_credentials=os.getenv('GOOGLE_CREDENTIALS_BASE64')
+            document_ai_credentials=credentials_path
         )
         
         print("✅ DocumentProcessor initialized")
@@ -165,9 +179,13 @@ def process_job(job_id: str) -> Dict[str, Any]:
             'logs': firestore.ArrayUnion([f"🎉 Job completed at {time.strftime('%Y-%m-%d %H:%M:%S')}"])
         })
         
-        # Clean up temporary file
+        # Clean up temporary files
         os.unlink(tmp_path)
         print(f"🧹 Cleaned up temporary file")
+        
+        if credentials_path and os.path.exists(credentials_path):
+            os.unlink(credentials_path)
+            print(f"🧹 Cleaned up temporary credentials file")
         
         return {
             'status': 'success',
@@ -190,10 +208,12 @@ def process_job(job_id: str) -> Dict[str, Any]:
         except Exception as update_error:
             print(f"⚠️ Failed to update job status: {update_error}")
         
-        # Clean up temporary file if it exists
+        # Clean up temporary files if they exist
         try:
             if 'tmp_path' in locals() and os.path.exists(tmp_path):
                 os.unlink(tmp_path)
+            if 'credentials_path' in locals() and credentials_path and os.path.exists(credentials_path):
+                os.unlink(credentials_path)
         except Exception:
             pass
         
