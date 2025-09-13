@@ -83,13 +83,67 @@ def process_job(job_id: str) -> Dict[str, Any]:
             'progress': 25
         })
         
-        # Process the document
+        # Process the document with detailed progress tracking
         if processing_mode == "single_deed":
             result = processor.process_document(tmp_path)
+            job_ref.update({
+                'logs': firestore.ArrayUnion([f"🤖 Running LLM analysis on single document"]),
+                'progress': 50
+            })
         elif processing_mode == "multi_deed":
+            # Enhanced multi-deed processing with detailed logging
+            job_ref.update({
+                'logs': firestore.ArrayUnion([f"📄 Starting multi-deed document analysis"]),
+                'progress': 30
+            })
+            
+            # Check if we're using Document AI for segmentation
+            if splitting_strategy == "document_ai":
+                job_ref.update({
+                    'logs': firestore.ArrayUnion([f"🔍 Calling Document AI for deed segmentation..."]),
+                    'progress': 35
+                })
+            
             result = processor.process_multi_deed_document(tmp_path, strategy=splitting_strategy)
+            
+            # Log deed segmentation results
+            if hasattr(result, 'deed_results') and result.deed_results:
+                deed_count = len(result.deed_results)
+                job_ref.update({
+                    'logs': firestore.ArrayUnion([f"📋 Document AI identified {deed_count} potential deeds"]),
+                    'progress': 60
+                })
+                
+                # Log deed ranges if available
+                for i, deed in enumerate(result.deed_results[:3]):  # Show first 3 deeds
+                    if hasattr(deed, 'pages_in_deed'):
+                        job_ref.update({
+                            'logs': firestore.ArrayUnion([f"📄 Deed {i+1}: {deed.pages_in_deed} pages identified"])
+                        })
+                
+                if deed_count > 3:
+                    job_ref.update({
+                        'logs': firestore.ArrayUnion([f"📄 ... and {deed_count - 3} more deeds"])
+                    })
+            
+            job_ref.update({
+                'logs': firestore.ArrayUnion([f"🤖 Running LLM analysis on {len(result.deed_results) if hasattr(result, 'deed_results') else 'unknown'} deeds"]),
+                'progress': 70
+            })
+            
         elif processing_mode == "page_by_page":
+            job_ref.update({
+                'logs': firestore.ArrayUnion([f"📄 Starting page-by-page analysis"]),
+                'progress': 30
+            })
             result = processor.process_document_page_by_page(tmp_path, max_samples=6, high_recall_mode=True)
+            
+            if hasattr(result, 'page_results') and result.page_results:
+                page_count = len(result.page_results)
+                job_ref.update({
+                    'logs': firestore.ArrayUnion([f"🤖 Running LLM analysis on {page_count} pages"]),
+                    'progress': 60
+                })
         else:
             raise ValueError(f"Unknown processing mode: {processing_mode}")
         
