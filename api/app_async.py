@@ -8,6 +8,8 @@ import os
 import time
 import uuid
 import asyncio
+import subprocess
+import threading
 from typing import Dict, Any, List
 from pathlib import Path
 
@@ -114,19 +116,55 @@ async def create_job(
             "logs": firestore.ArrayUnion([f"📁 File uploaded to Cloud Storage"])
         })
         
-        # For now, just mark as queued - we'll process it manually
-        # In a full implementation, this would trigger a Cloud Run Job
+        # Trigger the job worker automatically
         job_ref.update({
             "status": "queued",
-            "logs": firestore.ArrayUnion([f"📤 Job queued for processing (manual trigger required)"])
+            "logs": firestore.ArrayUnion([f"🚀 Triggering job worker for processing..."])
         })
         
-        print(f"✅ Job {job_id} created and queued")
+        try:
+            def trigger_job_worker():
+                try:
+                    # Use gcloud to trigger the job worker
+                    result = subprocess.run([
+                        "gcloud", "run", "jobs", "execute", "mineral-rights-worker",
+                        "--region=us-central1",
+                        f"--args={job_id}",
+                        "--quiet"
+                    ], capture_output=True, text=True, timeout=30)
+                    
+                    if result.returncode == 0:
+                        print(f"✅ Job worker triggered successfully for {job_id}")
+                        job_ref.update({
+                            "logs": firestore.ArrayUnion([f"✅ Job worker triggered successfully"])
+                        })
+                    else:
+                        print(f"❌ Failed to trigger job worker: {result.stderr}")
+                        job_ref.update({
+                            "logs": firestore.ArrayUnion([f"❌ Failed to trigger job worker: {result.stderr}"])
+                        })
+                except Exception as e:
+                    print(f"❌ Error triggering job worker: {e}")
+                    job_ref.update({
+                        "logs": firestore.ArrayUnion([f"❌ Error triggering job worker: {str(e)}"])
+                    })
+            
+            # Run in background thread
+            thread = threading.Thread(target=trigger_job_worker, daemon=True)
+            thread.start()
+            
+        except Exception as e:
+            print(f"❌ Error setting up job worker trigger: {e}")
+            job_ref.update({
+                "logs": firestore.ArrayUnion([f"❌ Error setting up job worker trigger: {str(e)}"])
+            })
+        
+        print(f"✅ Job {job_id} created and worker triggered")
         
         return {
             "job_id": job_id,
             "status": "queued",
-            "message": "Job created successfully. Use the job_id to check status."
+            "message": "Job created and worker triggered successfully. Use the job_id to check status."
         }
         
     except Exception as e:
