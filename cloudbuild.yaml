@@ -55,7 +55,7 @@ steps:
       '--max-retries', '3',
       '--parallelism', '1',
       '--task-timeout', '3600',
-      '--set-env-vars', 'GCS_BUCKET_NAME=mineral-rights-storage-$PROJECT_ID,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=us-central1'
+      '--set-env-vars', 'GCS_BUCKET_NAME=mineral-rights-storage-$PROJECT_ID,GOOGLE_CLOUD_PROJECT=$PROJECT_ID,GOOGLE_CLOUD_LOCATION=us-central1,ANTHROPIC_API_KEY=sk-ant-api03-xxx'
     ]
 
 # Store images in Container Registry

@@ -205,21 +205,50 @@ def process_job(job_id: str) -> Dict[str, Any]:
 
 def main():
     """Main entry point for the job worker"""
-    if len(sys.argv) != 2:
-        print("Usage: python job_worker.py <job_id>")
-        sys.exit(1)
-    
-    job_id = sys.argv[1]
-    print(f"🚀 Starting job worker for job: {job_id}")
-    
-    result = process_job(job_id)
-    
-    if result['status'] == 'success':
-        print(f"✅ Job {job_id} completed successfully")
-        sys.exit(0)
+    if len(sys.argv) == 2:
+        # Single job mode - process specific job
+        job_id = sys.argv[1]
+        print(f"🚀 Starting job worker for job: {job_id}")
+        
+        result = process_job(job_id)
+        
+        if result['status'] == 'success':
+            print(f"✅ Job {job_id} completed successfully")
+            sys.exit(0)
+        else:
+            print(f"❌ Job {job_id} failed: {result.get('error', 'Unknown error')}")
+            sys.exit(1)
     else:
-        print(f"❌ Job {job_id} failed: {result.get('error', 'Unknown error')}")
-        sys.exit(1)
+        # Continuous mode - poll for queued jobs
+        print("🚀 Starting job worker in continuous mode - polling for queued jobs")
+        
+        while True:
+            try:
+                # Get all queued jobs
+                jobs_ref = db.collection('jobs')
+                queued_jobs = jobs_ref.where('status', '==', 'queued').limit(1).get()
+                
+                if queued_jobs:
+                    for job_doc in queued_jobs:
+                        job_id = job_doc.id
+                        job_data = job_doc.to_dict()
+                        
+                        print(f"🔄 Found queued job: {job_id}")
+                        
+                        # Process the job
+                        result = process_job(job_id)
+                        
+                        if result['status'] == 'success':
+                            print(f"✅ Job {job_id} completed successfully")
+                        else:
+                            print(f"❌ Job {job_id} failed: {result.get('error', 'Unknown error')}")
+                else:
+                    print("⏳ No queued jobs found, waiting...")
+                    time.sleep(10)  # Wait 10 seconds before checking again
+                    
+            except Exception as e:
+                print(f"❌ Error in job polling loop: {e}")
+                time.sleep(30)  # Wait 30 seconds before retrying
 
 if __name__ == "__main__":
     main()
