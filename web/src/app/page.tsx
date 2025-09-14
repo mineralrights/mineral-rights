@@ -3,7 +3,7 @@
 import PDFUpload from "@/components/PDFUpload";
 import ProcessingModeSelector from "@/components/ProcessingModeSelector";
 import ResultsTable from "@/components/ResultsTable";
-import { createJob, pollJobUntilComplete } from "@/lib/api_async";
+import { processDocument } from "@/lib/api_async";
 import { rowsToCSV } from "@/lib/csv";
 import { useState } from "react";
 import { PredictionRow, ProcessingMode, SplittingStrategy } from "@/lib/types";
@@ -23,7 +23,7 @@ export default function Home() {
     if (processingMode === 'single_deed') {
       // Single deed result
       const row: PredictionRow = {
-        filename: 'document.pdf',
+        filename: result.filename || 'document.pdf',
         status: 'done',
         prediction: result.has_reservation ? 'has_reservation' : 'no_reservation',
         confidence: result.confidence || 0,
@@ -36,9 +36,9 @@ export default function Home() {
       if (result.deed_results && Array.isArray(result.deed_results)) {
         result.deed_results.forEach((deed: any, index: number) => {
           const row: PredictionRow = {
-            filename: `deed-${deed.deed_number}.pdf`,
+            filename: `deed-${deed.page_number || index + 1}.pdf`,
             status: 'done',
-            prediction: deed.prediction,
+            prediction: deed.has_reservations ? 'has_reservation' : 'no_reservation',
             confidence: deed.confidence || 0,
             explanation: deed.explanation || '',
             processingMode: 'multi_deed',
@@ -52,7 +52,7 @@ export default function Home() {
       if (result.page_results && Array.isArray(result.page_results)) {
         result.page_results.forEach((page: any, index: number) => {
           const row: PredictionRow = {
-            filename: `page-${page.page_number}.pdf`,
+            filename: `page-${page.page_number || index + 1}.pdf`,
             status: 'done',
             prediction: page.has_reservations ? 'has_reservation' : 'no_reservation',
             confidence: page.confidence || 0,
@@ -82,7 +82,7 @@ export default function Home() {
     // Add the new files to the existing rows immediately
     setRows(prevRows => [...prevRows, ...newFileRows]);
     
-    // Process each file individually using the async API
+    // Process each file individually using direct processing
     for (const file of files) {
       try {
         // Update status to processing
@@ -95,43 +95,23 @@ export default function Home() {
           });
         });
         
-        // Create job
-        const jobResponse = await createJob(file, processingMode, splittingStrategy);
-        console.log('Job created:', jobResponse);
+        console.log(`🚀 Processing file: ${file.name} with mode: ${processingMode}`);
         
-        // Poll for completion
-        const finalStatus = await pollJobUntilComplete(
-          jobResponse.job_id,
-          (status) => {
-            // Update progress
-            setRows(prevRows => {
-              return prevRows.map(row => {
-                if (row.filename === file.name) {
-                  return { 
-                    ...row, 
-                    status: status.status === 'completed' ? 'done' : 'processing',
-                    steps: status.logs || []
-                  };
-                }
-                return row;
-              });
-            });
-          }
-        );
+        // Process document directly
+        const result = await processDocument(file, processingMode, splittingStrategy);
+        console.log('✅ Processing completed:', result);
         
-        // Process the results
-        if (finalStatus.result) {
-          const results = convertJobResultToPredictionRows(finalStatus.result, processingMode);
-          if (results.length > 0) {
-            setRows(prevRows => {
-              return prevRows.map(row => {
-                if (row.filename === file.name) {
-                  return results[0];
-                }
-                return row;
-              });
+        // Convert results to prediction rows
+        const results = convertJobResultToPredictionRows(result, processingMode);
+        if (results.length > 0) {
+          setRows(prevRows => {
+            return prevRows.map(row => {
+              if (row.filename === file.name) {
+                return results[0];
+              }
+              return row;
             });
-          }
+          });
         }
         
       } catch (error) {

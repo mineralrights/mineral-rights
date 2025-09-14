@@ -138,88 +138,95 @@ async def predict(
     processing_mode: str = Form("single_deed"),
     splitting_strategy: str = Form("document_ai")
 ):
-    """Upload PDF and start processing - returns job_id for SSE streaming"""
-    print(f"🔍 Processing mode: {processing_mode}")
-    print(f"🔍 Filename: {file.filename}")
+    """Process document directly and return results"""
+    print(f"🔍 Processing document - Mode: {processing_mode}, File: {file.filename}")
     
-    if processor is None:
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Save file temporarily for processing
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            tmp_file.write(file_content)
+            tmp_file_path = tmp_file.name
+        
         try:
-            if not initialize_processor():
-                raise HTTPException(status_code=500, detail="Model not initialized")
-        except Exception as e:
-            print(f"❌ Processor initialization failed: {e}")
-            raise HTTPException(status_code=500, detail=f"Model initialization failed: {str(e)}")
-
-    # Memory monitoring
-    process = psutil.Process(os.getpid())
-    initial_memory = process.memory_info().rss / 1024 / 1024
-    print(f"💾 Memory usage: {initial_memory:.1f} MB")
-
-    # Save file
-    contents = await file.read()
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        tmp.write(contents)
-        tmp_path = tmp.name
-
-    # Create job
-    job_id = str(uuid.uuid4())
-    log_q: asyncio.Queue[str] = asyncio.Queue(maxsize=500)
-    jobs[job_id] = log_q
-    job_start_times[job_id] = time.time()
-    job_metadata[job_id] = {
-        "filename": file.filename,
-        "processing_mode": processing_mode,
-        "splitting_strategy": splitting_strategy,
-        "status": "processing"
-    }
-    
-    def run():
-        try:
-            print(f"🚀 Starting processing for job {job_id}")
-            log_q.put_nowait("🚀 Processing started")
+            if processor is None:
+                try:
+                    if not initialize_processor():
+                        raise HTTPException(status_code=500, detail="Model not initialized")
+                except Exception as e:
+                    print(f"❌ Processor initialization failed: {e}")
+                    raise HTTPException(status_code=500, detail=f"Model initialization failed: {str(e)}")
             
-            with redirect_stdout(QueueWriter(log_q)):
-                print(f"📁 File: {file.filename}")
-                print(f"⏰ Started at: {time.strftime('%Y-%m-%d %H:%M:%S')}")
-                print(f"💾 Memory: {initial_memory:.1f} MB")
+            print("🤖 Initializing document processor...")
+            print(f"🔧 Processing with mode: {processing_mode}")
+            
+            # Process the document based on mode
+            if processing_mode == "single_deed":
+                result = processor.process_document(tmp_file_path)
                 
-                if processing_mode == "single_deed":
-                    print("📄 Single deed processing")
-                    result = processor.process_document(tmp_path)
-                elif processing_mode == "multi_deed":
-                    print("📄 Multi-deed processing")
-                    result = processor.process_multi_deed_document(tmp_path, strategy=splitting_strategy)
-                elif processing_mode == "page_by_page":
-                    print("📄 Page-by-page processing")
-                    result = processor.process_document_page_by_page(tmp_path, max_samples=6, high_recall_mode=True)
-                else:
-                    raise ValueError(f"Unknown processing mode: {processing_mode}")
+                # Convert result to expected format
+                return {
+                    "has_reservation": result.get("classification", 0) == 1,
+                    "confidence": result.get("confidence", 0.0),
+                    "reasoning": result.get("detailed_samples", [{}])[0].get("reasoning", "No reasoning provided") if result.get("detailed_samples") else "No reasoning provided",
+                    "processing_mode": processing_mode,
+                    "filename": file.filename
+                }
                 
-                job_results[job_id] = result
-                log_q.put_nowait(f"__RESULT__{json.dumps(result)}")
-                print("✅ Processing completed successfully")
-                log_q.put_nowait("__END__")
-                    
-        except Exception as e:
-            print(f"❌ Processing failed: {e}")
-            import traceback
-            traceback.print_exc()
-            log_q.put_nowait(f"❌ Error: {str(e)}")
-            log_q.put_nowait("__END__")
+            elif processing_mode == "multi_deed":
+                # For multi-deed, we'll process page by page as a fallback
+                # This is simpler than implementing the full Document AI splitting
+                result = processor.process_document(tmp_file_path, page_strategy="all_pages")
+                
+                # Convert to multi-deed format
+                page_results = []
+                if "page_results" in result:
+                    for i, page_result in enumerate(result["page_results"]):
+                        page_results.append({
+                            "page_number": i + 1,
+                            "has_reservations": page_result.get("classification", 0) == 1,
+                            "confidence": page_result.get("confidence", 0.0),
+                            "explanation": page_result.get("detailed_samples", [{}])[0].get("reasoning", "No reasoning provided") if page_result.get("detailed_samples") else "No reasoning provided"
+                        })
+                
+                return {
+                    "deed_results": page_results,
+                    "total_deeds": len(page_results),
+                    "processing_mode": processing_mode,
+                    "filename": file.filename
+                }
+                
+            elif processing_mode == "page_by_page":
+                result = processor.process_document(tmp_file_path, page_strategy="all_pages")
+                
+                # Convert to page-by-page format
+                page_results = []
+                if "page_results" in result:
+                    for i, page_result in enumerate(result["page_results"]):
+                        page_results.append({
+                            "page_number": i + 1,
+                            "has_reservations": page_result.get("classification", 0) == 1,
+                            "confidence": page_result.get("confidence", 0.0),
+                            "explanation": page_result.get("detailed_samples", [{}])[0].get("reasoning", "No reasoning provided") if page_result.get("detailed_samples") else "No reasoning provided"
+                        })
+                
+                return {
+                    "page_results": page_results,
+                    "total_pages": len(page_results),
+                    "processing_mode": processing_mode,
+                    "filename": file.filename
+                }
+                
         finally:
-            # Clean up
-            try:
-                if os.path.exists(tmp_path):
-                    os.remove(tmp_path)
-                    print(f"🧹 Cleaned up temp file")
-            except Exception as cleanup_error:
-                print(f"⚠️ Cleanup error: {cleanup_error}")
-
-    # Start background thread
-    thread = threading.Thread(target=run, daemon=True)
-    thread.start()
-
-    return {"job_id": job_id}
+            # Clean up temp file
+            if os.path.exists(tmp_file_path):
+                os.unlink(tmp_file_path)
+        
+    except Exception as e:
+        print(f"❌ Failed to process document: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to process document: {str(e)}")
 
 @app.get("/stream/{job_id}")
 async def stream(job_id: str):

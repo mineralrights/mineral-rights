@@ -84,12 +84,12 @@ export interface JobStatus {
   completed_at?: number;
 }
 
-// Create a new processing job
-export async function createJob(
+// Process document directly and return results
+export async function processDocument(
   file: File,
   processingMode: ProcessingMode = 'single_deed',
   splittingStrategy: SplittingStrategy = 'document_ai'
-): Promise<{ job_id: string; status: string; message: string }> {
+): Promise<any> {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('processing_mode', processingMode);
@@ -102,10 +102,30 @@ export async function createJob(
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to create job: ${response.status} ${errorText}`);
+    throw new Error(`Failed to process document: ${response.status} ${errorText}`);
   }
 
   return await response.json();
+}
+
+// Legacy function for backward compatibility - now just calls processDocument
+export async function createJob(
+  file: File,
+  processingMode: ProcessingMode = 'single_deed',
+  splittingStrategy: SplittingStrategy = 'document_ai'
+): Promise<{ job_id: string; status: string; message: string; result?: any }> {
+  // For backward compatibility, we'll simulate the old job-based API
+  const result = await processDocument(file, processingMode, splittingStrategy);
+  
+  // Generate a fake job ID for compatibility
+  const jobId = `direct-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
+  return {
+    job_id: jobId,
+    status: 'completed',
+    message: 'Document processed successfully',
+    result: result
+  };
 }
 
 // Get job status
@@ -156,12 +176,37 @@ export async function heartbeat(): Promise<{ status: string; timestamp: number }
   return await response.json();
 }
 
-// Poll job status until completion
+// Poll job status until completion - now handles direct processing
 export async function pollJobUntilComplete(
   jobId: string,
   onProgress?: (status: JobStatus) => void,
   pollInterval: number = 2000
 ): Promise<JobStatus> {
+  // If this is a direct processing job (starts with "direct-"), return immediately
+  if (jobId.startsWith('direct-')) {
+    // For direct processing, we don't need to poll - the result is already available
+    // This is a simplified approach for the new direct processing API
+    return new Promise((resolve) => {
+      // Simulate a completed job status
+      const completedStatus: JobStatus = {
+        job_id: jobId,
+        status: 'completed',
+        progress: 100,
+        logs: ['Document processed successfully'],
+        created_at: Date.now() - 1000,
+        updated_at: Date.now(),
+        completed_at: Date.now()
+      };
+      
+      if (onProgress) {
+        onProgress(completedStatus);
+      }
+      
+      resolve(completedStatus);
+    });
+  }
+  
+  // Legacy polling for actual job-based processing
   return new Promise((resolve, reject) => {
     const poll = async () => {
       try {
