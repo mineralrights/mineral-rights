@@ -39,7 +39,7 @@ async function robustFetch(url: string, options: RequestInit = {}): Promise<Resp
         const fetchOptions: RequestInit = {
           ...options,
           headers,
-          signal: AbortSignal.timeout(30000), // 30 second timeout
+          signal: AbortSignal.timeout(900000), // 15 minute timeout to match Cloud Run
           // Add mode and credentials for CORS
           mode: 'cors',
           credentials: 'omit', // Don't send credentials to avoid SSL issues
@@ -240,4 +240,36 @@ export async function predictDocument(
   splittingStrategy: SplittingStrategy = 'document_ai'
 ): Promise<{ job_id: string; status: string; message: string }> {
   return createJob(file, processingMode, splittingStrategy);
+}
+
+// Test connection to backend
+export async function testConnection(): Promise<{success: boolean, message: string, details?: any}> {
+  try {
+    console.log("🔍 Testing connection to backend...");
+    const response = await robustFetch(`${API_CONFIG.baseUrl}/health`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log("✅ Backend connection successful:", data);
+      return {
+        success: true,
+        message: "Backend connection successful",
+        details: data
+      };
+    } else {
+      console.error("❌ Backend health check failed:", response.status);
+      return {
+        success: false,
+        message: `Backend health check failed (${response.status})`,
+        details: { status: response.status, statusText: response.statusText }
+      };
+    }
+  } catch (error) {
+    console.error("❌ Backend connection test failed:", error);
+    return {
+      success: false,
+      message: `Connection test failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      details: { error: error instanceof Error ? error.message : String(error) }
+    };
+  }
 }
