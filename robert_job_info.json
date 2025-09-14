@@ -1,9 +1,0 @@
-{
-  "job_id": "projects/381937358877/locations/us/operations/750816768648186985",
-  "status": "RUNNING",
-  "input_uri": "gs://mineral-rights-batch-1757454568/input/1757459866_ROBERT.pdf",
-  "output_uri": "gs://mineral-rights-batch-1757454568/output/",
-  "created_at": 1757459876.90671,
-  "bucket_name": "mineral-rights-batch-1757454568",
-  "pdf_name": "ROBERT"
-}
