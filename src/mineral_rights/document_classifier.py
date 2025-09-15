@@ -667,7 +667,7 @@ class DocumentProcessor:
         
         # Use smart chunking service
         print("📡 Calling Document AI service for smart chunking...")
-        result = self.document_ai_service.split_deeds_with_smart_chunking(pdf_path)
+        result = self.document_ai_service.process_pdf(pdf_path)
         print(f"🔍 DEBUG: Document AI result type: {type(result)}")
         print(f"🔍 DEBUG: Document AI result: {result}")
         if result is None:
@@ -692,7 +692,7 @@ class DocumentProcessor:
         
         # Log deed boundaries for interpretability
         print(f"\n📋 Deed Boundaries Detected:")
-        for i, deed in enumerate(result.deeds):
+        for i, deed in enumerate(result.deed_detections):
             start_page = min(deed.pages) + 1  # Convert to 1-indexed
             end_page = max(deed.pages) + 1    # Convert to 1-indexed
             print(f"   Deed {i+1}: Pages {start_page}-{end_page} (Confidence: {deed.confidence:.3f})")
@@ -701,7 +701,7 @@ class DocumentProcessor:
         deed_pdfs = []
         doc = fitz.open(pdf_path)
         
-        for i, deed in enumerate(result.deeds):
+        for i, deed in enumerate(result.deed_detections):
             # Create new PDF with deed pages
             new_doc = fitz.open()
             for page_num in deed.pages:  # pages are 0-indexed
@@ -772,7 +772,7 @@ class DocumentProcessor:
                     'confidence': deed.confidence,
                     'page_range': f"{min(deed.pages)+1}-{max(deed.pages)+1}"
                 }
-                for deed in self._last_split_result.deeds
+                for deed in self._last_split_result.deed_detections
             ]
             print(f"📊 Deed boundaries tracked: {len(deed_boundaries)} deeds")
             
