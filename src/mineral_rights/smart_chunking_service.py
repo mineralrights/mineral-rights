@@ -248,18 +248,21 @@ class SmartChunkingService:
         total_pages = len(doc)
         doc.close()
         
-        # HYBRID APPROACH: Use Document AI only for small PDFs to avoid memory issues
-        if total_pages >= 15:
-            print(f"⚠️ Large PDF detected ({total_pages} pages) - Document AI too memory-intensive for Cloud Run")
-            print("🔄 Falling back to simple page-based splitting for reliable processing")
-            return self._fallback_to_simple_splitting(pdf_path)
+        # TWO-STAGE APPROACH: Use Document AI for all PDFs with optimized memory management
+        print(f"🎯 Two-stage approach: Using Document AI for deed boundary detection on {total_pages} pages")
         
-        # For small PDFs, use Document AI with conservative chunk sizes
-        if total_pages > 10:
-            chunk_size = min(chunk_size, 3)  # Small chunks for medium PDFs
-            print(f"📦 Medium PDF detected ({total_pages} pages), reducing chunk size to {chunk_size}")
+        # Dynamic chunk sizing based on PDF size for memory optimization
+        if total_pages > 50:
+            chunk_size = 2  # Very small chunks for very large PDFs
+            print(f"📦 Very large PDF detected ({total_pages} pages), using chunk size {chunk_size}")
+        elif total_pages > 30:
+            chunk_size = 3  # Small chunks for large PDFs
+            print(f"📦 Large PDF detected ({total_pages} pages), using chunk size {chunk_size}")
+        elif total_pages > 15:
+            chunk_size = 5  # Medium chunks for medium PDFs
+            print(f"📦 Medium PDF detected ({total_pages} pages), using chunk size {chunk_size}")
         else:
-            chunk_size = min(chunk_size, 5)  # Default small chunks
+            chunk_size = min(chunk_size, 8)  # Default chunks for small PDFs
             print(f"📦 Small PDF detected ({total_pages} pages), using chunk size {chunk_size}")
         
         # Create smart chunks
@@ -278,8 +281,8 @@ class SmartChunkingService:
             memory_before = process.memory_info().rss / 1024 / 1024
             print(f"💾 Memory before chunk {chunk_id}: {memory_before:.1f} MB")
             
-            # Skip chunk if memory is too high
-            if memory_before > 14000:  # 14GB threshold
+            # Skip chunk if memory is too high (32GB = 32000MB, use 28000MB as threshold)
+            if memory_before > 28000:  # 28GB threshold for 32GB container
                 print(f"⚠️ Memory too high ({memory_before:.1f} MB), skipping chunk {chunk_id}")
                 continue
             
@@ -303,7 +306,7 @@ class SmartChunkingService:
             print(f"💾 Memory after chunk {chunk_id}: {memory_mb:.1f} MB")
             
             # If memory usage is too high, force more aggressive cleanup
-            if memory_mb > 12000:  # 12GB threshold
+            if memory_mb > 25000:  # 25GB threshold for 32GB container
                 print("⚠️ High memory usage detected, forcing aggressive cleanup...")
                 import gc
                 gc.set_threshold(0)  # Disable automatic garbage collection
