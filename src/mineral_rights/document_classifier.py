@@ -667,7 +667,7 @@ class DocumentProcessor:
         
         # Use smart chunking service
         print("📡 Calling Document AI service for smart chunking...")
-        result = self.document_ai_service.process_pdf(pdf_path)
+        result = self.document_ai_service.split_deeds_with_smart_chunking(pdf_path)
         print(f"🔍 DEBUG: Document AI result type: {type(result)}")
         print(f"🔍 DEBUG: Document AI result: {result}")
         if result is None:
@@ -692,19 +692,19 @@ class DocumentProcessor:
         
         # Log deed boundaries for interpretability
         print(f"\n📋 Deed Boundaries Detected:")
-        for i, deed in enumerate(result.deed_detections):
-            start_page = min(deed.pages) + 1  # Convert to 1-indexed
-            end_page = max(deed.pages) + 1    # Convert to 1-indexed
+        for i, deed in enumerate(result.deeds):
+            start_page = deed.start_page + 1  # Convert to 1-indexed
+            end_page = deed.end_page + 1      # Convert to 1-indexed
             print(f"   Deed {i+1}: Pages {start_page}-{end_page} (Confidence: {deed.confidence:.3f})")
         
         # Create individual deed PDFs
         deed_pdfs = []
         doc = fitz.open(pdf_path)
         
-        for i, deed in enumerate(result.deed_detections):
+        for i, deed in enumerate(result.deeds):
             # Create new PDF with deed pages
             new_doc = fitz.open()
-            for page_num in deed.pages:  # pages are 0-indexed
+            for page_num in range(deed.start_page, deed.end_page + 1):  # pages are 0-indexed
                 new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
             
             # Save to temporary file
@@ -768,11 +768,11 @@ class DocumentProcessor:
             deed_boundaries = [
                 {
                     'deed_number': deed.deed_number,
-                    'pages': deed.pages,
+                    'pages': list(range(deed.start_page, deed.end_page + 1)),
                     'confidence': deed.confidence,
-                    'page_range': f"{min(deed.pages)+1}-{max(deed.pages)+1}"
+                    'page_range': f"{deed.start_page+1}-{deed.end_page+1}"
                 }
-                for deed in self._last_split_result.deed_detections
+                for deed in self._last_split_result.deeds
             ]
             print(f"📊 Deed boundaries tracked: {len(deed_boundaries)} deeds")
             
