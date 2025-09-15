@@ -90,6 +90,8 @@ class SmartChunkingService:
         doc = None
         chunk_doc = None
         result = None
+        raw_document = None
+        request = None
         
         try:
             # Extract chunk
@@ -114,32 +116,8 @@ class SmartChunkingService:
             result = self.client.process_document(request=request)
             print(f"✅ Chunk {chunk_id} processed by Document AI successfully")
             
-        except Exception as e:
-            print(f"Error processing chunk {chunk_id}: {e}")
-            # Clean up resources even on error
-            if doc:
-                doc.close()
-            if chunk_doc:
-                chunk_doc.close()
-            if 'chunk_bytes' in locals() and chunk_bytes:
-                del chunk_bytes
-            return []
-        finally:
-            # Aggressive cleanup
-            if doc:
-                doc.close()
-            if chunk_doc:
-                chunk_doc.close()
-            if 'chunk_bytes' in locals() and chunk_bytes:
-                del chunk_bytes
-            # Force garbage collection
-            import gc
-            gc.collect()
-        
-        if result is None:
-            return []
-        
-        try:
+            if result is None:
+                return []
             
             # Parse entities
             entities = []
@@ -166,17 +144,28 @@ class SmartChunkingService:
                     if entity_dict['pages']:
                         entities.append(entity_dict)
             
-            # Clean up
-            del result, raw_document, request
-            if 'chunk_bytes' in locals():
-                del chunk_bytes
-            gc.collect()
-            
             return entities
             
         except Exception as e:
             print(f"Error processing chunk {chunk_id}: {e}")
             return []
+        finally:
+            # Aggressive cleanup - ensure all resources are freed
+            if doc:
+                doc.close()
+            if chunk_doc:
+                chunk_doc.close()
+            if chunk_bytes:
+                del chunk_bytes
+            if result:
+                del result
+            if raw_document:
+                del raw_document
+            if request:
+                del request
+            # Force garbage collection
+            import gc
+            gc.collect()
     
     def merge_deeds(self, all_deeds: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Merge overlapping deeds with improved logic"""
@@ -253,7 +242,14 @@ class SmartChunkingService:
         
         # Dynamic chunk sizing based on PDF size for memory optimization
         if total_pages > 50:
-            chunk_size = 2  # Very small chunks for very large PDFs
+            chunk_size = 2  # Very small c9
+(base) lauragomez@Lauras-MacBook-Pro-4 mineral-rights % curl -X POST "https://mineral-rights-api-1081023230228.us-central1.run.app/predict" \
+  -F "file=@data/synthetic_dataset/test/pdfs/synthetic_test_002.pdf" \
+  -F "processing_mode=multi_deed" \
+  -F "splitting_strategy=document_ai" \
+  -H "Accept: application/json" \
+  -s
+upstream request timeout%  hunks for very large PDFs
             print(f"📦 Very large PDF detected ({total_pages} pages), using chunk size {chunk_size}")
         elif total_pages > 30:
             chunk_size = 3  # Small chunks for large PDFs
@@ -321,6 +317,10 @@ class SmartChunkingService:
         # Merge overlapping deeds
         merged_deeds = self.merge_deeds(all_deeds)
         
+        # Clean up all_deeds to free memory
+        del all_deeds
+        gc.collect()
+        
         # Apply offset correction if requested
         if apply_offset:
             final_deeds = self.apply_offset_correction(merged_deeds, offset=1)
@@ -328,6 +328,10 @@ class SmartChunkingService:
         else:
             final_deeds = merged_deeds
             systematic_offset = None
+        
+        # Clean up merged_deeds to free memory
+        del merged_deeds
+        gc.collect()
         
         # Convert to structured results
         deed_detections = []
@@ -344,13 +348,17 @@ class SmartChunkingService:
         
         processing_time = time.time() - start_time
         
+        # Final cleanup
+        del final_deeds
+        gc.collect()
+        
         return SmartChunkingResult(
             total_deeds=len(deed_detections),
             deed_detections=deed_detections,
             processing_time=processing_time,
             chunks_processed=len(chunks),
             systematic_offset=systematic_offset,
-            raw_deeds_before_merge=len(all_deeds)
+            raw_deeds_before_merge=0  # We deleted all_deeds earlier
         )
     
     def _fallback_to_simple_splitting(self, pdf_path: str) -> SmartChunkingResult:
