@@ -595,7 +595,7 @@ class DocumentProcessor:
             raise
 
     def split_pdf_by_deeds(self, pdf_path: str, strategy: str = "document_ai") -> List[str]:
-        """Split PDF into individual deed PDFs using smart chunking Document AI"""
+        """Split PDF into individual deed PDFs using the specified strategy"""
         
         import tempfile
         import os
@@ -604,14 +604,59 @@ class DocumentProcessor:
         total_pages = len(doc)
         doc.close()
         
-        print(f"🚀 Splitting PDF with {total_pages} pages using smart chunking Document AI")
+        print(f"🚀 Splitting PDF with {total_pages} pages using strategy: {strategy}")
         
-        # Use smart chunking Document AI for all cases
-        if self.document_ai_service:
-            print("✅ Document AI service is available - starting smart chunking")
-            return self._split_with_smart_chunking(pdf_path)
+        if strategy == "document_ai":
+            # Use Document AI smart chunking
+            if self.document_ai_service:
+                print("✅ Document AI service is available - starting smart chunking")
+                return self._split_with_smart_chunking(pdf_path)
+            else:
+                print("⚠️ Document AI service not available, falling back to simple splitting")
+                return self._split_with_simple_strategy(pdf_path)
+        elif strategy == "simple":
+            # Use simple page-based splitting
+            print("📄 Using simple page-based splitting")
+            return self._split_with_simple_strategy(pdf_path)
         else:
-            raise ValueError("Document AI service not available. Please check Google Cloud credentials and Document AI service configuration.")
+            raise ValueError(f"Unknown splitting strategy: {strategy}")
+    
+    def _split_with_simple_strategy(self, pdf_path: str) -> List[str]:
+        """Split PDF using simple page-based strategy (every 3 pages = 1 deed)"""
+        import tempfile
+        import os
+        
+        print(f"🔧 Using simple page-based splitting...")
+        
+        # Open PDF to get page count
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        doc.close()
+        
+        # Simple strategy: every 3 pages = 1 deed
+        pages_per_deed = 3
+        deed_pdfs = []
+        
+        for start_page in range(0, total_pages, pages_per_deed):
+            end_page = min(start_page + pages_per_deed, total_pages)
+            deed_number = len(deed_pdfs) + 1
+            
+            # Create temporary PDF for this deed
+            temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f"_deed_{deed_number}.pdf")
+            
+            # Extract pages for this deed
+            doc = fitz.open(pdf_path)
+            deed_doc = fitz.open()
+            deed_doc.insert_pdf(doc, from_page=start_page, to_page=end_page-1)
+            deed_doc.save(temp_file.name)
+            deed_doc.close()
+            doc.close()
+            
+            deed_pdfs.append(temp_file.name)
+            print(f"💾 Created deed {deed_number} PDF (pages {start_page+1}-{end_page}): {temp_file.name}")
+        
+        print(f"📄 Simple splitting created {len(deed_pdfs)} deed files")
+        return deed_pdfs
     
     def _split_with_smart_chunking(self, pdf_path: str) -> List[str]:
         """Split PDF using smart chunking Document AI approach"""

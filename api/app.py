@@ -176,24 +176,23 @@ async def predict(
                 }
                 
             elif processing_mode == "multi_deed":
-                # For multi-deed, we'll process page by page as a fallback
-                # This is simpler than implementing the full Document AI splitting
-                result = processor.process_document(tmp_file_path, page_strategy="all_pages")
+                # Use the proper multi-deed processing with Document AI splitting
+                result = processor.process_multi_deed_document(tmp_file_path, strategy=splitting_strategy)
                 
-                # Convert to multi-deed format
-                page_results = []
-                if "page_results" in result:
-                    for i, page_result in enumerate(result["page_results"]):
-                        page_results.append({
-                            "page_number": i + 1,
-                            "has_reservations": page_result.get("classification", 0) == 1,
-                            "confidence": page_result.get("confidence", 0.0),
-                            "explanation": page_result.get("detailed_samples", [{}])[0].get("reasoning", "No reasoning provided") if page_result.get("detailed_samples") else "No reasoning provided"
-                        })
+                # Convert to expected format
+                deed_results = []
+                for deed_result in result:
+                    deed_results.append({
+                        "deed_number": deed_result.get("deed_number", 0),
+                        "has_reservations": deed_result.get("has_reservation", False),
+                        "confidence": deed_result.get("confidence", 0.0),
+                        "reasoning": deed_result.get("reasoning", "No reasoning provided"),
+                        "pages": deed_result.get("pages", [])
+                    })
                 
                 return {
-                    "deed_results": page_results,
-                    "total_deeds": len(page_results),
+                    "deed_results": deed_results,
+                    "total_deeds": len(deed_results),
                     "processing_mode": processing_mode,
                     "filename": file.filename
                 }

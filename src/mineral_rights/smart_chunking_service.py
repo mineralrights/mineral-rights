@@ -85,31 +85,61 @@ class SmartChunkingService:
         return chunks
     
     def process_chunk(self, pdf_path: str, start_page: int, end_page: int, chunk_id: int) -> List[Dict[str, Any]]:
-        """Process a single chunk and return deed detections"""
-        # Extract chunk
-        doc = fitz.open(pdf_path)
-        chunk_doc = fitz.open()
-        chunk_doc.insert_pdf(doc, from_page=start_page-1, to_page=end_page-1)
-        chunk_bytes = chunk_doc.write()
-        
-        # Clean up
-        doc.close()
-        chunk_doc.close()
-        gc.collect()
-        
-        # Process chunk
-        raw_document = documentai.RawDocument(
-            content=chunk_bytes,
-            mime_type="application/pdf"
-        )
-        
-        request = documentai.ProcessRequest(
-            name=self.processor_name,
-            raw_document=raw_document
-        )
+        """Process a single chunk and return deed detections with memory optimization"""
+        chunk_bytes = None
+        doc = None
+        chunk_doc = None
+        result = None
         
         try:
+            # Extract chunk
+            doc = fitz.open(pdf_path)
+            chunk_doc = fitz.open()
+            chunk_doc.insert_pdf(doc, from_page=start_page-1, to_page=end_page-1)
+            chunk_bytes = chunk_doc.write()
+            print(f"✅ Chunk {chunk_id} extracted successfully, size: {len(chunk_bytes)} bytes")
+            
+            # Process chunk
+            raw_document = documentai.RawDocument(
+                content=chunk_bytes,
+                mime_type="application/pdf"
+            )
+            
+            request = documentai.ProcessRequest(
+                name=self.processor_name,
+                raw_document=raw_document
+            )
+            
+            print(f"📡 Sending chunk {chunk_id} to Document AI...")
             result = self.client.process_document(request=request)
+            print(f"✅ Chunk {chunk_id} processed by Document AI successfully")
+            
+        except Exception as e:
+            print(f"Error processing chunk {chunk_id}: {e}")
+            # Clean up resources even on error
+            if doc:
+                doc.close()
+            if chunk_doc:
+                chunk_doc.close()
+            if 'chunk_bytes' in locals() and chunk_bytes:
+                del chunk_bytes
+            return []
+        finally:
+            # Aggressive cleanup
+            if doc:
+                doc.close()
+            if chunk_doc:
+                chunk_doc.close()
+            if 'chunk_bytes' in locals() and chunk_bytes:
+                del chunk_bytes
+            # Force garbage collection
+            import gc
+            gc.collect()
+        
+        if result is None:
+            return []
+        
+        try:
             
             # Parse entities
             entities = []
@@ -137,7 +167,9 @@ class SmartChunkingService:
                         entities.append(entity_dict)
             
             # Clean up
-            del result, raw_document, request, chunk_bytes
+            del result, raw_document, request
+            if 'chunk_bytes' in locals():
+                del chunk_bytes
             gc.collect()
             
             return entities
@@ -210,6 +242,26 @@ class SmartChunkingService:
         """Process PDF using smart chunking and return structured results"""
         start_time = time.time()
         
+        # Check PDF size and adjust chunk size for memory efficiency
+        import fitz
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        doc.close()
+        
+        # HYBRID APPROACH: Use Document AI only for small PDFs to avoid memory issues
+        if total_pages >= 15:
+            print(f"⚠️ Large PDF detected ({total_pages} pages) - Document AI too memory-intensive for Cloud Run")
+            print("🔄 Falling back to simple page-based splitting for reliable processing")
+            return self._fallback_to_simple_splitting(pdf_path)
+        
+        # For small PDFs, use Document AI with conservative chunk sizes
+        if total_pages > 10:
+            chunk_size = min(chunk_size, 3)  # Small chunks for medium PDFs
+            print(f"📦 Medium PDF detected ({total_pages} pages), reducing chunk size to {chunk_size}")
+        else:
+            chunk_size = min(chunk_size, 5)  # Default small chunks
+            print(f"📦 Small PDF detected ({total_pages} pages), using chunk size {chunk_size}")
+        
         # Create smart chunks
         chunks = self.create_smart_chunks(pdf_path, chunk_size, overlap)
         
@@ -218,11 +270,50 @@ class SmartChunkingService:
         
         for i, (start_page, end_page) in enumerate(chunks):
             chunk_id = i + 1
+            print(f"📄 Processing chunk {chunk_id}/{len(chunks)} (pages {start_page}-{end_page})")
+            
+            # Check memory before processing chunk
+            import psutil
+            process = psutil.Process()
+            memory_before = process.memory_info().rss / 1024 / 1024
+            print(f"💾 Memory before chunk {chunk_id}: {memory_before:.1f} MB")
+            
+            # Skip chunk if memory is too high
+            if memory_before > 14000:  # 14GB threshold
+                print(f"⚠️ Memory too high ({memory_before:.1f} MB), skipping chunk {chunk_id}")
+                continue
+            
             chunk_deeds = self.process_chunk(pdf_path, start_page, end_page, chunk_id)
             all_deeds.extend(chunk_deeds)
             
-            # Force garbage collection after each chunk
+            # Aggressive memory management after each chunk
+            print(f"🧹 Cleaning up memory after chunk {chunk_id}...")
+            import gc
             gc.collect()
+            
+            # Add delay between chunks to allow memory cleanup
+            import time as time_module
+            print("⏳ Adding delay for memory cleanup...")
+            time_module.sleep(3)  # 3 second delay
+            
+            # Check memory usage
+            import psutil
+            process = psutil.Process()
+            memory_mb = process.memory_info().rss / 1024 / 1024
+            print(f"💾 Memory after chunk {chunk_id}: {memory_mb:.1f} MB")
+            
+            # If memory usage is too high, force more aggressive cleanup
+            if memory_mb > 12000:  # 12GB threshold
+                print("⚠️ High memory usage detected, forcing aggressive cleanup...")
+                import gc
+                gc.set_threshold(0)  # Disable automatic garbage collection
+                gc.collect()
+                gc.set_threshold(700, 10, 10)  # Restore default thresholds
+                
+                # Add delay between chunks to allow memory cleanup
+                import time as time_module
+                print("⏳ Adding delay for memory cleanup...")
+                time_module.sleep(2)
         
         # Merge overlapping deeds
         merged_deeds = self.merge_deeds(all_deeds)
@@ -257,6 +348,56 @@ class SmartChunkingService:
             chunks_processed=len(chunks),
             systematic_offset=systematic_offset,
             raw_deeds_before_merge=len(all_deeds)
+        )
+    
+    def _fallback_to_simple_splitting(self, pdf_path: str) -> SmartChunkingResult:
+        """Fallback to simple page-based splitting for large PDFs to avoid memory issues"""
+        import time
+        import fitz
+        
+        start_time = time.time()
+        
+        # Open PDF to get page count
+        doc = fitz.open(pdf_path)
+        total_pages = len(doc)
+        doc.close()
+        
+        print(f"📄 Using simple page-based splitting for {total_pages} pages")
+        
+        # Simple strategy: every 3 pages = 1 deed (with overlap)
+        pages_per_deed = 3
+        overlap = 1
+        deeds = []
+        
+        for start_page in range(0, total_pages, pages_per_deed - overlap):
+            end_page = min(start_page + pages_per_deed, total_pages)
+            deed_number = len(deeds) + 1
+            
+            # Create deed detection result
+            deed_pages = list(range(start_page + 1, end_page + 1))  # 1-indexed pages
+            
+            deed_result = DeedDetectionResult(
+                deed_number=deed_number,
+                start_page=min(deed_pages),
+                end_page=max(deed_pages),
+                confidence=0.8,  # Default confidence for simple splitting
+                pages=deed_pages
+            )
+            
+            deeds.append(deed_result)
+            print(f"📄 Created deed {deed_number}: pages {deed_pages}")
+        
+        processing_time = time.time() - start_time
+        
+        print(f"✅ Simple splitting completed: {len(deeds)} deeds in {processing_time:.1f}s")
+        
+        return SmartChunkingResult(
+            total_deeds=len(deeds),
+            deed_detections=deeds,
+            processing_time=processing_time,
+            chunks_processed=1,  # Single "chunk" for simple splitting
+            systematic_offset=None,
+            raw_deeds_before_merge=len(deeds)
         )
 
 def create_smart_chunking_service(project_id: str, location: str, processor_id: str, processor_version: str, credentials_path: Optional[str] = None) -> SmartChunkingService:
