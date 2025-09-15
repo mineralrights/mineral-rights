@@ -242,14 +242,7 @@ class SmartChunkingService:
         
         # Dynamic chunk sizing based on PDF size for memory optimization
         if total_pages > 50:
-            chunk_size = 2  # Very small c9
-(base) lauragomez@Lauras-MacBook-Pro-4 mineral-rights % curl -X POST "https://mineral-rights-api-1081023230228.us-central1.run.app/predict" \
-  -F "file=@data/synthetic_dataset/test/pdfs/synthetic_test_002.pdf" \
-  -F "processing_mode=multi_deed" \
-  -F "splitting_strategy=document_ai" \
-  -H "Accept: application/json" \
-  -s
-upstream request timeout%  hunks for very large PDFs
+            chunk_size = 2  # Very small chunks for very large PDFs
             print(f"📦 Very large PDF detected ({total_pages} pages), using chunk size {chunk_size}")
         elif total_pages > 30:
             chunk_size = 3  # Small chunks for large PDFs
