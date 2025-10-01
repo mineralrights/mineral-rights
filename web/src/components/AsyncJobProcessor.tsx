@@ -28,17 +28,27 @@ export default function AsyncJobProcessor({ onResults, onError }: AsyncJobProces
     setCurrentJob(null);
 
     try {
-      console.log(`🚀 Starting async job processing: ${file.name}`);
+      console.log(`🚀 Starting document processing: ${file.name}`);
       
-      // Create the job
+      // Show initial progress
+      setLogs(['📤 Uploading PDF...', '⏳ Processing document (this may take several minutes for large PDFs)...']);
+      setProgress(10);
+      
+      // Create the job (now uses direct processing)
       const jobResponse = await createJob(file, processingMode, splittingStrategy);
-      console.log('📋 Job created:', jobResponse);
+      console.log('📋 Processing started:', jobResponse);
+
+      // Simulate progress updates for long-running requests
+      const progressInterval = setInterval(() => {
+        setLogs(prev => [...prev, '⏳ Still processing... (Large PDFs can take 10-30 minutes)']);
+        setProgress(prev => Math.min(prev + 5, 90));
+      }, 30000); // Update every 30 seconds
 
       // Start polling for job status
       const finalStatus = await pollJobUntilComplete(
         jobResponse.job_id,
         (status) => {
-          console.log('📊 Job progress:', status);
+          console.log('📊 Processing progress:', status);
           setCurrentJob(status);
           setProgress(status.progress);
           setLogs(status.logs || []);
@@ -46,18 +56,22 @@ export default function AsyncJobProcessor({ onResults, onError }: AsyncJobProces
         2000 // Poll every 2 seconds
       );
 
-      console.log('✅ Job completed:', finalStatus);
+      clearInterval(progressInterval);
+      setProgress(100);
+      setLogs(prev => [...prev, '✅ Processing completed!']);
+
+      console.log('✅ Processing completed:', finalStatus);
 
       // Process the results
       if (finalStatus.result) {
         const results = convertJobResultToPredictionRows(finalStatus.result || {}, processingMode);
         onResults(results);
       } else {
-        throw new Error('No results returned from job');
+        throw new Error('No results returned from processing');
       }
 
     } catch (error) {
-      console.error('❌ Job processing failed:', error);
+      console.error('❌ Processing failed:', error);
       onError(error instanceof Error ? error.message : 'Unknown error occurred');
     } finally {
       setIsProcessing(false);

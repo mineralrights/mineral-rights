@@ -40,7 +40,7 @@ async function robustFetch(url: string, options: RequestInit = {}): Promise<Resp
         const fetchOptions: RequestInit = {
           ...options,
           headers,
-          signal: AbortSignal.timeout(900000), // 15 minute timeout to match Cloud Run
+          signal: AbortSignal.timeout(1800000), // 30 minute timeout for large PDFs
           // Add mode and credentials for CORS
           mode: 'cors',
           credentials: 'omit', // Don't send credentials to avoid SSL issues
