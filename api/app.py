@@ -184,10 +184,12 @@ async def predict(
                 for deed_result in result:
                     deed_results.append({
                         "deed_number": deed_result.get("deed_number", 0),
-                        "has_reservations": deed_result.get("has_reservation", False),
+                        "has_reservations": deed_result.get("classification", 0) == 1,
                         "confidence": deed_result.get("confidence", 0.0),
-                        "reasoning": deed_result.get("reasoning", "No reasoning provided"),
-                        "pages": deed_result.get("pages", [])
+                        "reasoning": deed_result.get("detailed_samples", [{}])[0].get("reasoning", "No reasoning provided") if deed_result.get("detailed_samples") else "No reasoning provided",
+                        "pages": deed_result.get("deed_boundary_info", {}).get("pages", []) if deed_result.get("deed_boundary_info") else [],
+                        "deed_boundary_info": deed_result.get("deed_boundary_info", {}),
+                        "pages_in_deed": deed_result.get("pages_in_deed", 0)
                     })
                 
                 return {
