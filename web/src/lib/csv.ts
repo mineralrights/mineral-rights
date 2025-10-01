@@ -58,3 +58,19 @@ export function rowsToCSV(rows: PredictionRow[]): string {
   
   return Papa.unparse(data);
 }
+
+export function downloadCSV(rows: PredictionRow[]): void {
+  const csv = rowsToCSV(rows);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  
+  if (link.download !== undefined) {
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `mineral_rights_results_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+}
