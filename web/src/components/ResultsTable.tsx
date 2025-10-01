@@ -1,29 +1,47 @@
-import { PredictionRow, PageResult } from "@/lib/types";
+import { PredictionRow, PageResult, DeedResult } from "@/lib/types";
 import { useState } from "react";
 import StepBubble from "./StepBubble";
+import { downloadCSV } from "@/lib/csv";
 
 type Props = { rows: PredictionRow[] };
 
 export default function ResultsTable({ rows }: Props) {
   if (!rows.length) return null;
 
+  const handleExportCSV = () => {
+    downloadCSV(rows);
+  };
+
   return (
-    <div className="overflow-x-auto mt-8">
-      <table className="min-w-full border text-sm">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-2 text-left">File</th>
-            <th className="px-4 py-2 text-left">Status</th>
-            <th className="px-4 py-2 text-left">Prediction</th>
-            <th className="px-4 py-2 text-left">Confidence</th>
-            <th className="px-4 py-2 text-left">Summary</th>
-            <th className="px-4 py-2 text-left">Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map(row => <Row key={row.filename} row={row} />)}
-        </tbody>
-      </table>
+    <div className="mt-8">
+      {/* Export Button */}
+      <div className="mb-4 flex justify-between items-center">
+        <h3 className="text-lg font-semibold">Processing Results</h3>
+        <button
+          onClick={handleExportCSV}
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+        >
+          📊 Export CSV
+        </button>
+      </div>
+
+      <div className="overflow-x-auto">
+        <table className="min-w-full border text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="px-4 py-2 text-left">File</th>
+              <th className="px-4 py-2 text-left">Status</th>
+              <th className="px-4 py-2 text-left">Prediction</th>
+              <th className="px-4 py-2 text-left">Confidence</th>
+              <th className="px-4 py-2 text-left">Summary</th>
+              <th className="px-4 py-2 text-left">Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map(row => <Row key={row.filename} row={row} />)}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -46,7 +64,16 @@ function Row({ row }: { row: PredictionRow }) {
         <td className="px-4 py-2">{row.prediction ?? "—"}</td>
         <td className="px-4 py-2">{formatConfidence(row.confidence)}</td>
         <td className="px-4 py-2 whitespace-pre-wrap">
-          {row.processingMode === "page_by_page" ? (
+          {row.processingMode === "multi_deed" && row.deedResults ? (
+            <div className="text-sm">
+              <div className="font-medium">
+                {row.deedResults.length} deeds processed
+              </div>
+              <div className="text-xs text-gray-600 mt-1">
+                {row.deedResults.filter(d => d.prediction === "has_reservation").length} with reservations
+              </div>
+            </div>
+          ) : row.processingMode === "page_by_page" ? (
             <div className="text-sm">
               <div className="font-medium">
                 {row.pagesWithReservations?.length || 0} of {row.totalPages || 0} pages
@@ -85,6 +112,18 @@ function Row({ row }: { row: PredictionRow }) {
               </div>
             )}
             
+            {/* Show deed-by-deed results */}
+            {row.processingMode === "multi_deed" && row.deedResults && (
+              <div>
+                <h4 className="font-medium text-gray-800 mb-3">Deed-by-Deed Results:</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {row.deedResults.map((deedResult) => (
+                    <DeedResultCard key={deedResult.deed_number} deedResult={deedResult} />
+                  ))}
+                </div>
+              </div>
+            )}
+            
             {/* Show page-by-page results */}
             {row.processingMode === "page_by_page" && row.pageResults && (
               <div>
@@ -114,6 +153,53 @@ function StatusBadge({ status }: { status: PredictionRow["status"] }) {
     <span className={`px-2 py-0.5 rounded text-xs font-medium ${map[status]}`}>
       {status}
     </span>
+  );
+}
+
+function DeedResultCard({ deedResult }: { deedResult: DeedResult }) {
+  const hasReservations = deedResult.prediction === "has_reservation";
+  
+  return (
+    <div className={`border rounded-lg p-3 ${
+      hasReservations 
+        ? "border-red-200 bg-red-50" 
+        : "border-gray-200 bg-gray-50"
+    }`}>
+      <div className="flex items-center justify-between mb-2">
+        <span className="font-medium text-sm">
+          Deed {deedResult.deed_number}
+        </span>
+        <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+          hasReservations
+            ? "bg-red-100 text-red-800"
+            : "bg-green-100 text-green-800"
+        }`}>
+          {hasReservations ? "Has Reservations" : "No Reservations"}
+        </span>
+      </div>
+      
+      <div className="text-xs text-gray-600 space-y-1">
+        <div>Confidence: {(deedResult.confidence * 100).toFixed(0)}%</div>
+        {deedResult.page_range && (
+          <div>Pages: {deedResult.page_range}</div>
+        )}
+        {deedResult.pages_in_deed && (
+          <div>Pages in deed: {deedResult.pages_in_deed}</div>
+        )}
+        {deedResult.deed_boundary_info && (
+          <div>Boundary confidence: {(deedResult.deed_boundary_info.confidence * 100).toFixed(0)}%</div>
+        )}
+      </div>
+      
+      {deedResult.explanation && (
+        <div className="mt-2 text-xs text-gray-700 bg-white p-2 rounded border">
+          <div className="font-medium mb-1">Reasoning:</div>
+          <div className="whitespace-pre-wrap max-h-20 overflow-y-auto">
+            {deedResult.explanation}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

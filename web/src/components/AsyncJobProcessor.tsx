@@ -97,20 +97,32 @@ export default function AsyncJobProcessor({ onResults, onError }: AsyncJobProces
       };
       rows.push(row);
     } else if (processingMode === 'multi_deed') {
-      // Multi-deed result
+      // Multi-deed result - create a single row with all deed results
       if (result.deed_results && Array.isArray(result.deed_results)) {
-        result.deed_results.forEach((deed: any, index: number) => {
-          const row: PredictionRow = {
-            filename: `deed-${deed.deed_number}.pdf`,
-            status: 'done',
-            prediction: deed.prediction,
-            confidence: deed.confidence || 0,
-            explanation: deed.explanation || '',
-            processingMode: 'multi_deed',
-            deedResults: [deed]
-          };
-          rows.push(row);
-        });
+        const deedResults = result.deed_results.map((deed: any) => ({
+          deed_number: deed.deed_number,
+          classification: deed.classification,
+          confidence: deed.confidence,
+          prediction: deed.prediction,
+          explanation: deed.explanation,
+          deed_file: deed.deed_file,
+          pages_in_deed: deed.pages_in_deed,
+          page_range: deed.deed_boundary_info?.page_range || `Pages ${deed.pages_in_deed || 'unknown'}`,
+          pages: deed.deed_boundary_info?.pages || [],
+          deed_boundary_info: deed.deed_boundary_info
+        }));
+        
+        const row: PredictionRow = {
+          filename: result.document_path || 'multi_deed_document.pdf',
+          status: 'done',
+          prediction: result.deed_results.some((d: any) => d.prediction === 'has_reservation') ? 'has_reservation' : 'no_reservation',
+          confidence: result.deed_results.reduce((sum: number, d: any) => sum + (d.confidence || 0), 0) / result.deed_results.length,
+          explanation: `Processed ${result.deed_results.length} deeds. ${result.deed_results.filter((d: any) => d.prediction === 'has_reservation').length} have reservations.`,
+          processingMode: 'multi_deed',
+          totalDeeds: result.deed_results.length,
+          deedResults: deedResults
+        };
+        rows.push(row);
       }
     } else if (processingMode === 'page_by_page') {
       // Page-by-page result

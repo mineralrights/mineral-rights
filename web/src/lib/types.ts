@@ -24,6 +24,14 @@ export interface DeedResult {
   deed_file?: string;
   smart_deed_name?: string;  // NEW: Smart generated name
   pages_in_deed?: number;
+  page_range?: string;        // NEW: Page range (e.g., "1-3", "4-6")
+  pages?: number[];           // NEW: Array of page numbers
+  deed_boundary_info?: {      // NEW: Deed boundary information
+    deed_number: number;
+    pages: number[];
+    confidence: number;
+    page_range: string;
+  };
 }
 
 export interface PageResult {
