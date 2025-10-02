@@ -62,6 +62,16 @@ async def add_cache_busting_headers(request, call_next):
     response.headers["Expires"] = "0"
     return response
 
+# Explicit CORS handler for all requests
+@app.middleware("http")
+async def cors_handler(request, call_next):
+    response = await call_next(request)
+    response.headers["Access-Control-Allow-Origin"] = "*"
+    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+    response.headers["Access-Control-Allow-Headers"] = "*"
+    response.headers["Access-Control-Max-Age"] = "86400"
+    return response
+
 # Global processor
 processor = None
 

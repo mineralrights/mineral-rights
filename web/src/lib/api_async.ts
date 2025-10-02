@@ -93,7 +93,7 @@ export async function processDocument(
 ): Promise<any> {
   // Check file size and choose appropriate endpoint
   const fileSizeMB = file.size / (1024 * 1024);
-  const isLargeFile = fileSizeMB > 50; // Use GCS for files > 50MB
+  const isLargeFile = fileSizeMB > 30; // Use GCS for files > 30MB (Cloud Run limit is 32MB)
   
   console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using ${isLargeFile ? 'GCS upload' : 'direct upload'}`);
   
