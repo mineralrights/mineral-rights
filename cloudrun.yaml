@@ -13,6 +13,7 @@ spec:
         run.googleapis.com/execution-environment: gen2
         autoscaling.knative.dev/maxScale: "10"
         autoscaling.knative.dev/minScale: "1"
+        run.googleapis.com/max-request-size: "100MB"
     spec:
       containerConcurrency: 1
       timeoutSeconds: 3600
