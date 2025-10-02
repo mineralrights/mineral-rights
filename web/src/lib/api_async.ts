@@ -93,27 +93,94 @@ export async function processDocument(
 ): Promise<any> {
   // Check file size and choose appropriate endpoint
   const fileSizeMB = file.size / (1024 * 1024);
-  const isLargeFile = fileSizeMB > 50; // Use large file endpoint for files > 50MB
-  const endpoint = isLargeFile ? '/predict-large' : '/predict';
+  const isLargeFile = fileSizeMB > 50; // Use GCS for files > 50MB
   
-  console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using endpoint: ${endpoint}`);
+  console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using ${isLargeFile ? 'GCS upload' : 'direct upload'}`);
   
-  const formData = new FormData();
-  formData.append('file', file);
-  formData.append('processing_mode', processingMode);
-  formData.append('splitting_strategy', splittingStrategy);
+  if (isLargeFile) {
+    // Use GCS upload for large files (up to 5TB)
+    return await processLargeFileWithGCS(file, processingMode, splittingStrategy);
+  } else {
+    // Use direct upload for smaller files
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('processing_mode', processingMode);
+    formData.append('splitting_strategy', splittingStrategy);
 
-  const response = await robustFetch(`${API_CONFIG.baseUrl}${endpoint}`, {
-    method: 'POST',
-    body: formData,
-  });
+    const response = await robustFetch(`${API_CONFIG.baseUrl}/predict`, {
+      method: 'POST',
+      body: formData,
+    });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Failed to process document: ${response.status} ${errorText}`);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to process document: ${response.status} ${errorText}`);
+    }
+
+    return await response.json();
   }
+}
 
-  return await response.json();
+// Process large files using Google Cloud Storage
+async function processLargeFileWithGCS(
+  file: File,
+  processingMode: ProcessingMode,
+  splittingStrategy: SplittingStrategy
+): Promise<any> {
+  console.log(`🚀 Starting GCS workflow for large file: ${file.name}`);
+  
+  try {
+    // Step 1: Upload to GCS
+    console.log('📤 Step 1: Uploading to Google Cloud Storage...');
+    const uploadFormData = new FormData();
+    uploadFormData.append('file', file);
+    uploadFormData.append('processing_mode', processingMode);
+    uploadFormData.append('splitting_strategy', splittingStrategy);
+
+    const uploadResponse = await robustFetch(`${API_CONFIG.baseUrl}/upload-gcs`, {
+      method: 'POST',
+      body: uploadFormData,
+    });
+
+    if (!uploadResponse.ok) {
+      const errorText = await uploadResponse.text();
+      throw new Error(`GCS upload failed: ${uploadResponse.status} ${errorText}`);
+    }
+
+    const uploadResult = await uploadResponse.json();
+    console.log(`✅ Upload successful: ${uploadResult.gcs_url}`);
+    console.log(`📊 File size: ${uploadResult.file_size_mb.toFixed(1)}MB`);
+    
+    // Step 2: Process from GCS
+    console.log('🔍 Step 2: Processing from GCS...');
+    const processFormData = new FormData();
+    processFormData.append('gcs_url', uploadResult.gcs_url);
+    processFormData.append('processing_mode', processingMode);
+    processFormData.append('splitting_strategy', splittingStrategy);
+
+    const processResponse = await robustFetch(`${API_CONFIG.baseUrl}/process-gcs`, {
+      method: 'POST',
+      body: processFormData,
+    });
+
+    if (!processResponse.ok) {
+      const errorText = await processResponse.text();
+      throw new Error(`GCS processing failed: ${processResponse.status} ${errorText}`);
+    }
+
+    const processResult = await processResponse.json();
+    console.log(`✅ Processing successful`);
+    
+    return {
+      ...processResult,
+      upload_info: uploadResult,
+      success: true
+    };
+    
+  } catch (error) {
+    console.error('❌ GCS workflow failed:', error);
+    throw error;
+  }
 }
 
 // Legacy function for backward compatibility - now just calls processDocument

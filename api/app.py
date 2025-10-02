@@ -16,6 +16,15 @@ import gc
 # Import your pipeline
 from src.mineral_rights.document_classifier import DocumentProcessor
 
+# GCS imports for large file handling
+try:
+    from google.cloud import storage
+    from google.oauth2 import service_account
+    GCS_AVAILABLE = True
+except ImportError:
+    GCS_AVAILABLE = False
+    print("⚠️ Google Cloud Storage not available. Install: pip install google-cloud-storage")
+
 # Initialize FastAPI app
 app = FastAPI(title="Mineral-Rights API - Simple SSE Version")
 
@@ -308,6 +317,162 @@ async def heartbeat():
 async def test():
     """Simple test endpoint that doesn't require processor initialization"""
     return {"message": "Test endpoint working", "timestamp": time.time()}
+
+@app.post("/upload-gcs")
+async def upload_to_gcs(
+    file: UploadFile = File(...),
+    processing_mode: str = Form("multi_deed"),
+    splitting_strategy: str = Form("document_ai")
+):
+    """Upload large files to Google Cloud Storage (handles up to 5TB)"""
+    if not GCS_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Google Cloud Storage not available")
+    
+    print(f"🔍 Uploading large file to GCS: {file.filename}")
+    
+    try:
+        # Initialize GCS client
+        client = storage.Client()
+        bucket_name = os.getenv("GCS_BUCKET_NAME", "mineral-rights-pdfs-1759435410")
+        bucket = client.bucket(bucket_name)
+        
+        # Generate unique blob name
+        file_id = str(uuid.uuid4())
+        blob_name = f"uploads/{file_id}/{file.filename}"
+        blob = bucket.blob(blob_name)
+        
+        # Upload file content to GCS
+        file_content = await file.read()
+        file_size_mb = len(file_content) / (1024 * 1024)
+        
+        print(f"📁 File size: {file_size_mb:.1f}MB")
+        
+        # Upload with resumable upload for large files
+        blob.upload_from_string(file_content, content_type=file.content_type)
+        
+        # Make it publicly accessible
+        blob.make_public()
+        
+        # Get public URL
+        public_url = blob.public_url
+        
+        print(f"✅ GCS upload successful: {public_url}")
+        
+        return {
+            "success": True,
+            "file_id": file_id,
+            "filename": file.filename,
+            "file_size_mb": file_size_mb,
+            "gcs_url": public_url,
+            "blob_name": blob_name,
+            "processing_mode": processing_mode,
+            "splitting_strategy": splitting_strategy,
+            "message": f"File uploaded to GCS successfully. Size: {file_size_mb:.1f}MB"
+        }
+        
+    except Exception as e:
+        print(f"❌ GCS upload failed: {e}")
+        raise HTTPException(status_code=500, detail=f"GCS upload failed: {str(e)}")
+
+@app.post("/process-gcs")
+async def process_from_gcs(
+    gcs_url: str = Form(...),
+    processing_mode: str = Form("multi_deed"),
+    splitting_strategy: str = Form("document_ai")
+):
+    """Process a file from Google Cloud Storage URL"""
+    print(f"🔍 Processing file from GCS: {gcs_url}")
+    
+    try:
+        # Download file from GCS
+        client = storage.Client()
+        
+        # Extract blob name from URL
+        # URL format: https://storage.googleapis.com/bucket-name/path/to/file
+        url_parts = gcs_url.split('/')
+        bucket_name = url_parts[3]
+        blob_name = '/'.join(url_parts[4:])
+        
+        bucket = client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
+        
+        # Download to temporary file
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            blob.download_to_filename(tmp_file.name)
+            tmp_file_path = tmp_file.name
+        
+        print(f"📁 Downloaded file to: {tmp_file_path}")
+        
+        # Process the file using existing logic
+        if processor is None:
+            try:
+                if not initialize_processor():
+                    raise HTTPException(status_code=500, detail="Model not initialized")
+            except Exception as e:
+                print(f"❌ Processor initialization failed: {e}")
+                raise HTTPException(status_code=500, detail=f"Model initialization failed: {str(e)}")
+        
+        print("🤖 Processing file from GCS...")
+        
+        if processing_mode == "multi_deed":
+            print("📄 Processing as multi-deed document...")
+            results = processor.process_multi_deed_document(
+                tmp_file_path, 
+                strategy=splitting_strategy
+            )
+            
+            # Convert results to the expected format
+            deed_results = []
+            for i, result in enumerate(results):
+                deed_results.append({
+                    "deed_number": result.get('deed_number', i + 1),
+                    "has_reservations": result.get('classification', 0) == 1,
+                    "confidence": result.get('confidence', 0.0),
+                    "reasoning": result.get('reasoning', 'No reasoning provided'),
+                    "pages": result.get('pages', []),
+                    "pages_in_deed": result.get('pages_in_deed', 0),
+                    "deed_boundary_info": result.get('deed_boundary_info', {}),
+                    "deed_file": result.get('deed_file', '')
+                })
+            
+            return {
+                "deed_results": deed_results,
+                "total_deeds": len(deed_results),
+                "processing_mode": "multi_deed",
+                "filename": blob_name.split('/')[-1],
+                "gcs_url": gcs_url,
+                "success": True
+            }
+        else:
+            # Single deed processing
+            result = processor.process_document(
+                tmp_file_path,
+                max_samples=6,
+                confidence_threshold=0.7,
+                page_strategy="first_few",
+                high_recall_mode=True
+            )
+            
+            return {
+                "has_reservation": result.get('classification', 0) == 1,
+                "confidence": result.get('confidence', 0.0),
+                "reasoning": result.get('reasoning', 'No reasoning provided'),
+                "processing_mode": "single_deed",
+                "filename": blob_name.split('/')[-1],
+                "gcs_url": gcs_url,
+                "success": True
+            }
+            
+    except Exception as e:
+        print(f"❌ GCS processing failed: {e}")
+        raise HTTPException(status_code=500, detail=f"GCS processing failed: {str(e)}")
+    finally:
+        # Clean up temp file
+        try:
+            if 'tmp_file_path' in locals():
+                os.unlink(tmp_file_path)
+        except:
+            pass
 
 
 if __name__ == "__main__":
