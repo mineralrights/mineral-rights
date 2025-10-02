@@ -14,24 +14,25 @@ RUN python -m venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Copy requirements and install Python dependencies
-COPY requirements-cloudrun.txt .
+COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements-cloudrun.txt
+    pip install --no-cache-dir -r requirements.txt
 
 # Production stage
 FROM python:3.11-slim
 
 # Install runtime dependencies
 RUN apt-get update && apt-get install -y \
-    libgl1-mesa-dri \
+    libgl1-mesa-glx \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
-    libxrender1 \
+    libxrender-dev \
     libgomp1 \
     libgthread-2.0-0 \
     libfontconfig1 \
     libxss1 \
+    libgconf-2-4 \
     libxtst6 \
     libxrandr2 \
     libasound2 \
@@ -39,7 +40,7 @@ RUN apt-get update && apt-get install -y \
     libatk1.0-0 \
     libcairo-gobject2 \
     libgtk-3-0 \
-    libgdk-pixbuf-2.0-0 \
+    libgdk-pixbuf2.0-0 \
     curl \
     && rm -rf /var/lib/apt/lists/*
 

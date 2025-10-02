@@ -704,8 +704,19 @@ class DocumentProcessor:
         for i, deed in enumerate(result.deeds):
             # Create new PDF with deed pages
             new_doc = fitz.open()
-            for page_num in range(deed.start_page, deed.end_page + 1):  # pages are 0-indexed
-                new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
+            
+            # Handle both old format (start_page, end_page) and new format (pages list)
+            if hasattr(deed, 'start_page') and hasattr(deed, 'end_page'):
+                # Old format
+                for page_num in range(deed.start_page, deed.end_page + 1):
+                    new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
+            elif hasattr(deed, 'pages'):
+                # New format
+                for page_num in deed.pages:
+                    new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
+            else:
+                # Fallback - use first page only
+                new_doc.insert_pdf(doc, from_page=0, to_page=0)
             
             # Save to temporary file
             temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=f"_deed_{i+1}.pdf")
@@ -765,31 +776,48 @@ class DocumentProcessor:
         
         # 2. Extract deed boundary information if available
         if hasattr(self, '_last_split_result') and self._last_split_result:
-            deed_boundaries = [
-                {
+            deed_boundaries = []
+            for deed in self._last_split_result.deeds:
+                # Handle both old format (start_page, end_page) and new format (pages list)
+                if hasattr(deed, 'start_page') and hasattr(deed, 'end_page'):
+                    # Old format
+                    pages = list(range(deed.start_page, deed.end_page + 1))
+                    page_range = f"{deed.start_page+1}-{deed.end_page+1}"
+                elif hasattr(deed, 'pages'):
+                    # New format
+                    pages = deed.pages
+                    if pages:
+                        page_range = f"{min(pages)+1}-{max(pages)+1}"
+                    else:
+                        page_range = "0-0"
+                else:
+                    # Fallback
+                    pages = [0]
+                    page_range = "1-1"
+                
+                deed_boundaries.append({
                     'deed_number': deed.deed_number,
-                    'pages': list(range(deed.start_page, deed.end_page + 1)),
+                    'pages': pages,
                     'confidence': deed.confidence,
-                    'page_range': f"{deed.start_page+1}-{deed.end_page+1}"
-                }
-                for deed in self._last_split_result.deeds
-            ]
+                    'page_range': page_range
+                })
             print(f"📊 Deed boundaries tracked: {len(deed_boundaries)} deeds")
             
             # Save deed boundaries to tracker
             self.deed_tracker.add_deed_boundaries(session_id, deed_boundaries)
         
         try:
-            # 3. Process each deed separately using memory-efficient processing
+            # 3. Process each deed separately using single-deed classification
             results = []
             for i, deed_pdf_path in enumerate(deed_pdfs):
                 print(f"Processing deed {i+1}/{len(deed_pdfs)}...")
                 try:
-                    # Use memory-efficient processing for each deed
-                    result = self.process_document_memory_efficient(
+                    # Use regular single-deed processing for each deed
+                    result = self.process_document(
                         deed_pdf_path,
-                        chunk_size=25,  # Smaller chunks for individual deeds
                         max_samples=6,  # Fewer samples for speed
+                        confidence_threshold=0.7,
+                        page_strategy="first_few",  # Process first few pages of each deed
                         high_recall_mode=True
                     )
                     result['deed_number'] = i + 1

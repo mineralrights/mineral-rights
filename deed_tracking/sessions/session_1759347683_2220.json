@@ -1,0 +1,34 @@
+{
+  "session_id": "session_1759347683_2220",
+  "original_filename": "test_small.pdf",
+  "total_pages": 3,
+  "splitting_strategy": "document_ai",
+  "document_ai_used": false,
+  "deed_boundaries": [],
+  "classification_results": [
+    {
+      "deed_number": 1,
+      "classification": 1,
+      "confidence": 1.0,
+      "pages_in_deed": 3,
+      "processing_time": 0.0,
+      "error": null,
+      "deed_boundary_info": null
+    }
+  ],
+  "processing_start_time": 1759347683.734878,
+  "processing_end_time": 1759347817.6537678,
+  "total_processing_time": 133.91888976097107,
+  "summary": {
+    "total_deeds": 0,
+    "deeds_processed": 1,
+    "deeds_with_reservations": 1,
+    "deeds_without_reservations": 0,
+    "deeds_with_errors": 0,
+    "average_confidence": 1.0,
+    "splitting_confidence": 0.0,
+    "splitting_strategy": "document_ai",
+    "document_ai_used": false,
+    "processing_time": 133.91888976097107
+  }
+}
