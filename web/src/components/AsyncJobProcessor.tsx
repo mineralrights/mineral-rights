@@ -97,33 +97,31 @@ export default function AsyncJobProcessor({ onResults, onError }: AsyncJobProces
       };
       rows.push(row);
     } else if (processingMode === 'multi_deed') {
-      // Multi-deed result - create a single row with all deed results
+      // Multi-deed result - create individual rows for each deed
       if (result.deed_results && Array.isArray(result.deed_results)) {
-        const deedResults = result.deed_results.map((deed: any) => ({
-          deed_number: deed.deed_number,
-          classification: deed.has_reservations ? 1 : 0,
-          confidence: deed.confidence,
-          prediction: deed.has_reservations ? 'has_reservation' : 'no_reservation',
-          explanation: deed.reasoning || 'No reasoning provided',
-          deed_file: deed.deed_file,
-          pages_in_deed: deed.pages_in_deed,
-          page_range: deed.deed_boundary_info?.page_range || (deed.pages && deed.pages.length > 0 ? `${Math.min(...deed.pages) + 1}-${Math.max(...deed.pages) + 1}` : 'Unknown'),
-          pages: deed.pages || [],
-          deed_boundary_info: deed.deed_boundary_info
-        }));
-        
-        const deedsWithReservations = result.deed_results.filter((d: any) => d.has_reservations).length;
-        const row: PredictionRow = {
-          filename: result.filename || result.document_path || 'multi_deed_document.pdf',
-          status: 'done',
-          prediction: deedsWithReservations > 0 ? 'has_reservation' : 'no_reservation',
-          confidence: result.deed_results.reduce((sum: number, d: any) => sum + (d.confidence || 0), 0) / result.deed_results.length,
-          explanation: `Processed ${result.deed_results.length} deeds. ${deedsWithReservations} have reservations.`,
-          processingMode: 'multi_deed',
-          totalDeeds: result.deed_results.length,
-          deedResults: deedResults
-        };
-        rows.push(row);
+        result.deed_results.forEach((deed: any) => {
+          const row: PredictionRow = {
+            filename: result.filename || result.document_path || 'multi_deed_document.pdf',
+            status: 'done',
+            prediction: deed.has_reservations ? 'has_reservation' : 'no_reservation',
+            confidence: deed.confidence || 0,
+            explanation: deed.reasoning || 'No reasoning provided',
+            processingMode: 'multi_deed',
+            deedResults: [{
+              deed_number: deed.deed_number,
+              classification: deed.has_reservations ? 1 : 0,
+              confidence: deed.confidence,
+              prediction: deed.has_reservations ? 'has_reservation' : 'no_reservation',
+              explanation: deed.reasoning || 'No reasoning provided',
+              deed_file: deed.deed_file,
+              pages_in_deed: deed.pages_in_deed,
+              page_range: deed.deed_boundary_info?.page_range || (deed.pages && deed.pages.length > 0 ? `${Math.min(...deed.pages) + 1}-${Math.max(...deed.pages) + 1}` : 'Unknown'),
+              pages: deed.pages || [],
+              deed_boundary_info: deed.deed_boundary_info
+            }]
+          };
+          rows.push(row);
+        });
       }
     } else if (processingMode === 'page_by_page') {
       // Page-by-page result

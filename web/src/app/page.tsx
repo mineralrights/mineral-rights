@@ -32,17 +32,28 @@ export default function Home() {
       };
       rows.push(row);
     } else if (processingMode === 'multi_deed') {
-      // Multi-deed result
+      // Multi-deed result - create individual rows for each deed
       if (result.deed_results && Array.isArray(result.deed_results)) {
         result.deed_results.forEach((deed: any, index: number) => {
           const row: PredictionRow = {
-            filename: `deed-${deed.page_number || index + 1}.pdf`,
+            filename: result.filename || 'multi_deed_document.pdf',
             status: 'done',
             prediction: deed.has_reservations ? 'has_reservation' : 'no_reservation',
             confidence: deed.confidence || 0,
-            explanation: deed.explanation || '',
+            explanation: deed.reasoning || 'No reasoning provided',
             processingMode: 'multi_deed',
-            deedResults: [deed]
+            deedResults: [{
+              deed_number: deed.deed_number,
+              classification: deed.has_reservations ? 1 : 0,
+              confidence: deed.confidence,
+              prediction: deed.has_reservations ? 'has_reservation' : 'no_reservation',
+              explanation: deed.reasoning || 'No reasoning provided',
+              deed_file: deed.deed_file,
+              pages_in_deed: deed.pages_in_deed,
+              page_range: deed.deed_boundary_info?.page_range || (deed.pages && deed.pages.length > 0 ? `${Math.min(...deed.pages) + 1}-${Math.max(...deed.pages) + 1}` : 'Unknown'),
+              pages: deed.pages || [],
+              deed_boundary_info: deed.deed_boundary_info
+            }]
           };
           rows.push(row);
         });
