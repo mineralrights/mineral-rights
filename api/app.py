@@ -19,6 +19,10 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 # Initialize FastAPI app
 app = FastAPI(title="Mineral-Rights API - Simple SSE Version")
 
+# File size limits
+MAX_FILE_SIZE = 50 * 1024 * 1024  # 50MB limit
+CHUNK_SIZE = 1024 * 1024  # 1MB chunks for reading
+
 # CORS configuration - Explicit and robust
 app.add_middleware(
     CORSMiddleware,
@@ -142,8 +146,30 @@ async def predict(
     print(f"🔍 Processing document - Mode: {processing_mode}, File: {file.filename}")
     
     try:
-        # Read file content
-        file_content = await file.read()
+        # Check file size before reading
+        if hasattr(file, 'size') and file.size and file.size > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413, 
+                detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB, got {file.size // (1024*1024)}MB"
+            )
+        
+        # Read file content in chunks to handle large files
+        file_content = b""
+        total_size = 0
+        
+        while chunk := await file.read(CHUNK_SIZE):
+            total_size += len(chunk)
+            if total_size > MAX_FILE_SIZE:
+                raise HTTPException(
+                    status_code=413, 
+                    detail=f"File too large. Maximum size is {MAX_FILE_SIZE // (1024*1024)}MB"
+                )
+            file_content += chunk
+        
+        print(f"📁 File size: {total_size / (1024*1024):.1f}MB")
+        
+        if total_size == 0:
+            raise HTTPException(status_code=400, detail="File is empty")
         
         # Save file temporarily for processing
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
@@ -308,6 +334,129 @@ async def heartbeat():
 async def test():
     """Simple test endpoint that doesn't require processor initialization"""
     return {"message": "Test endpoint working", "timestamp": time.time()}
+
+@app.post("/predict-large")
+async def predict_large(
+    file: UploadFile = File(...), 
+    processing_mode: str = Form("multi_deed"),
+    splitting_strategy: str = Form("document_ai")
+):
+    """Process large documents with special handling for files > 50MB"""
+    print(f"🔍 Processing large document - Mode: {processing_mode}, File: {file.filename}")
+    
+    try:
+        # For large files, we need to use a different approach
+        # This endpoint is specifically for files that are too large for direct processing
+        
+        # Check if file is actually large
+        file_size = 0
+        if hasattr(file, 'size') and file.size:
+            file_size = file.size
+        else:
+            # Read in chunks to determine size
+            temp_content = b""
+            while chunk := await file.read(CHUNK_SIZE):
+                temp_content += chunk
+                file_size += len(chunk)
+                if file_size > MAX_FILE_SIZE * 2:  # Allow up to 100MB for large files
+                    break
+        
+        print(f"📁 Large file size: {file_size / (1024*1024):.1f}MB")
+        
+        if file_size > MAX_FILE_SIZE * 2:  # 100MB limit for large files
+            raise HTTPException(
+                status_code=413, 
+                detail=f"File too large even for large file processing. Maximum size is {MAX_FILE_SIZE * 2 // (1024*1024)}MB, got {file_size // (1024*1024)}MB"
+            )
+        
+        # For large files, we'll use a simplified approach
+        # Save to temp file and process with memory-efficient methods
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+            if 'temp_content' in locals():
+                tmp_file.write(temp_content)
+            else:
+                # Re-read file if we didn't already
+                await file.seek(0)  # Reset file pointer
+                while chunk := await file.read(CHUNK_SIZE):
+                    tmp_file.write(chunk)
+            tmp_file_path = tmp_file.name
+        
+        try:
+            if processor is None:
+                try:
+                    if not initialize_processor():
+                        raise HTTPException(status_code=500, detail="Model not initialized")
+                except Exception as e:
+                    print(f"❌ Processor initialization failed: {e}")
+                    raise HTTPException(status_code=500, detail=f"Model initialization failed: {str(e)}")
+            
+            print("🤖 Processing large document with memory-efficient approach...")
+            
+            # For large files, use memory-efficient processing
+            if processing_mode == "multi_deed":
+                print("📄 Processing as multi-deed document...")
+                results = processor.process_multi_deed_document(
+                    tmp_file_path, 
+                    strategy=splitting_strategy
+                )
+                
+                # Convert results to the expected format
+                deed_results = []
+                for i, result in enumerate(results):
+                    deed_results.append({
+                        "deed_number": result.get('deed_number', i + 1),
+                        "has_reservations": result.get('classification', 0) == 1,
+                        "confidence": result.get('confidence', 0.0),
+                        "reasoning": result.get('reasoning', 'No reasoning provided'),
+                        "pages": result.get('pages', []),
+                        "pages_in_deed": result.get('pages_in_deed', 0),
+                        "deed_boundary_info": result.get('deed_boundary_info', {}),
+                        "deed_file": result.get('deed_file', '')
+                    })
+                
+                return {
+                    "deed_results": deed_results,
+                    "total_deeds": len(deed_results),
+                    "processing_mode": "multi_deed",
+                    "filename": file.filename,
+                    "file_size_mb": file_size / (1024*1024)
+                }
+            else:
+                # Single deed processing for large files
+                result = processor.process_document_memory_efficient(
+                    tmp_file_path,
+                    chunk_size=25,  # Smaller chunks for large files
+                    max_samples=6,
+                    high_recall_mode=True
+                )
+                
+                return {
+                    "has_reservation": result.get('classification', 0) == 1,
+                    "confidence": result.get('confidence', 0.0),
+                    "reasoning": result.get('reasoning', 'No reasoning provided'),
+                    "processing_mode": "single_deed",
+                    "filename": file.filename,
+                    "file_size_mb": file_size / (1024*1024)
+                }
+                
+        finally:
+            # Clean up temp file
+            try:
+                os.unlink(tmp_file_path)
+            except:
+                pass
+                
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error processing large file: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            "error": str(e),
+            "processing_mode": processing_mode,
+            "filename": file.filename
+        }
 
 
 if __name__ == "__main__":

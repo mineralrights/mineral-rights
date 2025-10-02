@@ -91,12 +91,19 @@ export async function processDocument(
   processingMode: ProcessingMode = 'single_deed',
   splittingStrategy: SplittingStrategy = 'document_ai'
 ): Promise<any> {
+  // Check file size and choose appropriate endpoint
+  const fileSizeMB = file.size / (1024 * 1024);
+  const isLargeFile = fileSizeMB > 50; // Use large file endpoint for files > 50MB
+  const endpoint = isLargeFile ? '/predict-large' : '/predict';
+  
+  console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using endpoint: ${endpoint}`);
+  
   const formData = new FormData();
   formData.append('file', file);
   formData.append('processing_mode', processingMode);
   formData.append('splitting_strategy', splittingStrategy);
 
-  const response = await robustFetch(`${API_CONFIG.baseUrl}/predict`, {
+  const response = await robustFetch(`${API_CONFIG.baseUrl}${endpoint}`, {
     method: 'POST',
     body: formData,
   });
