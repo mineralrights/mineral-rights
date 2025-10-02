@@ -328,6 +328,49 @@ async def test():
     """Simple test endpoint that doesn't require processor initialization"""
     return {"message": "Test endpoint working", "timestamp": time.time()}
 
+@app.post("/get-signed-upload-url")
+async def get_signed_upload_url(request: dict):
+    """Get a signed URL for direct GCS upload (bypasses Cloud Run size limits)"""
+    if not GCS_AVAILABLE:
+        raise HTTPException(status_code=500, detail="Google Cloud Storage not available")
+    
+    try:
+        filename = request.get("filename", "document.pdf")
+        content_type = request.get("content_type", "application/pdf")
+        
+        print(f"🔑 Generating signed URL for: {filename}")
+        
+        # Initialize GCS client
+        client = storage.Client()
+        bucket_name = os.getenv("GCS_BUCKET_NAME", "mineral-rights-pdfs-1759435410")
+        bucket = client.bucket(bucket_name)
+        
+        # Generate unique blob name
+        file_id = str(uuid.uuid4())
+        blob_name = f"uploads/{file_id}/{filename}"
+        blob = bucket.blob(blob_name)
+        
+        # Generate signed URL (valid for 1 hour)
+        signed_url = blob.generate_signed_url(
+            expiration=3600,  # 1 hour
+            method="PUT",
+            content_type=content_type
+        )
+        
+        print(f"✅ Signed URL generated: {blob_name}")
+        
+        return {
+            "signed_url": signed_url,
+            "bucket_name": bucket_name,
+            "blob_name": blob_name,
+            "expiration": "1 hour",
+            "gcs_url": f"https://storage.googleapis.com/{bucket_name}/{blob_name}"
+        }
+        
+    except Exception as e:
+        print(f"❌ Signed URL generation failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Signed URL generation failed: {str(e)}")
+
 @app.post("/upload-gcs")
 async def upload_to_gcs(
     file: UploadFile = File(...),

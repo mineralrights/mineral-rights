@@ -121,40 +121,57 @@ export async function processDocument(
   }
 }
 
-// Process large files using Google Cloud Storage
+// Process large files using direct GCS upload (bypasses Cloud Run limits)
 async function processLargeFileWithGCS(
   file: File,
   processingMode: ProcessingMode,
   splittingStrategy: SplittingStrategy
 ): Promise<any> {
-  console.log(`🚀 Starting GCS workflow for large file: ${file.name}`);
+  console.log(`🚀 Starting direct GCS upload for large file: ${file.name}`);
   
   try {
-    // Step 1: Upload to GCS
-    console.log('📤 Step 1: Uploading to Google Cloud Storage...');
-    const uploadFormData = new FormData();
-    uploadFormData.append('file', file);
-    uploadFormData.append('processing_mode', processingMode);
-    uploadFormData.append('splitting_strategy', splittingStrategy);
-
-    const uploadResponse = await robustFetch(`${API_CONFIG.baseUrl}/upload-gcs`, {
+    // Step 1: Get signed URL for direct GCS upload
+    console.log('🔑 Step 1: Getting signed upload URL...');
+    const signedUrlResponse = await robustFetch(`${API_CONFIG.baseUrl}/get-signed-upload-url`, {
       method: 'POST',
-      body: uploadFormData,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        filename: file.name,
+        content_type: file.type
+      }),
     });
 
-    if (!uploadResponse.ok) {
-      const errorText = await uploadResponse.text();
-      throw new Error(`GCS upload failed: ${uploadResponse.status} ${errorText}`);
+    if (!signedUrlResponse.ok) {
+      const errorText = await signedUrlResponse.text();
+      throw new Error(`Signed URL request failed: ${signedUrlResponse.status} ${errorText}`);
     }
 
-    const uploadResult = await uploadResponse.json();
-    console.log(`✅ Upload successful: ${uploadResult.gcs_url}`);
-    console.log(`📊 File size: ${uploadResult.file_size_mb.toFixed(1)}MB`);
+    const signedUrlData = await signedUrlResponse.json();
+    console.log(`✅ Signed URL obtained: ${signedUrlData.blob_name}`);
     
-    // Step 2: Process from GCS
-    console.log('🔍 Step 2: Processing from GCS...');
+    // Step 2: Upload directly to GCS (bypasses Cloud Run)
+    console.log('📤 Step 2: Uploading directly to GCS...');
+    const gcsUploadResponse = await fetch(signedUrlData.signed_url, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type,
+      },
+    });
+
+    if (!gcsUploadResponse.ok) {
+      throw new Error(`Direct GCS upload failed: ${gcsUploadResponse.status} ${gcsUploadResponse.statusText}`);
+    }
+
+    console.log(`✅ Direct GCS upload successful: ${signedUrlData.gcs_url}`);
+    console.log(`📊 File size: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+    
+    // Step 3: Process from GCS
+    console.log('🔍 Step 3: Processing from GCS...');
     const processFormData = new FormData();
-    processFormData.append('gcs_url', uploadResult.gcs_url);
+    processFormData.append('gcs_url', signedUrlData.gcs_url);
     processFormData.append('processing_mode', processingMode);
     processFormData.append('splitting_strategy', splittingStrategy);
 
@@ -173,12 +190,16 @@ async function processLargeFileWithGCS(
     
     return {
       ...processResult,
-      upload_info: uploadResult,
+      upload_info: {
+        gcs_url: signedUrlData.gcs_url,
+        blob_name: signedUrlData.blob_name,
+        file_size_mb: file.size / (1024 * 1024)
+      },
       success: true
     };
     
   } catch (error) {
-    console.error('❌ GCS workflow failed:', error);
+    console.error('❌ Direct GCS workflow failed:', error);
     throw error;
   }
 }
