@@ -340,8 +340,14 @@ async def get_signed_upload_url(request: dict):
         
         print(f"🔑 Generating signed URL for: {filename}")
         
-        # Initialize GCS client
-        client = storage.Client()
+        # Initialize GCS client with service account
+        try:
+            # Try to use the service account attached to Cloud Run
+            client = storage.Client()
+        except Exception as e:
+            print(f"❌ GCS client initialization failed: {e}")
+            raise HTTPException(status_code=500, detail="GCS client initialization failed")
+        
         bucket_name = os.getenv("GCS_BUCKET_NAME", "mineral-rights-pdfs-1759435410")
         bucket = client.bucket(bucket_name)
         
