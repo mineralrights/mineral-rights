@@ -1,0 +1,17 @@
+[
+  {
+    "maxAgeSeconds": 3600,
+    "method": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    "origin": [
+      "https://mineral-rights-*.vercel.app",
+      "https://mineral-rights-marcz836x-lauragomezjurados-projects.vercel.app",
+      "https://mineral-rights-1bhhj34x8-lauragomezjurados-projects.vercel.app"
+    ],
+    "responseHeader": [
+      "Content-Type",
+      "Access-Control-Allow-Origin",
+      "Access-Control-Allow-Methods",
+      "Access-Control-Allow-Headers"
+    ]
+  }
+]
