@@ -331,6 +331,7 @@ async def test():
 @app.post("/get-signed-upload-url")
 async def get_signed_upload_url(request: dict):
     """Get a signed URL for direct GCS upload (bypasses Cloud Run size limits)"""
+    print(f"🔍 GCS_AVAILABLE: {GCS_AVAILABLE}")
     if not GCS_AVAILABLE:
         raise HTTPException(status_code=500, detail="Google Cloud Storage not available")
     
@@ -342,8 +343,26 @@ async def get_signed_upload_url(request: dict):
         
         # Initialize GCS client with service account
         try:
-            # Try to use the service account attached to Cloud Run
-            client = storage.Client()
+            # Try to use base64 encoded credentials first
+            credentials_b64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")
+            print(f"🔍 GOOGLE_CREDENTIALS_BASE64 present: {bool(credentials_b64)}")
+            if credentials_b64:
+                import base64
+                import json
+                from google.oauth2 import service_account
+                
+                # Decode the base64 credentials
+                credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+                credentials_info = json.loads(credentials_json)
+                
+                # Create credentials object
+                credentials = service_account.Credentials.from_service_account_info(credentials_info)
+                client = storage.Client(credentials=credentials)
+                print("✅ Using base64 encoded service account credentials")
+            else:
+                # Fallback to default credentials
+                client = storage.Client()
+                print("✅ Using default service account credentials")
         except Exception as e:
             print(f"❌ GCS client initialization failed: {e}")
             raise HTTPException(status_code=500, detail="GCS client initialization failed")
@@ -443,8 +462,25 @@ async def process_from_gcs(
     print(f"🔍 Processing file from GCS: {gcs_url}")
     
     try:
-        # Download file from GCS
-        client = storage.Client()
+        # Download file from GCS using same credential logic as signed URL
+        credentials_b64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")
+        if credentials_b64:
+            import base64
+            import json
+            from google.oauth2 import service_account
+            
+            # Decode the base64 credentials
+            credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+            credentials_info = json.loads(credentials_json)
+            
+            # Create credentials object
+            credentials = service_account.Credentials.from_service_account_info(credentials_info)
+            client = storage.Client(credentials=credentials)
+            print("✅ Using base64 encoded service account credentials for GCS download")
+        else:
+            # Fallback to default credentials
+            client = storage.Client()
+            print("✅ Using default service account credentials for GCS download")
         
         # Extract blob name from URL
         # URL format: https://storage.googleapis.com/bucket-name/path/to/file
