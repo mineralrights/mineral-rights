@@ -375,12 +375,35 @@ async def get_signed_upload_url(request: dict):
         blob_name = f"uploads/{file_id}/{filename}"
         blob = bucket.blob(blob_name)
         
-        # Generate signed URL (valid for 1 hour)
-        signed_url = blob.generate_signed_url(
-            expiration=3600,  # 1 hour
-            method="PUT",
-            content_type=content_type
-        )
+        # Generate signed URL (valid for 1 hour) using custom method
+        import time
+        from datetime import datetime, timedelta
+        
+        current_time = int(time.time())
+        expiration_time = current_time + 3600
+        print(f"🕐 Current time: {current_time}, Expiration: {expiration_time}")
+        
+        # Try alternative signing method
+        try:
+            # Method 1: Use datetime instead of seconds
+            expiration_dt = datetime.utcnow() + timedelta(hours=1)
+            signed_url = blob.generate_signed_url(
+                expiration=expiration_dt,
+                method="PUT",
+                content_type=content_type
+            )
+            print(f"✅ Signed URL generated with datetime method")
+        except Exception as e:
+            print(f"❌ Datetime method failed: {e}")
+            # Fallback to original method
+            signed_url = blob.generate_signed_url(
+                expiration=3600,  # 1 hour
+                method="PUT",
+                content_type=content_type
+            )
+            print(f"✅ Signed URL generated with seconds method")
+        
+        print(f"🔗 Generated signed URL: {signed_url[:100]}...")
         
         print(f"✅ Signed URL generated: {blob_name}")
         
