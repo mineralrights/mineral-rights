@@ -94,10 +94,14 @@ export async function processDocument(
   // Check file size and choose appropriate endpoint
   const fileSizeMB = file.size / (1024 * 1024);
   const isLargeFile = fileSizeMB > 30; // Use GCS for files > 30MB (Cloud Run limit is 32MB)
+  const isVeryLargeFile = fileSizeMB > 100; // Use Cloud Jobs for files > 100MB
   
-  console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using ${isLargeFile ? 'GCS upload' : 'direct upload'}`);
+  console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using ${isVeryLargeFile ? 'Cloud Jobs' : isLargeFile ? 'GCS upload' : 'direct upload'}`);
   
-  if (isLargeFile) {
+  if (isVeryLargeFile) {
+    // Use chunked processing for very large files (memory efficient)
+    return await processVeryLargeFileChunked(file, processingMode, splittingStrategy);
+  } else if (isLargeFile) {
     // Use GCS upload for large files (up to 5TB)
     return await processLargeFileWithGCS(file, processingMode, splittingStrategy);
   } else {
@@ -118,6 +122,80 @@ export async function processDocument(
     }
 
     return await response.json();
+  }
+}
+
+// Process very large files using chunked approach (memory efficient)
+async function processVeryLargeFileChunked(
+  file: File,
+  processingMode: ProcessingMode,
+  splittingStrategy: SplittingStrategy
+): Promise<any> {
+  console.log(`🚀 Starting chunked processing for very large file: ${file.name}`);
+  
+  try {
+    // Step 1: Get signed upload URL
+    console.log(`🔑 Step 1: Getting signed upload URL...`);
+    const uploadResponse = await robustFetch(`${API_CONFIG.baseUrl}/get-signed-upload-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: file.name,
+        content_type: file.type || 'application/pdf'
+      })
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Failed to get signed URL: ${uploadResponse.status}`);
+    }
+
+    const { signed_url, gcs_url } = await uploadResponse.json();
+    console.log(`✅ Signed URL obtained: ${gcs_url}`);
+
+    // Step 2: Upload directly to GCS
+    console.log(`📤 Step 2: Uploading directly to GCS...`);
+    const uploadResult = await fetch(signed_url, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type || 'application/pdf',
+      }
+    });
+
+    if (!uploadResult.ok) {
+      throw new Error(`Failed to upload to GCS: ${uploadResult.status}`);
+    }
+    console.log(`✅ File uploaded to GCS successfully`);
+
+    // Step 3: Process with chunked approach
+    console.log(`🔧 Step 3: Processing with chunked approach...`);
+    const processFormData = new FormData();
+    processFormData.append('gcs_url', gcs_url);
+    processFormData.append('processing_mode', processingMode);
+    processFormData.append('splitting_strategy', splittingStrategy);
+
+    const processResponse = await robustFetch(`${API_CONFIG.baseUrl}/process-large-pdf`, {
+      method: 'POST',
+      body: processFormData,
+    });
+
+    if (!processResponse.ok) {
+      const errorText = await processResponse.text();
+      throw new Error(`Failed to process large PDF: ${processResponse.status} ${errorText}`);
+    }
+
+    const result = await processResponse.json();
+    console.log(`✅ Large PDF processed successfully`);
+
+    return {
+      ...result,
+      message: "Very large file processed using chunked approach for memory efficiency.",
+      processing_method: "chunked"
+    };
+
+  } catch (error) {
+    console.error(`❌ Chunked processing workflow failed:`, error);
+    throw error;
   }
 }
 

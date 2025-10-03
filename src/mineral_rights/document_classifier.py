@@ -1792,6 +1792,159 @@ class DocumentProcessor:
             'total_processing_time': sum(chunk['processing_time'] for chunk in chunk_results)
         }
 
+    def process_document_from_gcs(self, gcs_url: str, processing_mode: str = "single_deed", splitting_strategy: str = "document_ai"):
+        """Process a document from a GCS URL"""
+        try:
+            # Download file from GCS
+            from google.cloud import storage
+            import tempfile
+            
+            # Initialize GCS client
+            client = storage.Client()
+            
+            # Parse GCS URL
+            bucket_name = gcs_url.split('/')[3]
+            blob_name = '/'.join(gcs_url.split('/')[4:])
+            
+            # Download to temp file
+            bucket = client.bucket(bucket_name)
+            blob = bucket.blob(blob_name)
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                blob.download_to_filename(tmp_file.name)
+                tmp_file_path = tmp_file.name
+            
+            # Process the file
+            result = self.process_document(tmp_file_path, processing_mode, splitting_strategy)
+            
+            # Clean up temp file
+            os.unlink(tmp_file_path)
+            
+            return result
+            
+        except Exception as e:
+            print(f"❌ Error processing document from GCS: {e}")
+            raise
+
+    def process_large_document_chunked(self, gcs_url: str, processing_mode: str = "single_deed", splitting_strategy: str = "document_ai"):
+        """Process large documents using chunked approach to avoid memory limits"""
+        try:
+            print(f"🚀 Processing large document with chunked approach...")
+            
+            # Download file from GCS
+            from google.cloud import storage
+            import tempfile
+            
+            # Initialize GCS client with credentials
+            try:
+                # Try to use base64 encoded credentials first
+                credentials_b64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")
+                if credentials_b64:
+                    import base64
+                    import json
+                    from google.oauth2 import service_account
+                    
+                    # Decode the base64 credentials
+                    credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+                    credentials_info = json.loads(credentials_json)
+                    
+                    # Create credentials object
+                    credentials = service_account.Credentials.from_service_account_info(credentials_info)
+                    client = storage.Client(credentials=credentials)
+                    print("✅ Using base64 encoded service account credentials for GCS")
+                else:
+                    # Fallback to default credentials
+                    client = storage.Client()
+                    print("✅ Using default service account credentials for GCS")
+            except Exception as e:
+                print(f"❌ GCS client initialization failed: {e}")
+                raise
+            
+            # Parse GCS URL
+            bucket_name = gcs_url.split('/')[3]
+            blob_name = '/'.join(gcs_url.split('/')[4:])
+            
+            # Download to temp file
+            bucket = client.bucket(bucket_name)
+            blob = bucket.blob(blob_name)
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                blob.download_to_filename(tmp_file.name)
+                tmp_file_path = tmp_file.name
+            
+            # Get PDF info
+            doc = fitz.open(tmp_file_path)
+            total_pages = len(doc)
+            doc.close()
+            
+            print(f"📄 Large PDF detected: {total_pages} pages")
+            
+            # For very large PDFs, use smaller chunk sizes
+            if total_pages > 200:
+                chunk_size = 50
+            elif total_pages > 100:
+                chunk_size = 25
+            else:
+                chunk_size = 10
+            
+            print(f"🔧 Using chunk size: {chunk_size} pages")
+            
+            # Process in chunks
+            all_results = []
+            for start_page in range(0, total_pages, chunk_size):
+                end_page = min(start_page + chunk_size, total_pages)
+                print(f"📖 Processing pages {start_page+1}-{end_page} of {total_pages}")
+                
+                # Create chunk PDF
+                chunk_doc = fitz.open(tmp_file_path)
+                chunk_pdf = fitz.open()
+                chunk_pdf.insert_pdf(chunk_doc, from_page=start_page, to_page=end_page-1)
+                
+                # Save chunk to temp file
+                chunk_path = f"{tmp_file_path}_chunk_{start_page}_{end_page}.pdf"
+                chunk_pdf.save(chunk_path)
+                chunk_pdf.close()
+                chunk_doc.close()
+                
+                try:
+                    # Process chunk
+                    chunk_result = self.process_document(chunk_path, processing_mode, splitting_strategy)
+                    all_results.append(chunk_result)
+                    
+                    # Clean up chunk
+                    os.unlink(chunk_path)
+                    
+                except Exception as e:
+                    print(f"⚠️ Error processing chunk {start_page}-{end_page}: {e}")
+                    # Clean up chunk
+                    try:
+                        os.unlink(chunk_path)
+                    except:
+                        pass
+                    continue
+            
+            # Clean up original temp file
+            os.unlink(tmp_file_path)
+            
+            # Combine results
+            combined_result = {
+                "deeds": [],
+                "total_pages": total_pages,
+                "chunks_processed": len(all_results),
+                "processing_method": "chunked"
+            }
+            
+            for result in all_results:
+                if "deeds" in result:
+                    combined_result["deeds"].extend(result["deeds"])
+            
+            print(f"✅ Chunked processing completed: {len(combined_result['deeds'])} deeds found")
+            return combined_result
+            
+        except Exception as e:
+            print(f"❌ Error in chunked processing: {e}")
+            raise
+
 def main():
     """Example usage"""
     

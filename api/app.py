@@ -19,10 +19,13 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 # GCS imports for large file handling
 try:
     from google.cloud import storage
+    from google.cloud import run_v2
     from google.oauth2 import service_account
     GCS_AVAILABLE = True
+    JOBS_AVAILABLE = True
 except ImportError:
     GCS_AVAILABLE = False
+    JOBS_AVAILABLE = False
     print("⚠️ Google Cloud Storage not available. Install: pip install google-cloud-storage")
 
 # Initialize FastAPI app
@@ -591,6 +594,36 @@ async def process_from_gcs(
                 os.unlink(tmp_file_path)
         except:
             pass
+
+@app.post("/process-large-pdf")
+async def process_large_pdf_chunked(
+    gcs_url: str = Form(...),
+    processing_mode: str = Form("single_deed"),
+    splitting_strategy: str = Form("document_ai")
+):
+    """Process large PDFs by splitting into chunks to avoid memory limits"""
+    if not GCS_AVAILABLE:
+        raise HTTPException(status_code=500, detail="GCS not available")
+    
+    try:
+        print(f"🚀 Processing large PDF with chunked approach...")
+        
+        # Initialize processor
+        if not initialize_processor():
+            raise HTTPException(status_code=500, detail="Failed to initialize processor")
+        
+        # Process the file with chunked approach for large PDFs
+        result = processor.process_large_document_chunked(
+            gcs_url=gcs_url,
+            processing_mode=processing_mode,
+            splitting_strategy=splitting_strategy
+        )
+        
+        return result
+        
+    except Exception as e:
+        print(f"❌ Error processing large PDF: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing large PDF: {str(e)}")
 
 
 if __name__ == "__main__":
