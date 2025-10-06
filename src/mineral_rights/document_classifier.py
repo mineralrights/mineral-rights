@@ -1923,8 +1923,18 @@ class DocumentProcessor:
                     else:
                         chunk_result = self.process_document(chunk_path)
                     
-                    print(f"✅ Chunk {start_page}-{end_page} processed successfully: {len(chunk_result.get('deeds', []))} deeds found")
-                    all_results.append(chunk_result)
+                    # Handle different return formats
+                    if isinstance(chunk_result, list):
+                        # process_multi_deed_document returns a list of deeds
+                        deeds_count = len(chunk_result)
+                        chunk_result_dict = {"deeds": chunk_result}
+                    else:
+                        # process_document returns a dict
+                        deeds_count = len(chunk_result.get('deeds', []))
+                        chunk_result_dict = chunk_result
+                    
+                    print(f"✅ Chunk {start_page}-{end_page} processed successfully: {deeds_count} deeds found")
+                    all_results.append(chunk_result_dict)
                     
                     # Clean up chunk
                     os.unlink(chunk_path)
