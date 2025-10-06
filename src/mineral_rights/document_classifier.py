@@ -1913,7 +1913,17 @@ class DocumentProcessor:
                 chunk_pdf.save(chunk_path)
                 chunk_pdf.close()
                 chunk_doc.close()
-                print(f"✅ Chunk created: {chunk_path}")
+                
+                # Verify chunk was created and has content
+                chunk_doc_check = fitz.open(chunk_path)
+                chunk_pages = len(chunk_doc_check)
+                chunk_doc_check.close()
+                print(f"✅ Chunk created: {chunk_path} ({chunk_pages} pages)")
+                
+                if chunk_pages == 0:
+                    print(f"⚠️ Chunk {start_page}-{end_page} is empty, skipping")
+                    os.unlink(chunk_path)
+                    continue
                 
                 try:
                     print(f"🔧 Processing chunk {start_page}-{end_page} with mode: {processing_mode}")
