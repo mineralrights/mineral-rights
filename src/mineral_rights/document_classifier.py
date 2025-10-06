@@ -1907,8 +1907,11 @@ class DocumentProcessor:
                 chunk_doc.close()
                 
                 try:
-                    # Process chunk
-                    chunk_result = self.process_document(chunk_path, processing_mode, splitting_strategy)
+                    # Process chunk based on processing mode
+                    if processing_mode == "multi_deed":
+                        chunk_result = self.process_multi_deed_document(chunk_path, splitting_strategy)
+                    else:
+                        chunk_result = self.process_document(chunk_path)
                     all_results.append(chunk_result)
                     
                     # Clean up chunk
