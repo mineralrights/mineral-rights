@@ -607,6 +607,9 @@ async def process_large_pdf_chunked(
     
     try:
         print(f"🚀 Processing large PDF with chunked approach...")
+        print(f"🔧 GCS URL: {gcs_url}")
+        print(f"🔧 Processing mode: {processing_mode}")
+        print(f"🔧 Splitting strategy: {splitting_strategy}")
         
         # Initialize processor
         if not initialize_processor():
