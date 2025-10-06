@@ -1827,9 +1827,9 @@ class DocumentProcessor:
             raise
 
     def process_large_document_chunked(self, gcs_url: str, processing_mode: str = "single_deed", splitting_strategy: str = "document_ai"):
-        """Process large documents using chunked approach to avoid memory limits"""
+        """Process large documents using Document AI smart chunking approach"""
         try:
-            print(f"🚀 Processing large document with chunked approach...")
+            print(f"🚀 Processing large document with Document AI smart chunking...")
             print(f"🔧 GCS URL: {gcs_url}")
             print(f"🔧 Processing mode: {processing_mode}")
             print(f"🔧 Splitting strategy: {splitting_strategy}")
@@ -1884,97 +1884,116 @@ class DocumentProcessor:
             doc.close()
             
             print(f"📄 Large PDF detected: {total_pages} pages")
-            print(f"🔧 Starting chunked processing for {total_pages} pages")
+            print(f"🔧 Using Document AI smart chunking for deed detection")
             
-            # For very large PDFs, use smaller chunk sizes
-            if total_pages > 200:
-                chunk_size = 50
-            elif total_pages > 100:
-                chunk_size = 25
-            else:
-                chunk_size = 10
-            
-            print(f"🔧 Using chunk size: {chunk_size} pages")
-            
-            # Process in chunks
-            all_results = []
-            for start_page in range(0, total_pages, chunk_size):
-                end_page = min(start_page + chunk_size, total_pages)
-                print(f"📖 Processing pages {start_page+1}-{end_page} of {total_pages}")
-                
-                # Create chunk PDF
-                print(f"📖 Creating chunk for pages {start_page+1}-{end_page}")
-                chunk_doc = fitz.open(tmp_file_path)
-                chunk_pdf = fitz.open()
-                chunk_pdf.insert_pdf(chunk_doc, from_page=start_page, to_page=end_page-1)
-                
-                # Save chunk to temp file
-                chunk_path = f"{tmp_file_path}_chunk_{start_page}_{end_page}.pdf"
-                chunk_pdf.save(chunk_path)
-                chunk_pdf.close()
-                chunk_doc.close()
-                
-                # Verify chunk was created and has content
-                chunk_doc_check = fitz.open(chunk_path)
-                chunk_pages = len(chunk_doc_check)
-                chunk_doc_check.close()
-                print(f"✅ Chunk created: {chunk_path} ({chunk_pages} pages)")
-                
-                if chunk_pages == 0:
-                    print(f"⚠️ Chunk {start_page}-{end_page} is empty, skipping")
-                    os.unlink(chunk_path)
-                    continue
-                
+            # Use Document AI smart chunking service for deed detection
+            if self.document_ai_service and splitting_strategy == "document_ai":
+                print("📡 Using Document AI smart chunking service...")
                 try:
-                    print(f"🔧 Processing chunk {start_page}-{end_page} with mode: {processing_mode}")
-                    # Process chunk based on processing mode
-                    if processing_mode == "multi_deed":
-                        chunk_result = self.process_multi_deed_document(chunk_path, splitting_strategy)
-                    else:
-                        chunk_result = self.process_document(chunk_path)
+                    # Use smart chunking service to process the entire PDF
+                    smart_result = self.document_ai_service.smart_chunking_service.process_pdf(tmp_file_path)
                     
-                    # Handle different return formats
-                    if isinstance(chunk_result, list):
-                        # process_multi_deed_document returns a list of deeds
-                        deeds_count = len(chunk_result)
-                        chunk_result_dict = {"deeds": chunk_result}
-                    else:
-                        # process_document returns a dict
-                        deeds_count = len(chunk_result.get('deeds', []))
-                        chunk_result_dict = chunk_result
+                    print(f"📊 Smart chunking results:")
+                    print(f"   - Total deeds detected: {smart_result.total_deeds}")
+                    print(f"   - Chunks processed: {smart_result.chunks_processed}")
+                    print(f"   - Processing time: {smart_result.processing_time:.2f}s")
                     
-                    print(f"✅ Chunk {start_page}-{end_page} processed successfully: {deeds_count} deeds found")
-                    all_results.append(chunk_result_dict)
+                    # Convert smart chunking results to our format
+                    deeds = []
+                    for i, deed in enumerate(smart_result.deeds):
+                        deed_result = {
+                            'deed_number': i + 1,
+                            'classification': 0,  # Will be determined by processing
+                            'confidence': 0.0,
+                            'reasoning': 'Deed detected by Document AI',
+                            'pages': deed.pages,
+                            'pages_in_deed': len(deed.pages),
+                            'deed_boundary_info': {
+                                'deed_number': i + 1,
+                                'pages': deed.pages,
+                                'confidence': deed.confidence,
+                                'page_range': f"{min(deed.pages)+1}-{max(deed.pages)+1}" if deed.pages else "0-0"
+                            }
+                        }
+                        deeds.append(deed_result)
                     
-                    # Clean up chunk
-                    os.unlink(chunk_path)
+                    # Clean up original temp file
+                    os.unlink(tmp_file_path)
+                    
+                    result = {
+                        "deeds": deeds,
+                        "total_pages": total_pages,
+                        "chunks_processed": smart_result.chunks_processed,
+                        "processing_method": "document_ai_smart_chunking",
+                        "message": f"Very large file processed using Document AI smart chunking. {smart_result.chunks_processed} chunks processed, {len(deeds)} deeds detected."
+                    }
+                    
+                    print(f"✅ Document AI smart chunking completed: {len(deeds)} deeds found")
+                    return result
                     
                 except Exception as e:
-                    print(f"⚠️ Error processing chunk {start_page}-{end_page}: {e}")
-                    # Clean up chunk
-                    try:
-                        os.unlink(chunk_path)
-                    except:
-                        pass
-                    continue
+                    print(f"⚠️ Document AI smart chunking failed: {e}")
+                    print("🔄 Falling back to regular multi-deed processing...")
             
-            # Clean up original temp file
-            os.unlink(tmp_file_path)
-            
-            # Combine results
-            combined_result = {
-                "deeds": [],
-                "total_pages": total_pages,
-                "chunks_processed": len(all_results),
-                "processing_method": "chunked"
-            }
-            
-            for result in all_results:
-                if "deeds" in result:
-                    combined_result["deeds"].extend(result["deeds"])
-            
-            print(f"✅ Chunked processing completed: {len(combined_result['deeds'])} deeds found")
-            return combined_result
+            # Fallback to regular multi-deed processing
+            print("🔄 Using regular multi-deed processing as fallback...")
+            try:
+                if processing_mode == "multi_deed":
+                    results = self.process_multi_deed_document(tmp_file_path, splitting_strategy)
+                else:
+                    # For single deed mode, process the entire document
+                    result = self.process_document(tmp_file_path)
+                    results = [result] if isinstance(result, dict) else result
+                
+                # Clean up original temp file
+                os.unlink(tmp_file_path)
+                
+                # Convert results to expected format
+                deeds = []
+                if isinstance(results, list):
+                    for i, result in enumerate(results):
+                        if isinstance(result, dict):
+                            deed_result = {
+                                'deed_number': result.get('deed_number', i + 1),
+                                'classification': result.get('classification', 0),
+                                'confidence': result.get('confidence', 0.0),
+                                'reasoning': result.get('reasoning', 'No reasoning provided'),
+                                'pages': result.get('pages', []),
+                                'pages_in_deed': result.get('pages_in_deed', 0),
+                                'deed_boundary_info': result.get('deed_boundary_info', {})
+                            }
+                            deeds.append(deed_result)
+                elif isinstance(results, dict):
+                    deed_result = {
+                        'deed_number': 1,
+                        'classification': results.get('classification', 0),
+                        'confidence': results.get('confidence', 0.0),
+                        'reasoning': results.get('reasoning', 'No reasoning provided'),
+                        'pages': results.get('pages', []),
+                        'pages_in_deed': results.get('pages_in_deed', 0),
+                        'deed_boundary_info': results.get('deed_boundary_info', {})
+                    }
+                    deeds.append(deed_result)
+                
+                result = {
+                    "deeds": deeds,
+                    "total_pages": total_pages,
+                    "chunks_processed": 1,  # Single processing
+                    "processing_method": "fallback_processing",
+                    "message": f"Very large file processed using fallback approach. {len(deeds)} deeds found."
+                }
+                
+                print(f"✅ Fallback processing completed: {len(deeds)} deeds found")
+                return result
+                
+            except Exception as e:
+                print(f"❌ Fallback processing also failed: {e}")
+                # Clean up original temp file
+                try:
+                    os.unlink(tmp_file_path)
+                except:
+                    pass
+                raise
             
         except Exception as e:
             print(f"❌ Error in chunked processing: {e}")

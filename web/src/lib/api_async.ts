@@ -186,12 +186,10 @@ async function processVeryLargeFileChunked(
 
     const result = await processResponse.json();
     console.log(`✅ Large PDF processed successfully`);
+    console.log(`📊 Processing result:`, result);
 
-    return {
-      ...result,
-      message: "Very large file processed using chunked approach for memory efficiency.",
-      processing_method: "chunked"
-    };
+    // Return the actual result from the backend without overriding
+    return result;
 
   } catch (error) {
     console.error(`❌ Chunked processing workflow failed:`, error);
