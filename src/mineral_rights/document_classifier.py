@@ -1907,11 +1907,14 @@ class DocumentProcessor:
                 chunk_doc.close()
                 
                 try:
+                    print(f"🔧 Processing chunk {start_page}-{end_page} with mode: {processing_mode}")
                     # Process chunk based on processing mode
                     if processing_mode == "multi_deed":
                         chunk_result = self.process_multi_deed_document(chunk_path, splitting_strategy)
                     else:
                         chunk_result = self.process_document(chunk_path)
+                    
+                    print(f"✅ Chunk {start_page}-{end_page} processed successfully: {len(chunk_result.get('deeds', []))} deeds found")
                     all_results.append(chunk_result)
                     
                     # Clean up chunk
