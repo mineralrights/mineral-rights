@@ -1878,6 +1878,7 @@ class DocumentProcessor:
             doc.close()
             
             print(f"📄 Large PDF detected: {total_pages} pages")
+            print(f"🔧 Starting chunked processing for {total_pages} pages")
             
             # For very large PDFs, use smaller chunk sizes
             if total_pages > 200:
@@ -1896,6 +1897,7 @@ class DocumentProcessor:
                 print(f"📖 Processing pages {start_page+1}-{end_page} of {total_pages}")
                 
                 # Create chunk PDF
+                print(f"📖 Creating chunk for pages {start_page+1}-{end_page}")
                 chunk_doc = fitz.open(tmp_file_path)
                 chunk_pdf = fitz.open()
                 chunk_pdf.insert_pdf(chunk_doc, from_page=start_page, to_page=end_page-1)
@@ -1905,6 +1907,7 @@ class DocumentProcessor:
                 chunk_pdf.save(chunk_path)
                 chunk_pdf.close()
                 chunk_doc.close()
+                print(f"✅ Chunk created: {chunk_path}")
                 
                 try:
                     print(f"🔧 Processing chunk {start_page}-{end_page} with mode: {processing_mode}")
