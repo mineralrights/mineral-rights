@@ -1887,6 +1887,13 @@ class DocumentProcessor:
             print(f"🔧 Using Document AI smart chunking for deed detection")
             
             # Use Document AI smart chunking service for deed detection
+            print(f"🔍 DEBUG: document_ai_service = {self.document_ai_service is not None}")
+            print(f"🔍 DEBUG: splitting_strategy = {splitting_strategy}")
+            if self.document_ai_service:
+                print(f"🔍 DEBUG: smart_chunking_service = {self.document_ai_service.smart_chunking_service}")
+            else:
+                print(f"🔍 DEBUG: document_ai_service is None - will use fallback")
+            
             if self.document_ai_service and splitting_strategy == "document_ai":
                 print("📡 Using Document AI smart chunking service...")
                 try:
@@ -1933,10 +1940,15 @@ class DocumentProcessor:
                     
                 except Exception as e:
                     print(f"⚠️ Document AI smart chunking failed: {e}")
+                    print(f"🔍 DEBUG: Exception details: {type(e).__name__}: {str(e)}")
+                    import traceback
+                    traceback.print_exc()
                     print("🔄 Falling back to regular multi-deed processing...")
             
             # Fallback to regular multi-deed processing
             print("🔄 Using regular multi-deed processing as fallback...")
+            print(f"🔍 DEBUG: Processing mode = {processing_mode}")
+            print(f"🔍 DEBUG: Splitting strategy = {splitting_strategy}")
             try:
                 if processing_mode == "multi_deed":
                     results = self.process_multi_deed_document(tmp_file_path, splitting_strategy)
@@ -1983,7 +1995,10 @@ class DocumentProcessor:
                     "message": f"Very large file processed using fallback approach. {len(deeds)} deeds found."
                 }
                 
+                print(f"🔍 DEBUG: Fallback result = {result}")
+                
                 print(f"✅ Fallback processing completed: {len(deeds)} deeds found")
+                print(f"🔍 DEBUG: Final result = {result}")
                 return result
                 
             except Exception as e:
