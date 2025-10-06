@@ -96,7 +96,7 @@ export async function processDocument(
   const isLargeFile = fileSizeMB > 30; // Use GCS for files > 30MB (Cloud Run limit is 32MB)
   const isVeryLargeFile = fileSizeMB > 40; // Use chunked processing for files > 40MB (memory efficient)
   
-  console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using ${isVeryLargeFile ? 'Cloud Jobs' : isLargeFile ? 'GCS upload' : 'direct upload'}`);
+  console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using ${isVeryLargeFile ? 'Chunked Processing' : isLargeFile ? 'GCS upload' : 'direct upload'}`);
   
   if (isVeryLargeFile) {
     // Use chunked processing for very large files (memory efficient)
