@@ -19,10 +19,9 @@ from src.mineral_rights.document_classifier import DocumentProcessor
 # GCS imports for large file handling
 try:
     from google.cloud import storage
-    from google.cloud import run_v2
     from google.oauth2 import service_account
     GCS_AVAILABLE = True
-    JOBS_AVAILABLE = True
+    JOBS_AVAILABLE = False  # We don't need Cloud Jobs anymore
 except ImportError:
     GCS_AVAILABLE = False
     JOBS_AVAILABLE = False
