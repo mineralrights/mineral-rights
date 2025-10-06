@@ -1830,6 +1830,9 @@ class DocumentProcessor:
         """Process large documents using chunked approach to avoid memory limits"""
         try:
             print(f"🚀 Processing large document with chunked approach...")
+            print(f"🔧 GCS URL: {gcs_url}")
+            print(f"🔧 Processing mode: {processing_mode}")
+            print(f"🔧 Splitting strategy: {splitting_strategy}")
             
             # Download file from GCS
             from google.cloud import storage
@@ -1863,14 +1866,17 @@ class DocumentProcessor:
             # Parse GCS URL
             bucket_name = gcs_url.split('/')[3]
             blob_name = '/'.join(gcs_url.split('/')[4:])
+            print(f"🔧 Bucket: {bucket_name}, Blob: {blob_name}")
             
             # Download to temp file
             bucket = client.bucket(bucket_name)
             blob = bucket.blob(blob_name)
+            print(f"🔧 Downloading file from GCS...")
             
             with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
                 blob.download_to_filename(tmp_file.name)
                 tmp_file_path = tmp_file.name
+                print(f"✅ File downloaded to: {tmp_file_path}")
             
             # Get PDF info
             doc = fitz.open(tmp_file_path)
