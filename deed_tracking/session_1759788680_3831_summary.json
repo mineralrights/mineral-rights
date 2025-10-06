@@ -1,0 +1,12 @@
+{
+  "total_deeds": 34,
+  "deeds_processed": 34,
+  "deeds_with_reservations": 17,
+  "deeds_without_reservations": 17,
+  "deeds_with_errors": 0,
+  "average_confidence": 1.0,
+  "splitting_confidence": 0.4,
+  "splitting_strategy": "document_ai",
+  "document_ai_used": true,
+  "processing_time": 3794.815742254257
+}

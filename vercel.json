@@ -1,4 +1,7 @@
 {
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://mineral-rights-processor-ms7ew6g6zq-uc.a.run.app"
+  },
   "headers": [
     {
       "source": "/api/(.*)",
