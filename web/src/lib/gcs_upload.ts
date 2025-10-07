@@ -24,7 +24,7 @@ interface GCSProcessResponse {
   message: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-processor-ms7ew6g6zq-uc.a.run.app';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-processor-1081023230228.us-central1.run.app';
 
 export class GCSUploadHandler {
   private apiBaseUrl: string;

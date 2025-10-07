@@ -2,7 +2,7 @@ import { PredictionRow, DeedResult, PageResult, ProcessingMode, SplittingStrateg
 
 // API configuration
 const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-processor-ms7ew6g6zq-uc.a.run.app',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-processor-1081023230228.us-central1.run.app',
   // Add fallback URLs for SSL issues
   fallbackUrls: [
     'https://mineral-rights-processor-ms7ew6g6zq-uc.a.run.app',
