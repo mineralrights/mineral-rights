@@ -67,12 +67,25 @@ export default function Home() {
             status: 'done',
             prediction: page.has_reservations ? 'has_reservation' : 'no_reservation',
             confidence: page.confidence || 0,
-            explanation: page.explanation || '',
+            explanation: page.reasoning || page.explanation || '',
             processingMode: 'page_by_page',
             pageResults: [page]
           };
           rows.push(row);
         });
+      } else {
+        // Fallback: create a summary row if no detailed page results
+        const row: PredictionRow = {
+          filename: result.filename || 'document.pdf',
+          status: 'done',
+          prediction: result.has_reservation ? 'has_reservation' : 'no_reservation',
+          confidence: result.confidence || 0,
+          explanation: result.reasoning || '',
+          processingMode: 'page_by_page',
+          totalPages: result.total_pages,
+          pagesWithReservations: result.reservation_pages || []
+        };
+        rows.push(row);
       }
     }
 

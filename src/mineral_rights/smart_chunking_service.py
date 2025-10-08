@@ -259,24 +259,32 @@ class SmartChunkingService:
         
         # Process chunks one by one
         all_deeds = []
+        processed_chunks = 0
+        
+        # Dynamic memory threshold based on available memory
+        import psutil
+        total_memory_gb = psutil.virtual_memory().total / (1024**3)
+        memory_threshold_mb = int(total_memory_gb * 1024 * 0.75)  # 75% of total memory
+        print(f"💾 Total system memory: {total_memory_gb:.1f} GB")
+        print(f"💾 Memory threshold: {memory_threshold_mb} MB")
         
         for i, (start_page, end_page) in enumerate(chunks):
             chunk_id = i + 1
             print(f"📄 Processing chunk {chunk_id}/{len(chunks)} (pages {start_page}-{end_page})")
             
             # Check memory before processing chunk
-            import psutil
             process = psutil.Process()
             memory_before = process.memory_info().rss / 1024 / 1024
             print(f"💾 Memory before chunk {chunk_id}: {memory_before:.1f} MB")
             
-            # Skip chunk if memory is too high (32GB = 32000MB, use 28000MB as threshold)
-            if memory_before > 28000:  # 28GB threshold for 32GB container
+            # Skip chunk if memory is too high (dynamic threshold)
+            if memory_before > memory_threshold_mb:
                 print(f"⚠️ Memory too high ({memory_before:.1f} MB), skipping chunk {chunk_id}")
                 continue
             
             chunk_deeds = self.process_chunk(pdf_path, start_page, end_page, chunk_id)
             all_deeds.extend(chunk_deeds)
+            processed_chunks += 1
             
             # Aggressive memory management after each chunk
             print(f"🧹 Cleaning up memory after chunk {chunk_id}...")
@@ -295,7 +303,7 @@ class SmartChunkingService:
             print(f"💾 Memory after chunk {chunk_id}: {memory_mb:.1f} MB")
             
             # If memory usage is too high, force more aggressive cleanup
-            if memory_mb > 25000:  # 25GB threshold for 32GB container
+            if memory_mb > memory_threshold_mb * 0.8:  # 80% of threshold
                 print("⚠️ High memory usage detected, forcing aggressive cleanup...")
                 import gc
                 gc.set_threshold(0)  # Disable automatic garbage collection
@@ -306,6 +314,11 @@ class SmartChunkingService:
                 import time as time_module
                 print("⏳ Adding delay for memory cleanup...")
                 time_module.sleep(2)
+        
+        # Check if no chunks were processed due to memory constraints
+        if processed_chunks == 0:
+            print("⚠️ No chunks were processed due to memory constraints, falling back to simple splitting...")
+            return self._fallback_to_simple_splitting(pdf_path)
         
         # Merge overlapping deeds
         merged_deeds = self.merge_deeds(all_deeds)
@@ -349,7 +362,7 @@ class SmartChunkingService:
             total_deeds=len(deed_detections),
             deed_detections=deed_detections,
             processing_time=processing_time,
-            chunks_processed=len(chunks),
+            chunks_processed=processed_chunks,
             systematic_offset=systematic_offset,
             raw_deeds_before_merge=0  # We deleted all_deeds earlier
         )

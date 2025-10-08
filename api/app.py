@@ -627,6 +627,35 @@ async def process_large_pdf_chunked(
         print(f"❌ Error processing large PDF: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing large PDF: {str(e)}")
 
+@app.post("/process-large-pdf-pages")
+async def process_large_pdf_pages(
+    gcs_url: str = Form(...)
+):
+    """Process large PDFs page by page for mineral rights detection"""
+    if not GCS_AVAILABLE:
+        raise HTTPException(status_code=500, detail="GCS not available")
+    
+    try:
+        print(f"🔍 Processing large PDF page by page...")
+        print(f"🔧 GCS URL: {gcs_url}")
+        
+        # Initialize large PDF processor
+        from mineral_rights.large_pdf_processor import LargePDFProcessor
+        api_key = os.getenv("ANTHROPIC_API_KEY")
+        if not api_key:
+            raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")
+        
+        processor = LargePDFProcessor(api_key=api_key)
+        
+        # Process the file page by page
+        result = processor.process_large_pdf_from_gcs(gcs_url)
+        
+        return result
+        
+    except Exception as e:
+        print(f"❌ Error processing large PDF pages: {e}")
+        raise HTTPException(status_code=500, detail=f"Error processing large PDF pages: {str(e)}")
+
 
 if __name__ == "__main__":
     import uvicorn

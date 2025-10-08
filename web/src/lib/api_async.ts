@@ -98,9 +98,15 @@ export async function processDocument(
   
   console.log(`📁 File size: ${fileSizeMB.toFixed(1)}MB, using ${isVeryLargeFile ? 'Chunked Processing' : isLargeFile ? 'GCS upload' : 'direct upload'}`);
   
+  // Handle explicit page-by-page mode
+  if (processingMode === 'page_by_page') {
+    console.log(`📄 User requested page-by-page processing for: ${file.name}`);
+    return await processVeryLargeFilePages(file, processingMode, splittingStrategy);
+  }
+  
   if (isVeryLargeFile) {
-    // Use chunked processing for very large files (memory efficient)
-    return await processVeryLargeFileChunked(file, processingMode, splittingStrategy);
+    // Use page-by-page processing for very large files (memory efficient)
+    return await processVeryLargeFilePages(file, processingMode, splittingStrategy);
   } else if (isLargeFile) {
     // Use GCS upload for large files (up to 5TB)
     return await processLargeFileWithGCS(file, processingMode, splittingStrategy);
@@ -125,7 +131,89 @@ export async function processDocument(
   }
 }
 
-// Process very large files using chunked approach (memory efficient)
+// Process very large files using page-by-page approach (memory efficient)
+async function processVeryLargeFilePages(
+  file: File,
+  processingMode: ProcessingMode,
+  splittingStrategy: SplittingStrategy
+): Promise<any> {
+  console.log(`🔍 Starting page-by-page processing for very large file: ${file.name}`);
+  
+  try {
+    // Step 1: Get signed upload URL
+    console.log(`🔑 Step 1: Getting signed upload URL...`);
+    const uploadResponse = await robustFetch(`${API_CONFIG.baseUrl}/get-signed-upload-url`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        filename: file.name,
+        content_type: file.type || 'application/pdf'
+      })
+    });
+
+    if (!uploadResponse.ok) {
+      throw new Error(`Failed to get signed URL: ${uploadResponse.status}`);
+    }
+
+    const { signed_url, gcs_url } = await uploadResponse.json();
+    console.log(`✅ Signed URL obtained: ${gcs_url}`);
+
+    // Step 2: Upload directly to GCS
+    console.log(`📤 Step 2: Uploading directly to GCS...`);
+    const uploadResult = await fetch(signed_url, {
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': file.type || 'application/pdf',
+      }
+    });
+
+    if (!uploadResult.ok) {
+      throw new Error(`Failed to upload to GCS: ${uploadResult.status}`);
+    }
+    console.log(`✅ File uploaded to GCS successfully`);
+
+    // Step 3: Process with page-by-page approach
+    console.log(`🔧 Step 3: Processing with page-by-page approach...`);
+    const processFormData = new FormData();
+    processFormData.append('gcs_url', gcs_url);
+
+    const processResponse = await robustFetch(`${API_CONFIG.baseUrl}/process-large-pdf-pages`, {
+      method: 'POST',
+      body: processFormData,
+    });
+
+    if (!processResponse.ok) {
+      const errorText = await processResponse.text();
+      throw new Error(`Page-by-page processing failed: ${processResponse.status} ${errorText}`);
+    }
+
+    const result = await processResponse.json();
+    console.log(`✅ Page-by-page processing completed: ${result.pages_with_reservations} pages with mineral rights`);
+    
+    // Format result for UI compatibility
+    const formattedResult = {
+      filename: file.name,
+      total_pages: result.total_pages,
+      pages_with_reservations: result.pages_with_reservations,
+      reservation_pages: result.reservation_pages || [],
+      page_results: result.results || [],
+      processing_method: result.processing_method || 'page_by_page',
+      // Add legacy fields for compatibility
+      has_reservation: result.pages_with_reservations > 0,
+      confidence: result.pages_with_reservations > 0 ? 1.0 : 0.0,
+      reasoning: `Found mineral rights reservations on ${result.pages_with_reservations} pages: ${(result.reservation_pages || []).join(', ')}`
+    };
+    
+    return formattedResult;
+
+  } catch (error) {
+    console.error(`❌ Page-by-page processing workflow failed:`, error);
+    throw error;
+  }
+}
+
+// Process very large files using chunked approach (memory efficient) - DEPRECATED
 async function processVeryLargeFileChunked(
   file: File,
   processingMode: ProcessingMode,
