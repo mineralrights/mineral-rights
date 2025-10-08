@@ -111,6 +111,10 @@ class LargePDFProcessor:
         """
         print(f"🔍 Processing large PDF from GCS: {gcs_url}")
         
+        # Validate GCS URL format
+        if not gcs_url.startswith('https://storage.googleapis.com/'):
+            raise ValueError(f"Invalid GCS URL format: {gcs_url}")
+        
         # Download from GCS
         from google.cloud import storage
         import tempfile
@@ -118,25 +122,37 @@ class LargePDFProcessor:
         # Initialize GCS client
         client = storage.Client()
         
-        # Parse GCS URL
-        bucket_name = gcs_url.split('/')[3]
-        blob_name = '/'.join(gcs_url.split('/')[4:])
-        
-        # Download to temp file
-        bucket = client.bucket(bucket_name)
-        blob = bucket.blob(blob_name)
-        
-        with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
-            blob.download_to_filename(tmp_file.name)
-            tmp_file_path = tmp_file.name
-        
         try:
-            # Process the downloaded file
-            result = self.process_large_pdf(tmp_file_path, output_csv)
-            return result
-        finally:
-            # Clean up temp file
-            os.unlink(tmp_file_path)
+            # Parse GCS URL
+            url_parts = gcs_url.split('/')
+            if len(url_parts) < 5:
+                raise ValueError(f"Invalid GCS URL format: {gcs_url}")
+            
+            bucket_name = url_parts[3]
+            blob_name = '/'.join(url_parts[4:])
+            
+            print(f"📦 Bucket: {bucket_name}")
+            print(f"📄 Blob: {blob_name}")
+            
+            # Download to temp file
+            bucket = client.bucket(bucket_name)
+            blob = bucket.blob(blob_name)
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                blob.download_to_filename(tmp_file.name)
+                tmp_file_path = tmp_file.name
+            
+            try:
+                # Process the downloaded file
+                result = self.process_large_pdf(tmp_file_path, output_csv)
+                return result
+            finally:
+                # Clean up temp file
+                os.unlink(tmp_file_path)
+                
+        except Exception as e:
+            print(f"❌ Error processing GCS file: {e}")
+            raise
     
     def process_large_pdf_local(self, pdf_path: str, output_csv: str = None) -> Dict[str, Any]:
         """
