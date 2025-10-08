@@ -125,11 +125,11 @@ class MemoryEfficientProcessor:
             image = Image.open(BytesIO(img_data))
             page_text = self.processor.extract_text_with_claude(image, max_tokens=6000)
             
-            # Classify page
+            # Classify page with minimal memory usage
             classification_result = self.classifier.classify_document(
                 page_text, 
-                max_samples=2,  # Reduced for memory efficiency
-                confidence_threshold=0.6,
+                max_samples=1,  # Single sample for maximum memory efficiency
+                confidence_threshold=0.5,  # Lower threshold for single sample
                 high_recall_mode=True
             )
             
@@ -164,6 +164,27 @@ class MemoryEfficientProcessor:
         return process.memory_info().rss / 1024 / 1024
     
     def _force_cleanup(self):
-        """Force garbage collection and memory cleanup"""
+        """Force aggressive garbage collection and memory cleanup"""
+        import gc
+        import psutil
+        import os
+        
+        # Force multiple garbage collection cycles
+        for _ in range(3):
+            gc.collect()
+        
+        # Clear any cached objects
+        gc.set_threshold(0)  # Disable automatic GC
         gc.collect()
-        gc.collect()  # Call twice for thorough cleanup
+        gc.set_threshold(700, 10, 10)  # Restore default thresholds
+        
+        # Force memory cleanup
+        try:
+            # Clear any cached imports
+            import sys
+            for module_name in list(sys.modules.keys()):
+                if module_name.startswith('PIL') or module_name.startswith('fitz'):
+                    if module_name in sys.modules:
+                        del sys.modules[module_name]
+        except:
+            pass

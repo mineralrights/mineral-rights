@@ -1,0 +1,119 @@
+page_number,has_reservations,confidence,reasoning,text_preview
+1,False,1.0,"After analyzing the provided document text, which appears to be an Affidavit of Confirmation describing a property transfer and containing detailed property boundary descriptions, I find:","HARRISON COUNTY AUDITOR
+ALLISON M. ANDERSON
+REAL ESTATE TRANSFER BY MC
+CONV.FEE EX √
+TRAN.FEE .50 DATE 3-30-21
+
+DEED APPROVED FOR TRANSFER
+DATE 3-29-21 BY SLL
+HARRISON COUNTY ENGINEER
+
+AFFIDAVIT OF CO..."
+2,False,1.0,"After analyzing the complete document text, I do not find any language reserving mineral rights, oil and gas rights, or general mining rights. The only reservations mentioned in the document are:","distances of plus 31.18 feet, plus 131.18 feet, and plus 516.21 feet, respectively,
+
+Thence South 74°56' 10"" West a distance of 380.64 feet to a 5/8"" iron pin found capped"" Cole 6995"" at the northeast..."
+3,False,1.0,"After analyzing this document, I find no mineral rights reservations that would include oil and gas rights. Here's why:","at a corner in the west line of the above described 8.034 acres tract;
+
+Thence, from said Point of Beginning and leaving the Brewer property line, North 39°23'08"" East a distance of 198.73 feet to a p..."
+4,True,1.0,"This document contains a clear mineral rights reservation that includes oil and gas, specifically in the line:","By accepting this deed GRANTEE also acknowledges that it has inspected the premises and is acquiring the same as a result of such inspection in its present condition and circumstance, and by accepting..."
+5,False,1.0,"After analyzing this document, I find no mineral rights reservations that would include oil and gas. The document appears to be an affidavit with standard legal boilerplate language. While it contains...","HARRISON COUNTY, OH    03/30/2021 08:51:12 AM    OR 274    682    202100000887    Page: 5 of 6
+
+This affidavit was prepared at the request of the parties with information obtained from them, with no t..."
+6,False,1.0,"This document is a death certificate, not a deed or mineral rights document. It contains no language whatsoever regarding mineral rights, oil and gas rights, coal rights, or any other subsurface right...","This is actually a Certificate of Death from Harrison County, Ohio, not a legal deed. Here are the key details from the document:
+
+Date: March 30, 2021 08:51:12 AM
+State File No: 2019034073
+
+Decedent ..."
+7,False,1.0,"After analyzing the complete document text, I do not find any mineral rights reservations language. This appears to be a quit claim deed transferring an undivided one-fourteenth interest in real estat...","this ----- day of October in the year of our Lord one thousand nine hundred and twenty-five (1925)
+
+Signed and acknowledged in presence of
+Mrs Bertha Purdum
+Louis Vm Haag
+M. Edwin Piscus
+Mary Purdum
+K..."
+8,True,1.0,"This document contains explicit oil and gas reservations. Specifically, the document states:","254
+
+Situate in the township of Wills, in the County of Guernsey and state of Ohio, to wit, 20.68 acres, 13.68 acres of which are in the northwest part of the northwest quarter of section 20, township..."
+9,False,1.0,"After analyzing the complete document text, I find no mineral rights reservations of any kind. This appears to be a standard real estate deed transferring two parcels of land:
+1. In-Lot Four (4) in Cl...","of October in the year of our Lord one thousand nine hundred and twenty-five (1925)
+Signed and acknowledged in presence of us:
+J. W. Jones
+John H Taylor
+The State of Ohio County of Guernsey SS.
+
+Edwar..."
+10,False,1.0,"After carefully analyzing the deed document, I find no language reserving mineral rights, oil rights, gas rights, or any other subsurface rights. This appears to be a standard real estate deed that:","This Deed,
+
+MADE THE 4 day of MAY in the year of our Lord one thousand nine hundred sixty-six,
+
+BETWEEN C. EDWARD STUCHELL and OLIVE C. STUCHELL, his wife, of R.D. 3, Shelocta, Pennsylvania,
+
+and DONA..."
+11,True,1.0,This document contains explicit oil and gas rights reservations. Specifically:,"EXCEPTING and RESERVING, however, from the above described premises all of the coal of whatsoever kind lying and being in and under the same, together with mining rights and release of damages, as sol..."
+12,False,1.0,"After analyzing the provided document text, I do not see any language related to mineral rights reservations, whether general mineral rights, specific oil and gas rights, or coal rights. The document ...","HARRISON COUNTY ENGINEER'S OFFICE
+DEED CHECKED FOR TRACT DESCRIPTION ONLY
+APPROVED ✓ REJECTED___
+DATE 12-11-08 BY DZ
+ROBERT STERLING, ENGINEER
+
+HARRISON COUNTY AUDITOR
+PATRICK J. MOORE
+REAL ESTATE TRA..."
+13,False,1.0,"After analyzing the provided deed text, I find no language reserving any mineral rights, whether general mineral rights, specific oil and gas rights, or coal rights. This appears to be a standard warr...","SURVIVORSHIP TENANCY
+WARRANTY DEED
+
+DARLA BREWER, unmarried, the Grantor herein, for a valuable consideration, the receipt of which is hereby acknowledged, grant, with covenants of general warranty, t..."
+14,False,1.0,"This document appears to be a legal description of property boundaries and survey measurements only. The text consists entirely of metes and bounds descriptions, including:
+- Directional bearings (e.g...","Instrument Book Page
+2008000002622 OR 178 1075
+
+Thence, continuing with said right of way line and a 4 degree curve to the right, having a radius of 1402.39 feet, an arc of 685.339 feet, a chord beari..."
+15,False,1.0,"After analyzing the document text, I do not find any mineral rights reservations that would include oil and gas. The document contains standard real estate language and references to:","PLACE OF BEGINNING, CONTAINING 2.9851 Acres by survey;
+
+Split from Parcel #05-02331.009; New Parcel No. 05-02331.016.
+
+Subject, however, to all easements, restrictions, and reservations of record;
+
+Th..."
+16,False,1.0,"This document appears to be only the signature, notary, and preparation pages of a legal document. It contains standard notarial language, acknowledgments, and attorney contact information, but no sub...","WITNESS my hand this 18th day of November, 2008.
+
+Signed and acknowledged by:
+DARLA BREWER
+
+STATE OF OHIO )
+COUNTY OF JEFFERSON ) SS:
+
+The foregoing instrument was acknowledged before me this 18th day..."
+17,False,1.0,"After analyzing the provided deed text, I do not find any mineral rights reservations language. This appears to be a standard property conveyance deed that:","DEED BOOK No. 475
+
+the authority therein conferred upon him, acknowledged said deed to be the act and deed of the said Harbison-Walker Refractories Company, and desired that the same might be recorded..."
+18,True,1.0,"This document contains explicit oil and gas reservations. Specifically, the document states:","DEED BOOK No. 475
+647
+
+to a stone; thence by said Bell land South 70 7/8° West, forty-four and eight tenths (44.8) perches to the place of beginning.
+
+Containing one hundred fifty-one (151) acres one ..."
+19,False,1.0,"After carefully analyzing this document, I do not find any mineral rights reservations language. This appears to be a deed acknowledgment section containing only:","DEED BOOK No. 475
+
+648
+
+J. L. Scott
+John B Hagerman as to
+C C. Rowan
+John A Huston } as to
+Peter Cosgrove }
+Harry C. Bebout
+Thomas E. McLaughlin
+
+Mary M. Cries (SEAL)
+Elmer F Cries (SEAL)
+Nettie Cries..."
+20,False,1.0,"After analyzing this document, I do not find any mineral rights reservations that would include oil and gas. This appears to be a collection of notarized acknowledgments followed by the beginning of w...","DEED BOOK No. 475 649
+
+STATE OF PENNSYLVANIA )
+COUNTY OF ALLEGHENY ) SS
+
+On this 18 day of September A. D. 1919, before me, a Justice of the Peace in and for said County and State, came the above name..."
