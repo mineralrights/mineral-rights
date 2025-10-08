@@ -613,13 +613,24 @@ async def process_large_pdf_chunked(
         # Handle page-by-page processing mode
         if processing_mode == "page_by_page":
             # Use the new page-by-page processor
+            import sys
+            import os
+            sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
             from mineral_rights.large_pdf_processor import LargePDFProcessor
             api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
                 raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")
             
             page_processor = LargePDFProcessor(api_key=api_key)
-            result = page_processor.process_large_pdf_from_gcs(gcs_url)
+            
+            # Check if it's a local file path (for testing) or GCS URL
+            if gcs_url.startswith('file://'):
+                # Extract local file path
+                local_path = gcs_url[7:]  # Remove 'file://' prefix
+                result = page_processor.process_large_pdf_local(local_path)
+            else:
+                # Process from GCS
+                result = page_processor.process_large_pdf_from_gcs(gcs_url)
         else:
             # Initialize processor for non-page-by-page modes
             if not initialize_processor():
