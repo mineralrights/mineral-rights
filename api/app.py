@@ -642,9 +642,28 @@ async def process_large_pdf_chunked(
                 temp_pdf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
                 temp_pdf.close()
                 
-                # Download from GCS
+                # Download from GCS using same credential logic as working endpoint
                 from google.cloud import storage
-                client = storage.Client()
+                
+                # Use same credential logic as /process-gcs endpoint
+                credentials_b64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")
+                if credentials_b64:
+                    import base64
+                    import json
+                    from google.oauth2 import service_account
+                    
+                    # Decode the base64 credentials
+                    credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+                    credentials_info = json.loads(credentials_json)
+                    
+                    # Create credentials object
+                    credentials = service_account.Credentials.from_service_account_info(credentials_info)
+                    client = storage.Client(credentials=credentials)
+                    print("✅ Using base64 encoded service account credentials for GCS download")
+                else:
+                    # Fallback to default credentials
+                    client = storage.Client()
+                    print("✅ Using default service account credentials for GCS download")
                 
                 # Parse GCS URL - handle both formats
                 if 'storage.googleapis.com' in gcs_url:
