@@ -610,10 +610,6 @@ async def process_large_pdf_chunked(
         print(f"🔧 Processing mode: {processing_mode}")
         print(f"🔧 Splitting strategy: {splitting_strategy}")
         
-        # Initialize processor
-        if not initialize_processor():
-            raise HTTPException(status_code=500, detail="Failed to initialize processor")
-        
         # Handle page-by-page processing mode
         if processing_mode == "page_by_page":
             # Use the new page-by-page processor
@@ -625,6 +621,10 @@ async def process_large_pdf_chunked(
             page_processor = LargePDFProcessor(api_key=api_key)
             result = page_processor.process_large_pdf_from_gcs(gcs_url)
         else:
+            # Initialize processor for non-page-by-page modes
+            if not initialize_processor():
+                raise HTTPException(status_code=500, detail="Failed to initialize processor")
+            
             # Process the file with chunked approach for large PDFs
             result = processor.process_large_document_chunked(
                 gcs_url=gcs_url,
