@@ -612,25 +612,57 @@ async def process_large_pdf_chunked(
         
         # Handle page-by-page processing mode
         if processing_mode == "page_by_page":
-            # Use the new page-by-page processor
+            # Use the memory-efficient streaming processor
             import sys
             import os
             sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-            from mineral_rights.large_pdf_processor import LargePDFProcessor
+            from mineral_rights.memory_efficient_processor import MemoryEfficientProcessor
             api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
                 raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")
             
-            page_processor = LargePDFProcessor(api_key=api_key)
+            # Create temporary CSV file for results
+            import tempfile
+            temp_csv = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+            temp_csv.close()
+            
+            streaming_processor = MemoryEfficientProcessor(api_key=api_key)
             
             # Check if it's a local file path (for testing) or GCS URL
             if gcs_url.startswith('file://'):
                 # Extract local file path
                 local_path = gcs_url[7:]  # Remove 'file://' prefix
-                result = page_processor.process_large_pdf_local(local_path)
+                result = streaming_processor.process_pdf_streaming(local_path, temp_csv.name)
             else:
-                # Process from GCS
-                result = page_processor.process_large_pdf_from_gcs(gcs_url)
+                # For GCS, we need to download first
+                from mineral_rights.large_pdf_processor import LargePDFProcessor
+                gcs_processor = LargePDFProcessor(api_key=api_key)
+                # Download to temp file
+                import tempfile
+                temp_pdf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
+                temp_pdf.close()
+                
+                # Download from GCS
+                from google.cloud import storage
+                client = storage.Client()
+                url_parts = gcs_url.split('/')
+                bucket_name = url_parts[3]
+                blob_name = '/'.join(url_parts[4:])
+                bucket = client.bucket(bucket_name)
+                blob = bucket.blob(blob_name)
+                blob.download_to_filename(temp_pdf.name)
+                
+                # Process with streaming
+                result = streaming_processor.process_pdf_streaming(temp_pdf.name, temp_csv.name)
+                
+                # Clean up temp PDF
+                os.unlink(temp_pdf.name)
+            
+            # Read CSV results if needed
+            if os.path.exists(temp_csv.name):
+                result['csv_results'] = temp_csv.name
+                # Clean up temp CSV
+                os.unlink(temp_csv.name)
         else:
             # Initialize processor for non-page-by-page modes
             if not initialize_processor():
