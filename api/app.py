@@ -693,7 +693,13 @@ async def process_large_pdf_chunked(
                     bucket = client.bucket(bucket_name)
                     blob = bucket.blob(blob_name)
                     
+                    # Wait a moment for file to be available (propagation delay)
+                    import time
+                    print("⏳ Waiting for file to be available...")
+                    time.sleep(2)  # 2 second wait
+                    
                     # Check if blob exists first
+                    print(f"🔍 Checking if blob exists...")
                     if not blob.exists():
                         raise HTTPException(status_code=404, detail=f"File not found in GCS: {blob_name}")
                     
