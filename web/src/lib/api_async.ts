@@ -177,8 +177,10 @@ async function processVeryLargeFilePages(
     console.log(`🔧 Step 3: Processing with page-by-page approach...`);
     const processFormData = new FormData();
     processFormData.append('gcs_url', gcs_url);
+    processFormData.append('processing_mode', 'page_by_page');
+    processFormData.append('splitting_strategy', 'document_ai');
 
-    const processResponse = await robustFetch(`${API_CONFIG.baseUrl}/process-large-pdf-pages`, {
+    const processResponse = await robustFetch(`${API_CONFIG.baseUrl}/process-large-pdf`, {
       method: 'POST',
       body: processFormData,
     });

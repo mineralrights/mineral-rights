@@ -614,12 +614,23 @@ async def process_large_pdf_chunked(
         if not initialize_processor():
             raise HTTPException(status_code=500, detail="Failed to initialize processor")
         
-        # Process the file with chunked approach for large PDFs
-        result = processor.process_large_document_chunked(
-            gcs_url=gcs_url,
-            processing_mode=processing_mode,
-            splitting_strategy=splitting_strategy
-        )
+        # Handle page-by-page processing mode
+        if processing_mode == "page_by_page":
+            # Use the new page-by-page processor
+            from mineral_rights.large_pdf_processor import LargePDFProcessor
+            api_key = os.getenv("ANTHROPIC_API_KEY")
+            if not api_key:
+                raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")
+            
+            page_processor = LargePDFProcessor(api_key=api_key)
+            result = page_processor.process_large_pdf_from_gcs(gcs_url)
+        else:
+            # Process the file with chunked approach for large PDFs
+            result = processor.process_large_document_chunked(
+                gcs_url=gcs_url,
+                processing_mode=processing_mode,
+                splitting_strategy=splitting_strategy
+            )
         
         return result
         
