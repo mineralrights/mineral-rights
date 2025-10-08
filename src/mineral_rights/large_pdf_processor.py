@@ -123,13 +123,26 @@ class LargePDFProcessor:
         client = storage.Client()
         
         try:
-            # Parse GCS URL
-            url_parts = gcs_url.split('/')
-            if len(url_parts) < 5:
-                raise ValueError(f"Invalid GCS URL format: {gcs_url}")
-            
-            bucket_name = url_parts[3]
-            blob_name = '/'.join(url_parts[4:])
+            # Parse GCS URL - handle both formats
+            if 'storage.googleapis.com' in gcs_url:
+                # Format: https://storage.googleapis.com/bucket-name/path/to/file
+                url_parts = gcs_url.split('/')
+                if len(url_parts) < 5:
+                    raise ValueError(f"Invalid GCS URL format: {gcs_url}")
+                
+                bucket_name = url_parts[3]
+                blob_name = '/'.join(url_parts[4:])
+            else:
+                # Format: gs://bucket-name/path/to/file
+                if gcs_url.startswith('gs://'):
+                    gcs_url = gcs_url[5:]  # Remove gs:// prefix
+                
+                parts = gcs_url.split('/', 1)
+                if len(parts) != 2:
+                    raise ValueError(f"Invalid GCS URL format: {gcs_url}")
+                
+                bucket_name = parts[0]
+                blob_name = parts[1]
             
             print(f"📦 Bucket: {bucket_name}")
             print(f"📄 Blob: {blob_name}")
