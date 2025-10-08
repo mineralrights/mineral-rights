@@ -670,9 +670,21 @@ async def process_large_pdf_chunked(
                 print(f"📦 Downloading from bucket: {bucket_name}")
                 print(f"📄 Blob name: {blob_name}")
                 
-                bucket = client.bucket(bucket_name)
-                blob = bucket.blob(blob_name)
-                blob.download_to_filename(temp_pdf.name)
+                try:
+                    bucket = client.bucket(bucket_name)
+                    blob = bucket.blob(blob_name)
+                    
+                    # Check if blob exists first
+                    if not blob.exists():
+                        raise HTTPException(status_code=404, detail=f"File not found in GCS: {blob_name}")
+                    
+                    print(f"✅ Blob exists, downloading...")
+                    blob.download_to_filename(temp_pdf.name)
+                    print(f"✅ File downloaded successfully to {temp_pdf.name}")
+                    
+                except Exception as e:
+                    print(f"❌ GCS download error: {e}")
+                    raise HTTPException(status_code=500, detail=f"Failed to download from GCS: {str(e)}")
                 
                 # Process with streaming
                 result = streaming_processor.process_pdf_streaming(temp_pdf.name, temp_csv.name)
