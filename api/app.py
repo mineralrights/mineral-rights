@@ -613,6 +613,9 @@ async def process_large_pdf_chunked(
         # Handle page-by-page processing mode
         if processing_mode == "page_by_page":
             # Use the original working page-by-page processor
+            import sys
+            import os
+            sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
             from mineral_rights.large_pdf_processor import LargePDFProcessor
             api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
