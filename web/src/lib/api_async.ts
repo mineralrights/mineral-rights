@@ -33,14 +33,19 @@ async function robustFetch(url: string, options: RequestInit = {}): Promise<Resp
               ...options.headers,
             };
         
-        // Create fetch options with SSL-friendly settings
+        // Determine if request is same-origin to send cookies (needed for Vercel preview protection)
+        const isBrowserEnv = typeof window !== 'undefined';
+        const isAbsolute = /^https?:\/\//i.test(currentUrl);
+        const isSameOrigin = isBrowserEnv
+          ? (!isAbsolute || currentUrl.startsWith(window.location.origin))
+          : false;
+
+        // Create fetch options; include credentials for same-origin, omit for cross-origin
         const fetchOptions: RequestInit = {
           ...options,
           headers,
           signal: AbortSignal.timeout(1800000), // 30 minute timeout for large PDFs
-          // Add mode and credentials for CORS
-          mode: 'cors',
-          credentials: 'omit', // Don't send credentials to avoid SSL issues
+          credentials: isSameOrigin ? 'same-origin' : 'omit',
         };
         
         console.log(`🔄 Attempting fetch to: ${cacheBustUrl} (attempt ${attempt})`);
@@ -140,10 +145,11 @@ async function processVeryLargeFilePages(
     // Step 1: Get signed upload URL
     console.log(`🔑 Step 1: Getting signed upload URL...`);
     const isBrowser = typeof window !== 'undefined';
-    const isCrossOriginSigned = isBrowser && API_CONFIG.baseUrl && !window.location.origin.startsWith(API_CONFIG.baseUrl);
-    const signedUrlEndpoint = isCrossOriginSigned
-      ? `/api/get-signed-upload-url` // use proxy in browser to avoid CORS on preflight
-      : (API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/get-signed-upload-url` : `/api/get-signed-upload-url`);
+    // Always use Next.js proxy in the browser to avoid cross-origin preflights
+    const useDirect = !isBrowser && Boolean(API_CONFIG.baseUrl);
+    const signedUrlEndpoint = isBrowser
+      ? `/api/get-signed-upload-url`
+      : (useDirect ? `${API_CONFIG.baseUrl}/get-signed-upload-url` : `/api/get-signed-upload-url`);
     const uploadResponse = await robustFetch(signedUrlEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -184,10 +190,10 @@ async function processVeryLargeFilePages(
 
     // Prefer proxying this long-running call through Next.js in the browser
     // to avoid cross-origin CORS issues if upstream returns non-CORS errors (e.g., 504).
-    const isCrossOrigin = isBrowser && API_CONFIG.baseUrl && !window.location.origin.startsWith(API_CONFIG.baseUrl);
-    const directProcess = API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/process-large-pdf` : `/api/process-large-pdf`;
+    // Prefer direct to Cloud Run to avoid Vercel function timeouts; proxy only if no baseUrl
     const proxyProcess = `/api/process-large-pdf`;
-    let processEndpoint = isCrossOrigin ? directProcess : directProcess;
+    const directProcess = API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/process-large-pdf` : proxyProcess;
+    let processEndpoint = directProcess;
     let processResponse: Response;
     try {
       processResponse = await robustFetch(processEndpoint, {
@@ -195,8 +201,8 @@ async function processVeryLargeFilePages(
         body: processFormData,
       });
     } catch (e) {
-      // Fallback to proxy if cross-origin direct call failed (likely CORS on 504)
-      if (isCrossOrigin) {
+      // Fallback to proxy if direct call fails and proxy is available
+      if (directProcess !== proxyProcess) {
         processResponse = await robustFetch(proxyProcess, {
           method: 'POST',
           body: processFormData,
