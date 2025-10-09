@@ -14,19 +14,17 @@ export async function OPTIONS() {
   });
 }
 
-export async function POST(req: NextRequest) {
+async function proxySignedUrlRequest(payload: { filename: string; content_type: string }) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 120000); // 120s
   try {
-    const body = await req.json();
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000);
     const res = await fetch(`${API_BASE}/get-signed-upload-url`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body: JSON.stringify(payload),
       signal: controller.signal,
       cache: 'no-store'
     });
-    clearTimeout(timeout);
     const text = await res.text();
     return new NextResponse(text, {
       status: res.status,
@@ -36,6 +34,54 @@ export async function POST(req: NextRequest) {
         'Access-Control-Expose-Headers': '*'
       },
     });
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const filename = searchParams.get('filename') || 'document.pdf';
+    const content_type = searchParams.get('content_type') || 'application/pdf';
+    return await proxySignedUrlRequest({ filename, content_type });
+  } catch (e: any) {
+    return new NextResponse(JSON.stringify({ error: e?.message || 'proxy error' }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      }
+    });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    let body: any = {};
+    try {
+      body = await req.json();
+    } catch {
+      // Fallback: attempt to read form or query params if JSON parse fails
+      try {
+        const form = await req.formData();
+        body = {
+          filename: (form.get('filename') as string) || 'document.pdf',
+          content_type: (form.get('content_type') as string) || 'application/pdf'
+        };
+      } catch {
+        const { searchParams } = new URL(req.url);
+        body = {
+          filename: searchParams.get('filename') || 'document.pdf',
+          content_type: searchParams.get('content_type') || 'application/pdf'
+        };
+      }
+    }
+    const payload = {
+      filename: body.filename || 'document.pdf',
+      content_type: body.content_type || 'application/pdf'
+    };
+    return await proxySignedUrlRequest(payload);
   } catch (e: any) {
     return new NextResponse(JSON.stringify({ error: e?.message || 'proxy error' }), {
       status: 500,
