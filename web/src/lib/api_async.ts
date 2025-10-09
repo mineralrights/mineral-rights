@@ -139,9 +139,11 @@ async function processVeryLargeFilePages(
   try {
     // Step 1: Get signed upload URL
     console.log(`🔑 Step 1: Getting signed upload URL...`);
-    const signedUrlEndpoint = API_CONFIG.baseUrl
-      ? `${API_CONFIG.baseUrl}/get-signed-upload-url`
-      : `/api/get-signed-upload-url`;
+    const isBrowser = typeof window !== 'undefined';
+    const isCrossOriginSigned = isBrowser && API_CONFIG.baseUrl && !window.location.origin.startsWith(API_CONFIG.baseUrl);
+    const signedUrlEndpoint = isCrossOriginSigned
+      ? `/api/get-signed-upload-url` // use proxy in browser to avoid CORS on preflight
+      : (API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/get-signed-upload-url` : `/api/get-signed-upload-url`);
     const uploadResponse = await robustFetch(signedUrlEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -182,15 +184,27 @@ async function processVeryLargeFilePages(
 
     // Prefer proxying this long-running call through Next.js in the browser
     // to avoid cross-origin CORS issues if upstream returns non-CORS errors (e.g., 504).
-    const isBrowser = typeof window !== 'undefined';
     const isCrossOrigin = isBrowser && API_CONFIG.baseUrl && !window.location.origin.startsWith(API_CONFIG.baseUrl);
-    const processEndpoint = isBrowser && isCrossOrigin
-      ? `/api/process-large-pdf`
-      : (API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/process-large-pdf` : `/api/process-large-pdf`);
-    const processResponse = await robustFetch(processEndpoint, {
-      method: 'POST',
-      body: processFormData,
-    });
+    const directProcess = API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/process-large-pdf` : `/api/process-large-pdf`;
+    const proxyProcess = `/api/process-large-pdf`;
+    let processEndpoint = isCrossOrigin ? directProcess : directProcess;
+    let processResponse: Response;
+    try {
+      processResponse = await robustFetch(processEndpoint, {
+        method: 'POST',
+        body: processFormData,
+      });
+    } catch (e) {
+      // Fallback to proxy if cross-origin direct call failed (likely CORS on 504)
+      if (isCrossOrigin) {
+        processResponse = await robustFetch(proxyProcess, {
+          method: 'POST',
+          body: processFormData,
+        });
+      } else {
+        throw e;
+      }
+    }
 
     if (!processResponse.ok) {
       const errorText = await processResponse.text();
