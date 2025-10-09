@@ -180,9 +180,13 @@ async function processVeryLargeFilePages(
     processFormData.append('processing_mode', 'page_by_page');
     processFormData.append('splitting_strategy', 'document_ai');
 
-    const processEndpoint = API_CONFIG.baseUrl
-      ? `${API_CONFIG.baseUrl}/process-large-pdf`
-      : `/api/process-large-pdf`;
+    // Prefer proxying this long-running call through Next.js in the browser
+    // to avoid cross-origin CORS issues if upstream returns non-CORS errors (e.g., 504).
+    const isBrowser = typeof window !== 'undefined';
+    const isCrossOrigin = isBrowser && API_CONFIG.baseUrl && !window.location.origin.startsWith(API_CONFIG.baseUrl);
+    const processEndpoint = isBrowser && isCrossOrigin
+      ? `/api/process-large-pdf`
+      : (API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/process-large-pdf` : `/api/process-large-pdf`);
     const processResponse = await robustFetch(processEndpoint, {
       method: 'POST',
       body: processFormData,
