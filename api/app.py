@@ -612,116 +612,22 @@ async def process_large_pdf_chunked(
         
         # Handle page-by-page processing mode
         if processing_mode == "page_by_page":
-            # Use the memory-efficient streaming processor
-            import sys
-            import os
-            sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
-            from mineral_rights.memory_efficient_processor import MemoryEfficientProcessor
+            # Use the original working page-by-page processor
+            from mineral_rights.large_pdf_processor import LargePDFProcessor
             api_key = os.getenv("ANTHROPIC_API_KEY")
             if not api_key:
                 raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")
             
-            # Create temporary CSV file for results
-            import tempfile
-            temp_csv = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
-            temp_csv.close()
-            
-            streaming_processor = MemoryEfficientProcessor(api_key=api_key)
+            page_processor = LargePDFProcessor(api_key=api_key)
             
             # Check if it's a local file path (for testing) or GCS URL
             if gcs_url.startswith('file://'):
                 # Extract local file path
                 local_path = gcs_url[7:]  # Remove 'file://' prefix
-                result = streaming_processor.process_pdf_streaming(local_path, temp_csv.name)
+                result = page_processor.process_large_pdf_local(local_path)
             else:
-                # For GCS, we need to download first
-                from mineral_rights.large_pdf_processor import LargePDFProcessor
-                gcs_processor = LargePDFProcessor(api_key=api_key)
-                # Download to temp file
-                import tempfile
-                temp_pdf = tempfile.NamedTemporaryFile(suffix='.pdf', delete=False)
-                temp_pdf.close()
-                
-                # Download from GCS using same credential logic as working endpoint
-                from google.cloud import storage
-                
-                # Use same credential logic as /process-gcs endpoint
-                credentials_b64 = os.getenv("GOOGLE_CREDENTIALS_BASE64")
-                if credentials_b64:
-                    import base64
-                    import json
-                    from google.oauth2 import service_account
-                    
-                    # Decode the base64 credentials
-                    credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
-                    credentials_info = json.loads(credentials_json)
-                    
-                    # Create credentials object
-                    credentials = service_account.Credentials.from_service_account_info(credentials_info)
-                    client = storage.Client(credentials=credentials)
-                    print("✅ Using base64 encoded service account credentials for GCS download")
-                else:
-                    # Fallback to default credentials
-                    client = storage.Client()
-                    print("✅ Using default service account credentials for GCS download")
-                
-                # Parse GCS URL - handle both formats
-                if 'storage.googleapis.com' in gcs_url:
-                    # Format: https://storage.googleapis.com/bucket-name/path/to/file
-                    url_parts = gcs_url.split('/')
-                    if len(url_parts) < 5:
-                        raise ValueError(f"Invalid GCS URL format: {gcs_url}")
-                    
-                    bucket_name = url_parts[3]
-                    blob_name = '/'.join(url_parts[4:])
-                else:
-                    # Format: gs://bucket-name/path/to/file
-                    if gcs_url.startswith('gs://'):
-                        gcs_url = gcs_url[5:]  # Remove gs:// prefix
-                    
-                    parts = gcs_url.split('/', 1)
-                    if len(parts) != 2:
-                        raise ValueError(f"Invalid GCS URL format: {gcs_url}")
-                    
-                    bucket_name = parts[0]
-                    blob_name = parts[1]
-                
-                print(f"📦 Downloading from bucket: {bucket_name}")
-                print(f"📄 Blob name: {blob_name}")
-                
-                try:
-                    bucket = client.bucket(bucket_name)
-                    blob = bucket.blob(blob_name)
-                    
-                    # Wait a moment for file to be available (propagation delay)
-                    import time
-                    print("⏳ Waiting for file to be available...")
-                    time.sleep(2)  # 2 second wait
-                    
-                    # Check if blob exists first
-                    print(f"🔍 Checking if blob exists...")
-                    if not blob.exists():
-                        raise HTTPException(status_code=404, detail=f"File not found in GCS: {blob_name}")
-                    
-                    print(f"✅ Blob exists, downloading...")
-                    blob.download_to_filename(temp_pdf.name)
-                    print(f"✅ File downloaded successfully to {temp_pdf.name}")
-                    
-                except Exception as e:
-                    print(f"❌ GCS download error: {e}")
-                    raise HTTPException(status_code=500, detail=f"Failed to download from GCS: {str(e)}")
-                
-                # Process with streaming
-                result = streaming_processor.process_pdf_streaming(temp_pdf.name, temp_csv.name)
-                
-                # Clean up temp PDF
-                os.unlink(temp_pdf.name)
-            
-            # Read CSV results if needed
-            if os.path.exists(temp_csv.name):
-                result['csv_results'] = temp_csv.name
-                # Clean up temp CSV
-                os.unlink(temp_csv.name)
+                # Process from GCS using the original working logic
+                result = page_processor.process_large_pdf_from_gcs(gcs_url)
         else:
             # Initialize processor for non-page-by-page modes
             if not initialize_processor():
