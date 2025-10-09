@@ -190,27 +190,15 @@ async function processVeryLargeFilePages(
 
     // Prefer proxying this long-running call through Next.js in the browser
     // to avoid cross-origin CORS issues if upstream returns non-CORS errors (e.g., 504).
-    // Prefer direct to Cloud Run to avoid Vercel function timeouts; proxy only if no baseUrl
+    // Always use proxy in the browser to avoid any CORS/network interruptions; direct on server only
     const proxyProcess = `/api/process-large-pdf`;
     const directProcess = API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/process-large-pdf` : proxyProcess;
-    let processEndpoint = directProcess;
+    let processEndpoint = typeof window !== 'undefined' ? proxyProcess : directProcess;
     let processResponse: Response;
-    try {
-      processResponse = await robustFetch(processEndpoint, {
-        method: 'POST',
-        body: processFormData,
-      });
-    } catch (e) {
-      // Fallback to proxy if direct call fails and proxy is available
-      if (directProcess !== proxyProcess) {
-        processResponse = await robustFetch(proxyProcess, {
-          method: 'POST',
-          body: processFormData,
-        });
-      } else {
-        throw e;
-      }
-    }
+    processResponse = await robustFetch(processEndpoint, {
+      method: 'POST',
+      body: processFormData,
+    });
 
     if (!processResponse.ok) {
       const errorText = await processResponse.text();
