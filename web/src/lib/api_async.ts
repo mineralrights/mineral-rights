@@ -22,15 +22,16 @@ async function robustFetch(url: string, options: RequestInit = {}): Promise<Resp
         const separator = currentUrl.includes('?') ? '&' : '?';
         const cacheBustUrl = `${currentUrl}${separator}t=${Date.now()}&r=${Math.random()}`;
         
-        // Add cache busting headers and SSL-friendly headers
-        const headers = {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache',
-          'Expires': '0',
-          'Connection': 'keep-alive',
-          'User-Agent': 'Mozilla/5.0 (compatible; MineralRightsApp/1.0)',
-          ...options.headers,
-        };
+        // Avoid adding non-safelisted headers for FormData to prevent CORS preflight
+        const isFormData = typeof FormData !== 'undefined' && (options as any)?.body instanceof FormData;
+        const headers = isFormData
+          ? { ...(options.headers || {}) }
+          : {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
+              ...options.headers,
+            };
         
         // Create fetch options with SSL-friendly settings
         const fetchOptions: RequestInit = {
