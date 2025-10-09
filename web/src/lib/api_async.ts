@@ -2,13 +2,9 @@ import { PredictionRow, DeedResult, PageResult, ProcessingMode, SplittingStrateg
 
 // API configuration
 const API_CONFIG = {
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-processor-1081023230228.us-central1.run.app',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || '',
   // Add fallback URLs for SSL issues
-  fallbackUrls: [
-    'https://mineral-rights-processor-ms7ew6g6zq-uc.a.run.app',
-    'https://mineral-rights-api-1081023230228.us-central1.run.app', // Old URL fallback
-    'https://mineral-rights-production.up.railway.app', // Railway fallback
-  ]
+  fallbackUrls: []
 };
 
 // Simple fetch with retry logic
@@ -142,7 +138,10 @@ async function processVeryLargeFilePages(
   try {
     // Step 1: Get signed upload URL
     console.log(`🔑 Step 1: Getting signed upload URL...`);
-    const uploadResponse = await robustFetch(`${API_CONFIG.baseUrl}/get-signed-upload-url`, {
+    const signedUrlEndpoint = API_CONFIG.baseUrl
+      ? `${API_CONFIG.baseUrl}/get-signed-upload-url`
+      : `/api/get-signed-upload-url`;
+    const uploadResponse = await robustFetch(signedUrlEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -180,7 +179,10 @@ async function processVeryLargeFilePages(
     processFormData.append('processing_mode', 'page_by_page');
     processFormData.append('splitting_strategy', 'document_ai');
 
-    const processResponse = await robustFetch(`${API_CONFIG.baseUrl}/process-large-pdf`, {
+    const processEndpoint = API_CONFIG.baseUrl
+      ? `${API_CONFIG.baseUrl}/process-large-pdf`
+      : `/api/process-large-pdf`;
+    const processResponse = await robustFetch(processEndpoint, {
       method: 'POST',
       body: processFormData,
     });
