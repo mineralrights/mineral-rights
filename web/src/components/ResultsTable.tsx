@@ -1,6 +1,4 @@
 import { PredictionRow, PageResult, DeedResult } from "@/lib/types";
-import { useState } from "react";
-import StepBubble from "./StepBubble";
 import { downloadCSV } from "@/lib/csv";
 
 type Props = { rows: PredictionRow[] };
@@ -34,7 +32,6 @@ export default function ResultsTable({ rows }: Props) {
               <th className="px-4 py-2 text-left">Prediction</th>
               <th className="px-4 py-2 text-left">Confidence</th>
               <th className="px-4 py-2 text-left">Summary</th>
-              <th className="px-4 py-2 text-left">Details</th>
             </tr>
           </thead>
           <tbody>
@@ -47,7 +44,6 @@ export default function ResultsTable({ rows }: Props) {
 }
 
 function Row({ row }: { row: PredictionRow }) {
-  const [open, setOpen] = useState(false);
 
   const formatConfidence = (confidence?: number) => {
     if (confidence === undefined) return "—";
@@ -88,56 +84,7 @@ function Row({ row }: { row: PredictionRow }) {
             row.explanation ?? "—"
           )}
         </td>
-        <td className="px-4 py-2">
-          {row.steps && (
-            <button
-              onClick={() => setOpen(!open)}
-              className="text-[color:var(--accent)] hover:underline"
-            >
-              {open ? "Hide" : "Show"}
-            </button>
-          )}
-        </td>
       </tr>
-      {open && (
-        <tr>
-          <td colSpan={6} className="bg-gray-50 px-6 py-4">
-            {/* Show processing steps */}
-            {row.steps && (
-              <div className="mb-4">
-                <h4 className="font-medium text-gray-800 mb-2">Processing Steps:</h4>
-                {row.steps.map((s, i) => (
-                  <StepBubble key={i} text={s} />
-                ))}
-              </div>
-            )}
-            
-            {/* Show deed-by-deed results */}
-            {row.processingMode === "multi_deed" && row.deedResults && (
-              <div>
-                <h4 className="font-medium text-gray-800 mb-3">Deed-by-Deed Results:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {row.deedResults.map((deedResult) => (
-                    <DeedResultCard key={deedResult.deed_number} deedResult={deedResult} />
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Show page-by-page results */}
-            {row.processingMode === "page_by_page" && row.pageResults && (
-              <div>
-                <h4 className="font-medium text-gray-800 mb-3">Page-by-Page Results:</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {row.pageResults.map((pageResult) => (
-                    <PageResultCard key={pageResult.page_number} pageResult={pageResult} />
-                  ))}
-                </div>
-              </div>
-            )}
-          </td>
-        </tr>
-      )}
     </>
   );
 }
