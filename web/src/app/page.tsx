@@ -241,7 +241,7 @@ export default function Home() {
         )}
 
         {/* Progress Display - positioned in the middle of the screen below Processing text */}
-        <ProgressDisplay progress={progressInfo} isVisible={isRunning && processingMode === "page_by_page"} />
+        <ProgressDisplay progress={progressInfo} isVisible={isRunning && processingMode === "page_by_page"} inline={true} />
 
         <ResultsTable rows={rows} />
 

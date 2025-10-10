@@ -18,9 +18,10 @@ interface ProgressInfo {
 interface ProgressDisplayProps {
   progress: ProgressInfo;
   isVisible: boolean;
+  inline?: boolean; // New prop to control positioning
 }
 
-export default function ProgressDisplay({ progress, isVisible }: ProgressDisplayProps) {
+export default function ProgressDisplay({ progress, isVisible, inline = false }: ProgressDisplayProps) {
   if (!isVisible || !progress) return null;
 
   const formatTime = (seconds: number) => {
@@ -29,8 +30,13 @@ export default function ProgressDisplay({ progress, isVisible }: ProgressDisplay
     return `${minutes}m ${remainingSeconds}s`;
   };
 
+  // Choose positioning based on inline prop
+  const containerClasses = inline 
+    ? "bg-white border border-gray-300 rounded-lg shadow-lg p-4 max-w-sm mx-auto my-4"
+    : "fixed top-4 right-4 bg-white border border-gray-300 rounded-lg shadow-lg p-4 max-w-sm z-50";
+
   return (
-    <div className="fixed top-4 right-4 bg-white border border-gray-300 rounded-lg shadow-lg p-4 max-w-sm z-50">
+    <div className={containerClasses}>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-gray-800">Processing Progress</h3>
         <div className="text-xs text-gray-500">
