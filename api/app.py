@@ -30,6 +30,9 @@ except ImportError:
 # Initialize FastAPI app
 app = FastAPI(title="Mineral-Rights API - Simple SSE Version")
 
+# Global job results storage (in production, use Redis or database)
+job_results = {}
+
 # CORS configuration - Explicit and robust
 app.add_middleware(
     CORSMiddleware,
@@ -652,37 +655,105 @@ async def process_large_pdf_chunked(
 @app.options("/process-large-pdf-pages")
 async def process_large_pdf_pages_options():
     """Handle CORS preflight requests"""
-    return {"message": "CORS preflight"}
+    from fastapi.responses import Response
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Max-Age": "86400"
+        }
+    )
 
 @app.post("/process-large-pdf-pages")
 async def process_large_pdf_pages(
     gcs_url: str = Form(...)
 ):
-    """Process large PDFs page by page for mineral rights detection"""
+    """Process large PDFs page by page for mineral rights detection - returns immediately with job ID"""
     if not GCS_AVAILABLE:
         raise HTTPException(status_code=500, detail="GCS not available")
     
     try:
-        print(f"🔍 Processing large PDF page by page...")
+        print(f"🔍 Starting async processing for PDF...")
         print(f"🔧 GCS URL: {gcs_url}")
         
-        # Initialize large PDF processor
-        from src.mineral_rights.large_pdf_processor import LargePDFProcessor
-        api_key = os.getenv("ANTHROPIC_API_KEY")
-        if not api_key:
-            raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")
+        # Generate unique job ID
+        job_id = str(uuid.uuid4())
         
-        processor = LargePDFProcessor(api_key=api_key)
+        # Start processing in background thread
+        def process_pdf_background():
+            global job_results
+            try:
+                from src.mineral_rights.large_pdf_processor import LargePDFProcessor
+                api_key = os.getenv("ANTHROPIC_API_KEY")
+                if not api_key:
+                    print(f"❌ Job {job_id}: ANTHROPIC_API_KEY not found")
+                    return
+                
+                processor = LargePDFProcessor(api_key=api_key)
+                result = processor.process_large_pdf_from_gcs(gcs_url)
+                
+                # Store result (in production, use Redis or database)
+                job_results[job_id] = {
+                    "status": "completed",
+                    "result": result,
+                    "timestamp": time.time()
+                }
+                print(f"✅ Job {job_id}: Processing completed")
+                
+            except Exception as e:
+                print(f"❌ Job {job_id}: Error processing PDF: {e}")
+                job_results[job_id] = {
+                    "status": "error",
+                    "error": str(e),
+                    "timestamp": time.time()
+                }
         
-        # Process the file page by page
-        result = processor.process_large_pdf_from_gcs(gcs_url)
+        # Start background processing
+        thread = threading.Thread(target=process_pdf_background)
+        thread.daemon = True
+        thread.start()
         
-        return result
+        # Initialize job status
+        global job_results
+        job_results[job_id] = {
+            "status": "processing",
+            "timestamp": time.time()
+        }
+        
+        # Return immediately with job ID
+        return {
+            "job_id": job_id,
+            "status": "processing",
+            "message": "PDF processing started. Use /process-status/{job_id} to check progress."
+        }
         
     except Exception as e:
-        print(f"❌ Error processing large PDF pages: {e}")
-        raise HTTPException(status_code=500, detail=f"Error processing large PDF pages: {str(e)}")
+        print(f"❌ Error starting PDF processing: {e}")
+        raise HTTPException(status_code=500, detail=f"Error starting PDF processing: {str(e)}")
 
+@app.get("/process-status/{job_id}")
+async def get_process_status(job_id: str):
+    """Get the status of a PDF processing job"""
+    if job_id not in job_results:
+        raise HTTPException(status_code=404, detail="Job not found")
+    
+    return job_results[job_id]
+
+@app.options("/process-status/{job_id}")
+async def get_process_status_options(job_id: str):
+    """Handle CORS preflight requests for status endpoint"""
+    from fastapi.responses import Response
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Max-Age": "86400"
+        }
+    )
 
 if __name__ == "__main__":
     import uvicorn

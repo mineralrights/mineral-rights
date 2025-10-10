@@ -225,24 +225,54 @@ async function processVeryLargeFilePages(
       throw new Error(`Page-by-page processing failed: ${processResponse.status} ${errorText}`);
     }
 
-    const result = await processResponse.json();
-    console.log(`✅ Page-by-page processing completed: ${result.pages_with_reservations} pages with mineral rights`);
+    const jobResponse = await processResponse.json();
+    console.log(`✅ Job started: ${jobResponse.job_id}`);
     
-    // Format result for UI compatibility
-    const formattedResult = {
-      filename: file.name,
-      total_pages: result.total_pages,
-      pages_with_reservations: result.pages_with_reservations,
-      reservation_pages: result.reservation_pages || [],
-      page_results: result.results || [],
-      processing_method: result.processing_method || 'page_by_page',
-      // Add legacy fields for compatibility
-      has_reservation: result.pages_with_reservations > 0,
-      confidence: result.pages_with_reservations > 0 ? 1.0 : 0.0,
-      reasoning: `Found mineral rights reservations on ${result.pages_with_reservations} pages: ${(result.reservation_pages || []).join(', ')}`
-    };
+    // Poll for completion
+    const jobId = jobResponse.job_id;
+    let attempts = 0;
+    const maxAttempts = 120; // 10 minutes max (5 second intervals)
     
-    return formattedResult;
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      attempts++;
+      
+      console.log(`🔍 Checking job status (attempt ${attempts}/${maxAttempts})...`);
+      const statusResponse = await robustFetch(`${API_CONFIG.baseUrl}/process-status/${jobId}`);
+      
+      if (!statusResponse.ok) {
+        throw new Error(`Failed to check job status: ${statusResponse.status}`);
+      }
+      
+      const status = await statusResponse.json();
+      console.log(`📊 Job status: ${status.status}`);
+      
+      if (status.status === 'completed') {
+        const result = status.result;
+        console.log(`✅ Page-by-page processing completed: ${result.pages_with_reservations} pages with mineral rights`);
+        
+        // Format result for UI compatibility
+        const formattedResult = {
+          filename: file.name,
+          total_pages: result.total_pages,
+          pages_with_reservations: result.pages_with_reservations,
+          reservation_pages: result.reservation_pages || [],
+          page_results: result.results || [],
+          processing_method: result.processing_method || 'page_by_page',
+          // Add legacy fields for compatibility
+          has_reservation: result.pages_with_reservations > 0,
+          confidence: result.pages_with_reservations > 0 ? 1.0 : 0.0,
+          reasoning: `Found mineral rights reservations on ${result.pages_with_reservations} pages: ${(result.reservation_pages || []).join(', ')}`
+        };
+        
+        return formattedResult;
+      } else if (status.status === 'error') {
+        throw new Error(`Job failed: ${status.error}`);
+      }
+      // Continue polling if status is 'processing'
+    }
+    
+    throw new Error('Job timed out after 10 minutes');
 
   } catch (error) {
     console.error(`❌ Page-by-page processing workflow failed:`, error);
