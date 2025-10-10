@@ -166,14 +166,10 @@ async function processVeryLargeFilePages(
     // Step 1: Get signed upload URL
     console.log(`🔑 Step 1: Getting signed upload URL...`);
     const isBrowser = typeof window !== 'undefined';
-    // Use direct backend call if NEXT_PUBLIC_API_URL is set, otherwise use proxy
-    const useDirect = Boolean(API_CONFIG.baseUrl);
-    const signedUrlEndpoint = useDirect
-      ? `${API_CONFIG.baseUrl}/get-signed-upload-url`
-      : `/api/get-signed-upload-url`;
+    // Use Vercel proxy for signed URL (avoids CORS issues), direct backend for processing
+    const signedUrlEndpoint = `/api/get-signed-upload-url`;
     
-    console.log(`🔧 API_CONFIG.baseUrl: ${API_CONFIG.baseUrl}`);
-    console.log(`🔧 useDirect: ${useDirect}`);
+    console.log(`🔧 Using Vercel proxy for signed URL to avoid CORS issues`);
     console.log(`🔧 signedUrlEndpoint: ${signedUrlEndpoint}`);
     const uploadResponse = await robustFetch(signedUrlEndpoint, {
       method: 'POST',
