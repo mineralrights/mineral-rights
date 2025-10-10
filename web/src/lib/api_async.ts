@@ -112,7 +112,8 @@ export interface JobStatus {
 export async function processDocument(
   file: File,
   processingMode: ProcessingMode = 'single_deed',
-  splittingStrategy: SplittingStrategy = 'document_ai'
+  splittingStrategy: SplittingStrategy = 'document_ai',
+  onProgress?: (progress: any) => void
 ): Promise<any> {
   // Check file size and choose appropriate endpoint
   const fileSizeMB = file.size / (1024 * 1024);
@@ -124,12 +125,12 @@ export async function processDocument(
   // Handle explicit page-by-page mode
   if (processingMode === 'page_by_page') {
     console.log(`📄 User requested page-by-page processing for: ${file.name}`);
-    return await processVeryLargeFilePages(file, processingMode, splittingStrategy);
+    return await processVeryLargeFilePages(file, processingMode, splittingStrategy, onProgress);
   }
   
   if (isVeryLargeFile) {
     // Use page-by-page processing for very large files (memory efficient)
-    return await processVeryLargeFilePages(file, processingMode, splittingStrategy);
+    return await processVeryLargeFilePages(file, processingMode, splittingStrategy, onProgress);
   } else if (isLargeFile) {
     // Use GCS upload for large files (up to 5TB)
     return await processLargeFileWithGCS(file, processingMode, splittingStrategy);
@@ -158,7 +159,8 @@ export async function processDocument(
 async function processVeryLargeFilePages(
   file: File,
   processingMode: ProcessingMode,
-  splittingStrategy: SplittingStrategy
+  splittingStrategy: SplittingStrategy,
+  onProgress?: (progress: any) => void
 ): Promise<any> {
   console.log(`🔍 Starting page-by-page processing for very large file: ${file.name}`);
   
@@ -231,7 +233,7 @@ async function processVeryLargeFilePages(
     // Poll for completion
     const jobId = jobResponse.job_id;
     let attempts = 0;
-    const maxAttempts = 360; // 30 minutes max (5 second intervals)
+    const maxAttempts = 720; // 60 minutes max (5 second intervals) - supports up to 300-page PDFs
     
     while (attempts < maxAttempts) {
       await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
@@ -246,6 +248,24 @@ async function processVeryLargeFilePages(
       
       const status = await statusResponse.json();
       console.log(`📊 Job status: ${status.status}`);
+      
+      // Display detailed progress if available
+      if (status.status === 'processing' && status.progress) {
+        const progress = status.progress;
+        console.log(`📈 Progress: ${progress.current_page}/${progress.total_pages} pages (${progress.progress_percentage?.toFixed(1) || 0}%)`);
+        console.log(`⏱️  Elapsed: ${Math.floor(progress.processing_time / 60)}m ${Math.floor(progress.processing_time % 60)}s | Est. remaining: ${Math.floor(progress.estimated_remaining / 60)}m`);
+        console.log(`🎯 Reservations found so far: ${progress.pages_with_reservations?.length || 0} pages`);
+        
+        if (progress.current_page_result) {
+          const current = progress.current_page_result;
+          console.log(`📄 Current page ${current.page_number}: ${current.has_reservations ? '🎯 HAS RESERVATIONS' : '📄 No reservations'} (confidence: ${current.confidence?.toFixed(3) || 0})`);
+        }
+        
+        // Call progress callback if provided
+        if (onProgress) {
+          onProgress(progress);
+        }
+      }
       
       if (status.status === 'completed') {
         const result = status.result;
@@ -272,7 +292,7 @@ async function processVeryLargeFilePages(
       // Continue polling if status is 'processing'
     }
     
-      throw new Error('Job timed out after 30 minutes');
+      throw new Error('Job timed out after 60 minutes');
 
   } catch (error) {
     console.error(`❌ Page-by-page processing workflow failed:`, error);

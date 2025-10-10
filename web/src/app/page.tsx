@@ -3,6 +3,7 @@
 import PDFUpload from "@/components/PDFUpload";
 import ProcessingModeSelector from "@/components/ProcessingModeSelector";
 import ResultsTable from "@/components/ResultsTable";
+import ProgressDisplay from "@/components/ProgressDisplay";
 import { processDocument } from "@/lib/api_async";
 import { rowsToCSV } from "@/lib/csv";
 import { useState } from "react";
@@ -13,6 +14,7 @@ export default function Home() {
   const [isRunning, setIsRunning] = useState(false);
   const [processingMode, setProcessingMode] = useState<ProcessingMode>("single_deed");
   const [splittingStrategy, setSplittingStrategy] = useState<SplittingStrategy>("document_ai");
+  const [progressInfo, setProgressInfo] = useState<any>(null);
 
   const convertJobResultToPredictionRows = (
     result: any,
@@ -121,9 +123,14 @@ export default function Home() {
         
         console.log(`🚀 Processing file: ${file.name} with mode: ${processingMode}`);
         
-        // Process document directly
-        const result = await processDocument(file, processingMode, splittingStrategy);
+        // Process document directly with progress tracking
+        const result = await processDocument(file, processingMode, splittingStrategy, (progress) => {
+          setProgressInfo(progress);
+        });
         console.log('✅ Processing completed:', result);
+        
+        // Clear progress info
+        setProgressInfo(null);
         
         // Convert results to prediction rows
         const results = convertJobResultToPredictionRows(result, processingMode);
@@ -140,6 +147,8 @@ export default function Home() {
         
       } catch (error) {
         console.error('Error processing file:', file.name, error);
+        // Clear progress info on error
+        setProgressInfo(null);
         // Update the row with error status
         setRows(prevRows => {
           return prevRows.map(row => {
@@ -181,6 +190,9 @@ export default function Home() {
 
   return (
     <main className="flex justify-center py-16 px-4">
+      {/* Progress Display */}
+      <ProgressDisplay progress={progressInfo} isVisible={isRunning && processingMode === "page_by_page"} />
+      
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-10">
         <h1 className="text-4xl font-semibold mb-10 text-[color:var(--accent)]">
           Mineral-Rights&nbsp;Classifier

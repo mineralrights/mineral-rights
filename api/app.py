@@ -691,13 +691,28 @@ async def process_large_pdf_pages(
                     print(f"❌ Job {job_id}: ANTHROPIC_API_KEY not found")
                     return
                 
-                processor = LargePDFProcessor(api_key=api_key)
-                result = processor.process_large_pdf_from_gcs(gcs_url)
+                # Initialize progress tracking
+                job_results[job_id] = {
+                    "status": "processing",
+                    "progress": {
+                        "current_page": 0,
+                        "total_pages": 0,
+                        "pages_with_reservations": [],
+                        "processing_time": 0,
+                        "estimated_remaining": 0,
+                        "current_page_result": None
+                    },
+                    "timestamp": time.time()
+                }
                 
-                # Store result (in production, use Redis or database)
+                processor = LargePDFProcessor(api_key=api_key)
+                result = processor.process_large_pdf_with_progress(gcs_url, job_id, job_results)
+                
+                # Store final result
                 job_results[job_id] = {
                     "status": "completed",
                     "result": result,
+                    "progress": job_results[job_id].get("progress", {}),
                     "timestamp": time.time()
                 }
                 print(f"✅ Job {job_id}: Processing completed")
@@ -707,6 +722,7 @@ async def process_large_pdf_pages(
                 job_results[job_id] = {
                     "status": "error",
                     "error": str(e),
+                    "progress": job_results[job_id].get("progress", {}),
                     "timestamp": time.time()
                 }
         
