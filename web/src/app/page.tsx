@@ -67,8 +67,9 @@ export default function Home() {
       }
     } else if (processingMode === 'page_by_page') {
       // Page-by-page result - create individual rows for each page
-      if (result.results && Array.isArray(result.results)) {
-        result.results.forEach((page: any, index: number) => {
+      if ((result.results && Array.isArray(result.results)) || (result.page_results && Array.isArray(result.page_results))) {
+        const pages = result.results || result.page_results;
+        pages.forEach((page: any, index: number) => {
           const row: PredictionRow = {
             filename: result.filename || 'document.pdf',
             status: 'done',
