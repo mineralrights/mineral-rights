@@ -277,7 +277,7 @@ async function processVeryLargeFilePages(
           total_pages: result.total_pages,
           pages_with_reservations: result.pages_with_reservations,
           reservation_pages: result.reservation_pages || [],
-          page_results: result.results || [],
+          page_results: result.results || result.page_results || [],
           processing_method: result.processing_method || 'page_by_page',
           // Add legacy fields for compatibility
           has_reservation: result.pages_with_reservations > 0,
