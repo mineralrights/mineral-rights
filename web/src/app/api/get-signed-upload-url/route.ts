@@ -1,6 +1,38 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE = 'https://mineral-rights-processor-1081023230228.us-central1.run.app';
+const API_BASE = process.env.BACKEND_API_URL || 'https://mineral-rights-api-1081023230228.us-central1.run.app';
+
+// Validate environment
+console.log('🔍 BACKEND_API_URL:', process.env.BACKEND_API_URL);
+console.log('🔍 Using API_BASE:', API_BASE);
+if (!process.env.BACKEND_API_URL) {
+  console.warn('⚠️ BACKEND_API_URL not set, using default');
+}
+
+// Input validation
+function validateFilename(filename: string): string {
+  if (!filename || typeof filename !== 'string') {
+    return 'document.pdf';
+  }
+  
+  // Sanitize filename - remove dangerous characters
+  const sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+  
+  // Ensure it has a valid extension
+  if (!sanitized.includes('.')) {
+    return `${sanitized}.pdf`;
+  }
+  
+  return sanitized;
+}
+
+function validateContentType(contentType: string): string {
+  const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/tiff'];
+  if (allowedTypes.includes(contentType)) {
+    return contentType;
+  }
+  return 'application/pdf';
+}
 
 export async function OPTIONS() {
   return new NextResponse('OK', {
@@ -16,7 +48,7 @@ export async function OPTIONS() {
 
 async function proxySignedUrlRequest(payload: { filename: string; content_type: string }) {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 120000); // 120s
+  const timeout = setTimeout(() => controller.abort(), 300000); // 300s (5 minutes)
   try {
     const res = await fetch(`${API_BASE}/get-signed-upload-url`, {
       method: 'POST',
@@ -25,6 +57,13 @@ async function proxySignedUrlRequest(payload: { filename: string; content_type: 
       signal: controller.signal,
       cache: 'no-store'
     });
+    
+    if (!res.ok) {
+      const errorText = await res.text();
+      console.error(`Backend error: ${res.status} ${errorText}`);
+      throw new Error(`Backend responded with ${res.status}: ${errorText}`);
+    }
+    
     const text = await res.text();
     return new NextResponse(text, {
       status: res.status,
@@ -34,6 +73,9 @@ async function proxySignedUrlRequest(payload: { filename: string; content_type: 
         'Access-Control-Expose-Headers': '*'
       },
     });
+  } catch (error) {
+    console.error('Proxy error:', error);
+    throw error;
   } finally {
     clearTimeout(timeout);
   }
@@ -42,11 +84,17 @@ async function proxySignedUrlRequest(payload: { filename: string; content_type: 
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
-    const filename = searchParams.get('filename') || 'document.pdf';
-    const content_type = searchParams.get('content_type') || 'application/pdf';
+    const filename = validateFilename(searchParams.get('filename') || 'document.pdf');
+    const content_type = validateContentType(searchParams.get('content_type') || 'application/pdf');
+    
+    console.log(`🔑 GET request for signed URL: ${filename} (${content_type})`);
     return await proxySignedUrlRequest({ filename, content_type });
   } catch (e: any) {
-    return new NextResponse(JSON.stringify({ error: e?.message || 'proxy error' }), {
+    console.error('❌ GET /get-signed-upload-url failed:', e);
+    return new NextResponse(JSON.stringify({ 
+      error: e?.message || 'proxy error',
+      details: e?.stack || 'No stack trace available'
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
@@ -77,13 +125,20 @@ export async function POST(req: NextRequest) {
         };
       }
     }
+    
     const payload = {
-      filename: body.filename || 'document.pdf',
-      content_type: body.content_type || 'application/pdf'
+      filename: validateFilename(body.filename || 'document.pdf'),
+      content_type: validateContentType(body.content_type || 'application/pdf')
     };
+    
+    console.log(`🔑 Requesting signed URL for: ${payload.filename} (${payload.content_type})`);
     return await proxySignedUrlRequest(payload);
   } catch (e: any) {
-    return new NextResponse(JSON.stringify({ error: e?.message || 'proxy error' }), {
+    console.error('❌ POST /get-signed-upload-url failed:', e);
+    return new NextResponse(JSON.stringify({ 
+      error: e?.message || 'proxy error',
+      details: e?.stack || 'No stack trace available'
+    }), {
       status: 500,
       headers: {
         'Content-Type': 'application/json',
