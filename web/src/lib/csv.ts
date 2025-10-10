@@ -56,21 +56,26 @@ export function rowsToCSV(rows: PredictionRow[]): string {
         });
       });
       
-      // Also add a summary row for page-by-page
-      const pagesWithReservations = row.pageResults.filter(p => p.has_reservations).length;
-      data.push({
-        "Original File": row.filename + " (Summary)",
-        "Deed Name": "ALL_PAGES_SUMMARY",
-        "Deed Number": "SUMMARY",
-        Status: row.status,
-        Prediction: `${pagesWithReservations}/${row.pageResults.length} pages have reservations`,
-        Confidence: "",
-        "Page Range": `Pages ${row.pagesWithReservations?.join(', ') || 'None'}`,
-        "Pages in Deed": `${row.totalPages || row.pageResults.length} pages total`,
-        "Boundary Confidence": "",
-        "Has Reservations": pagesWithReservations > 0 ? "YES" : "NO",
-        Explanation: row.explanation || ""
-      });
+      // Only add summary row if this is the first page row (to avoid duplicates)
+      if (row.pageResults.length === 1 && row.pageResults[0].page_number === 1) {
+        // This is the first page, so we can add a summary row
+        // We need to get the total count from the parent data structure
+        const totalPages = row.totalPages || 1;
+        const pagesWithReservations = row.pagesWithReservations?.length || 0;
+        data.push({
+          "Original File": row.filename + " (Summary)",
+          "Deed Name": "ALL_PAGES_SUMMARY",
+          "Deed Number": "SUMMARY",
+          Status: row.status,
+          Prediction: `${pagesWithReservations}/${totalPages} pages have reservations`,
+          Confidence: "",
+          "Page Range": `Pages ${row.pagesWithReservations?.join(', ') || 'None'}`,
+          "Pages in Deed": `${totalPages} pages total`,
+          "Boundary Confidence": "",
+          "Has Reservations": pagesWithReservations > 0 ? "YES" : "NO",
+          Explanation: row.explanation || ""
+        });
+      }
     } else {
       // Single deed format
       data.push({
