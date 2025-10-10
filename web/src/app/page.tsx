@@ -67,9 +67,17 @@ export default function Home() {
       }
     } else if (processingMode === 'page_by_page') {
       // Page-by-page result - create individual rows for each page
+      console.log('🔍 DEBUG: Processing page_by_page result:', result);
+      console.log('🔍 DEBUG: result.results:', result.results);
+      console.log('🔍 DEBUG: result.page_results:', result.page_results);
+      
       if ((result.results && Array.isArray(result.results)) || (result.page_results && Array.isArray(result.page_results))) {
         const pages = result.results || result.page_results;
+        console.log('🔍 DEBUG: Pages array length:', pages.length);
+        console.log('🔍 DEBUG: First page:', pages[0]);
+        
         pages.forEach((page: any, index: number) => {
+          console.log(`🔍 DEBUG: Creating row for page ${page.page_number} (index ${index})`);
           const row: PredictionRow = {
             filename: result.filename || 'document.pdf',
             status: 'done',
@@ -82,7 +90,9 @@ export default function Home() {
             pagesWithReservations: result.reservation_pages || []
           };
           rows.push(row);
+          console.log(`🔍 DEBUG: Added row ${rows.length} for page ${page.page_number}`);
         });
+        console.log('🔍 DEBUG: Total rows created:', rows.length);
       } else {
         // Fallback: create a summary row if no detailed page results
         const row: PredictionRow = {
