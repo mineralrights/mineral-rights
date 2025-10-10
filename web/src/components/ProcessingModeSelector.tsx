@@ -37,7 +37,8 @@ export default function ProcessingModeSelector({
               <strong>Single Deed</strong> - One deed per PDF
             </span>
           </label>
-          <label className="flex items-center">
+          {/* Multi-deed option temporarily disabled - not working properly */}
+          {/* <label className="flex items-center">
             <input
               type="radio"
               name="processingMode"
@@ -49,7 +50,7 @@ export default function ProcessingModeSelector({
             <span className="text-sm">
               <strong>Multiple Deeds</strong> - Multiple deeds in one PDF (uses Document AI)
             </span>
-          </label>
+          </label> */}
           <label className="flex items-center">
             <input
               type="radio"
@@ -66,8 +67,8 @@ export default function ProcessingModeSelector({
         </div>
       </div>
 
-      {/* Splitting Strategy (only for multi-deed) */}
-      {processingMode === "multi_deed" && (
+      {/* Splitting Strategy (only for multi-deed) - temporarily disabled */}
+      {/* {processingMode === "multi_deed" && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Splitting Method
@@ -88,7 +89,7 @@ export default function ProcessingModeSelector({
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Page-by-Page Description */}
       {processingMode === "page_by_page" && (
