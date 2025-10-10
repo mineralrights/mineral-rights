@@ -166,11 +166,15 @@ async function processVeryLargeFilePages(
     // Step 1: Get signed upload URL
     console.log(`🔑 Step 1: Getting signed upload URL...`);
     const isBrowser = typeof window !== 'undefined';
-    // Always use Next.js proxy in the browser to avoid cross-origin preflights
-    const useDirect = !isBrowser && Boolean(API_CONFIG.baseUrl);
-    const signedUrlEndpoint = isBrowser
-      ? `/api/get-signed-upload-url`
-      : (useDirect ? `${API_CONFIG.baseUrl}/get-signed-upload-url` : `/api/get-signed-upload-url`);
+    // Use direct backend call if NEXT_PUBLIC_API_URL is set, otherwise use proxy
+    const useDirect = Boolean(API_CONFIG.baseUrl);
+    const signedUrlEndpoint = useDirect
+      ? `${API_CONFIG.baseUrl}/get-signed-upload-url`
+      : `/api/get-signed-upload-url`;
+    
+    console.log(`🔧 API_CONFIG.baseUrl: ${API_CONFIG.baseUrl}`);
+    console.log(`🔧 useDirect: ${useDirect}`);
+    console.log(`🔧 signedUrlEndpoint: ${signedUrlEndpoint}`);
     const uploadResponse = await robustFetch(signedUrlEndpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -209,12 +213,14 @@ async function processVeryLargeFilePages(
     processFormData.append('processing_mode', 'page_by_page');
     processFormData.append('splitting_strategy', 'document_ai');
 
-    // Prefer proxying this long-running call through Next.js in the browser
-    // to avoid cross-origin CORS issues if upstream returns non-CORS errors (e.g., 504).
-    // Always use proxy in the browser to avoid any CORS/network interruptions; direct on server only
-    const proxyProcess = `/api/process-large-pdf`;
-    const directProcess = API_CONFIG.baseUrl ? `${API_CONFIG.baseUrl}/process-large-pdf` : proxyProcess;
-    let processEndpoint = typeof window !== 'undefined' ? proxyProcess : directProcess;
+    // Use direct backend call if NEXT_PUBLIC_API_URL is set, otherwise use proxy
+    const useDirectProcess = Boolean(API_CONFIG.baseUrl);
+    const processEndpoint = useDirectProcess
+      ? `${API_CONFIG.baseUrl}/process-large-pdf`
+      : `/api/process-large-pdf`;
+    
+    console.log(`🔧 useDirectProcess: ${useDirectProcess}`);
+    console.log(`🔧 processEndpoint: ${processEndpoint}`);
     let processResponse: Response;
     processResponse = await robustFetch(processEndpoint, {
       method: 'POST',
