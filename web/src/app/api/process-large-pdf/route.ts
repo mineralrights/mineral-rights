@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-const API_BASE = 'https://mineral-rights-processor-1081023230228.us-central1.run.app';
+const API_BASE = 'https://mineral-rights-api-1081023230228.us-central1.run.app';
 
 export async function OPTIONS() {
   return new NextResponse('OK', {
