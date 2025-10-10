@@ -282,24 +282,99 @@ class LargePDFProcessor:
             "processing_method": "page_by_page"
         }
     
+    def process_large_pdf_from_gcs_with_progress(self, gcs_url: str, job_id: str, job_results: dict) -> Dict[str, Any]:
+        """
+        Process large PDF from GCS with real-time progress updates
+        
+        Args:
+            gcs_url: GCS URL of the PDF file
+            job_id: Job ID for progress tracking
+            job_results: Global job results dictionary
+            
+        Returns:
+            Dict with pages containing mineral rights reservations
+        """
+        self.job_id = job_id
+        self.job_results = job_results
+        
+        print(f"🔍 Processing large PDF from GCS with progress tracking: {gcs_url}")
+        
+        # Download PDF from GCS to temporary file
+        import tempfile
+        import requests
+        
+        try:
+            # Download PDF from GCS
+            print(f"📥 Downloading PDF from GCS...")
+            response = requests.get(gcs_url, stream=True)
+            response.raise_for_status()
+            
+            # Create temporary file
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as tmp_file:
+                for chunk in response.iter_content(chunk_size=8192):
+                    tmp_file.write(chunk)
+                tmp_file_path = tmp_file.name
+            
+            print(f"✅ PDF downloaded to temporary file: {tmp_file_path}")
+            
+            # Process the downloaded file with progress tracking
+            result = self.process_large_pdf_with_progress(tmp_file_path, job_id, job_results)
+            
+            return result
+            
+        except Exception as e:
+            print(f"❌ Error processing GCS file: {e}")
+            raise
+        finally:
+            # Clean up temporary file
+            if 'tmp_file_path' in locals() and os.path.exists(tmp_file_path):
+                os.unlink(tmp_file_path)
+                print(f"🧹 Cleaned up temporary file: {tmp_file_path}")
+    
     def _process_single_page_with_progress(self, pdf_path: str, page_num: int, current_page: int) -> Dict[str, Any]:
         """Process a single page and return result"""
         try:
             # Use the existing processor's single page method
-            # For now, we'll use a simplified approach
-            # In a full implementation, you'd extract the single page processing logic
+            # Extract single page from PDF and process it
+            import fitz
+            from PIL import Image
+            from io import BytesIO
+            import base64
             
-            # This is a placeholder - in reality, you'd need to implement
-            # the actual single page processing logic here
-            import random
-            has_reservations = random.random() > 0.8  # 20% chance for demo
-            confidence = random.uniform(0.6, 0.95)
+            # Open PDF and get the specific page
+            doc = fitz.open(pdf_path)
+            page = doc.load_page(page_num)
+            
+            # Convert page to image
+            mat = fitz.Matrix(2, 2)  # 2x zoom for quality
+            pix = page.get_pixmap(matrix=mat)
+            img_data = pix.tobytes("png")
+            image = Image.open(BytesIO(img_data))
+            
+            # Extract text from page
+            page_text = page.get_text()
+            doc.close()
+            
+            # Use the existing classifier to process this page
+            # For now, we'll use a simplified approach that actually processes the page
+            # In a full implementation, you'd use the real classification logic
+            
+            # Simple text-based detection for demo
+            has_reservations = any(keyword in page_text.lower() for keyword in [
+                'mineral', 'oil', 'gas', 'reservation', 'reserved', 'subsurface'
+            ])
+            
+            # Calculate confidence based on keyword matches
+            keyword_matches = sum(1 for keyword in [
+                'mineral', 'oil', 'gas', 'reservation', 'reserved', 'subsurface'
+            ] if keyword in page_text.lower())
+            confidence = min(0.95, 0.6 + (keyword_matches * 0.1))
             
             return {
                 'page_number': current_page,
                 'has_reservations': has_reservations,
                 'confidence': confidence,
-                'reasoning': f"Processed page {current_page} with confidence {confidence:.3f}"
+                'reasoning': f"Processed page {current_page}: {'Found mineral rights keywords' if has_reservations else 'No mineral rights keywords found'} (confidence: {confidence:.3f})"
             }
             
         except Exception as e:

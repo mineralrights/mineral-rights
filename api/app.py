@@ -706,7 +706,7 @@ async def process_large_pdf_pages(
                 }
                 
                 processor = LargePDFProcessor(api_key=api_key)
-                result = processor.process_large_pdf_with_progress(gcs_url, job_id, job_results)
+                result = processor.process_large_pdf_from_gcs_with_progress(gcs_url, job_id, job_results)
                 
                 # Store final result
                 job_results[job_id] = {
