@@ -700,7 +700,8 @@ async def process_large_pdf_pages(
                         "pages_with_reservations": [],
                         "processing_time": 0,
                         "estimated_remaining": 0,
-                        "current_page_result": None
+                        "current_page_result": None,
+                        "progress_percentage": 0
                     },
                     "timestamp": time.time()
                 }
