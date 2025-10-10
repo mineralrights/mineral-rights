@@ -108,6 +108,23 @@ export interface JobStatus {
   completed_at?: number;
 }
 
+// Check if processing can be resumed
+export async function checkResumeCapability(jobId: string): Promise<any> {
+  const API_CONFIG = getApiConfig();
+  const resumeUrl = `${API_CONFIG.baseUrl}/resume-processing/${jobId}`;
+  
+  try {
+    const response = await fetch(resumeUrl);
+    if (!response.ok) {
+      throw new Error(`Failed to check resume capability: ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Error checking resume capability:', error);
+    return { can_resume: false, message: 'Error checking resume capability' };
+  }
+}
+
 // Process document directly and return results
 export async function processDocument(
   file: File,

@@ -777,6 +777,70 @@ async def get_process_status_options(job_id: str):
         }
     )
 
+@app.get("/resume-processing/{job_id}")
+async def resume_processing(job_id: str):
+    """Check if processing can be resumed for a job"""
+    try:
+        # Check if job exists in memory
+        if job_id in job_results:
+            return {
+                "can_resume": True,
+                "status": job_results[job_id].get("status", "unknown"),
+                "progress": job_results[job_id].get("progress", {}),
+                "message": "Job found in memory"
+            }
+        
+        # Check if job exists in GCS (saved progress)
+        import os
+        from google.cloud import storage
+        
+        # Initialize GCS client
+        credentials_json = base64.b64decode(os.getenv("GOOGLE_CREDENTIALS_BASE64", "")).decode('utf-8')
+        credentials = json.loads(credentials_json)
+        client = storage.Client.from_service_account_info(credentials)
+        bucket_name = os.getenv("GCS_BUCKET_NAME", "mineral-rights-pdfs-1759435410")
+        bucket = client.bucket(bucket_name)
+        
+        # Check for saved progress file
+        progress_blob_name = f"progress/{job_id}.json"
+        progress_blob = bucket.blob(progress_blob_name)
+        
+        if progress_blob.exists():
+            # Load saved progress
+            progress_data = json.loads(progress_blob.download_as_text())
+            return {
+                "can_resume": True,
+                "status": "resumable",
+                "progress": progress_data.get("progress", {}),
+                "message": "Found saved progress in cloud storage"
+            }
+        
+        return {
+            "can_resume": False,
+            "message": "No saved progress found"
+        }
+        
+    except Exception as e:
+        print(f"❌ Error checking resume status: {e}")
+        return {
+            "can_resume": False,
+            "message": f"Error checking resume status: {str(e)}"
+        }
+
+@app.options("/resume-processing/{job_id}")
+async def resume_processing_options(job_id: str):
+    """Handle CORS preflight requests for resume endpoint"""
+    from fastapi.responses import Response
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "86400"
+        }
+    )
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))

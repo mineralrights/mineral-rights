@@ -199,8 +199,8 @@ class LargePDFProcessor:
         """
         print(f"🔍 Processing large PDF locally: {pdf_path}")
         
-        # Process the local file with progress tracking
-        result = self.process_large_pdf_with_progress(pdf_path, job_id, job_results)
+        # Process the local file
+        result = self.process_large_pdf(pdf_path, output_csv)
         return result
     
     def process_large_pdf_with_progress(self, pdf_path: str, job_id: str, job_results: dict) -> Dict[str, Any]:
@@ -263,16 +263,19 @@ class LargePDFProcessor:
                 estimated_remaining,
                 page_result
             )
+            
+            # Save progress to GCS after each page
+            self._save_progress_to_gcs()
         
-        # Create final results
+        # Create final results - include ALL pages (both positive and negative results)
         results = []
         for page_result in page_results:
-            if page_result.get('has_reservations', False):
-                results.append({
-                    'page_number': page_result['page_number'],
-                    'confidence': page_result.get('confidence', 0.0),
-                    'reasoning': page_result.get('reasoning', 'No reasoning provided')
-                })
+            results.append({
+                'page_number': page_result['page_number'],
+                'has_reservations': page_result.get('has_reservations', False),
+                'confidence': page_result.get('confidence', 0.0),
+                'reasoning': page_result.get('reasoning', 'No reasoning provided')
+            })
         
         return {
             "total_pages": total_pages,
@@ -281,6 +284,46 @@ class LargePDFProcessor:
             "results": results,
             "processing_method": "page_by_page"
         }
+    
+    def _save_progress_to_gcs(self):
+        """Save current progress to GCS for resume capability"""
+        try:
+            import os
+            import json
+            import base64
+            from google.cloud import storage
+            
+            if not self.job_id or not self.job_results:
+                return
+            
+            # Get current progress data
+            progress_data = {
+                "job_id": self.job_id,
+                "timestamp": time.time(),
+                "progress": self.job_results[self.job_id].get("progress", {}),
+                "status": "processing"
+            }
+            
+            # Initialize GCS client
+            credentials_json = base64.b64decode(os.getenv("GOOGLE_CREDENTIALS_BASE64", "")).decode('utf-8')
+            credentials = json.loads(credentials_json)
+            client = storage.Client.from_service_account_info(credentials)
+            bucket_name = os.getenv("GCS_BUCKET_NAME", "mineral-rights-pdfs-1759435410")
+            bucket = client.bucket(bucket_name)
+            
+            # Save progress to GCS
+            progress_blob_name = f"progress/{self.job_id}.json"
+            progress_blob = bucket.blob(progress_blob_name)
+            progress_blob.upload_from_string(
+                json.dumps(progress_data, indent=2),
+                content_type='application/json'
+            )
+            
+            print(f"💾 Progress saved to GCS: {progress_blob_name}")
+            
+        except Exception as e:
+            print(f"❌ Error saving progress to GCS: {e}")
+            # Don't fail the processing if saving progress fails
     
     def process_large_pdf_from_gcs_with_progress(self, gcs_url: str, job_id: str, job_results: dict) -> Dict[str, Any]:
         """
@@ -351,31 +394,50 @@ class LargePDFProcessor:
             img_data = pix.tobytes("png")
             image = Image.open(BytesIO(img_data))
             
-            # Extract text from page
-            page_text = page.get_text()
+            # Extract text from page using Claude (for image-based PDFs)
+            page_text = self.processor.extract_text_with_claude(image, max_tokens=6000)
             doc.close()
             
-            # Use the existing classifier to process this page
-            # For now, we'll use a simplified approach that actually processes the page
-            # In a full implementation, you'd use the real classification logic
-            
-            # Simple text-based detection for demo
-            has_reservations = any(keyword in page_text.lower() for keyword in [
-                'mineral', 'oil', 'gas', 'reservation', 'reserved', 'subsurface'
-            ])
-            
-            # Calculate confidence based on keyword matches
-            keyword_matches = sum(1 for keyword in [
-                'mineral', 'oil', 'gas', 'reservation', 'reserved', 'subsurface'
-            ] if keyword in page_text.lower())
-            confidence = min(0.95, 0.6 + (keyword_matches * 0.1))
-            
-            return {
-                'page_number': current_page,
-                'has_reservations': has_reservations,
-                'confidence': confidence,
-                'reasoning': f"Processed page {current_page}: {'Found mineral rights keywords' if has_reservations else 'No mineral rights keywords found'} (confidence: {confidence:.3f})"
-            }
+            # Use the real AI classifier to process this page
+            try:
+                # Use the real classifier with page-specific settings
+                # For individual pages, we need to be more conservative since pages lack full document context
+                result = self.processor.classifier.classify_document(
+                    ocr_text=page_text,
+                    max_samples=1,  # Single sample for speed
+                    confidence_threshold=0.9,  # Very high threshold for pages (was 0.6)
+                    high_recall_mode=False  # Disable high recall mode for pages (was True)
+                )
+                
+                has_reservations = result.predicted_class == 1
+                confidence = result.confidence
+                
+                # Use the actual AI reasoning from the classification result
+                ai_reasoning = "No reasoning provided"
+                if result.all_samples and len(result.all_samples) > 0:
+                    ai_reasoning = result.all_samples[0].reasoning
+                
+                return {
+                    'page_number': current_page,
+                    'has_reservations': has_reservations,
+                    'confidence': confidence,
+                    'reasoning': ai_reasoning
+                }
+                
+            except Exception as e:
+                print(f"❌ Error with AI classification for page {current_page}: {e}")
+                # Fallback to simple keyword detection if AI fails
+                has_reservations = any(keyword in page_text.lower() for keyword in [
+                    'mineral', 'oil', 'gas', 'reservation', 'reserved', 'subsurface'
+                ])
+                confidence = 0.6 if has_reservations else 0.4
+                
+                return {
+                    'page_number': current_page,
+                    'has_reservations': has_reservations,
+                    'confidence': confidence,
+                    'reasoning': f"Fallback analysis for page {current_page}: {'Found mineral rights keywords' if has_reservations else 'No mineral rights keywords found'} (AI failed: {str(e)})"
+                }
             
         except Exception as e:
             print(f"❌ Error processing page {current_page}: {e}")
