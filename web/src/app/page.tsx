@@ -6,7 +6,7 @@ import ResultsTable from "@/components/ResultsTable";
 import ProgressDisplay from "@/components/ProgressDisplay";
 import { processDocument } from "@/lib/api_async";
 import { rowsToCSV } from "@/lib/csv";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PredictionRow, ProcessingMode, SplittingStrategy } from "@/lib/types";
 
 export default function Home() {
@@ -15,6 +15,11 @@ export default function Home() {
   const [processingMode, setProcessingMode] = useState<ProcessingMode>("single_deed");
   const [splittingStrategy, setSplittingStrategy] = useState<SplittingStrategy>("document_ai");
   const [progressInfo, setProgressInfo] = useState<any>(null);
+
+  // Debug progressInfo state changes
+  useEffect(() => {
+    console.log('🔄 progressInfo state changed:', progressInfo);
+  }, [progressInfo]);
 
   const convertJobResultToPredictionRows = (
     result: any,
@@ -126,7 +131,9 @@ export default function Home() {
         // Process document directly with progress tracking
         const result = await processDocument(file, processingMode, splittingStrategy, (progress) => {
           console.log('🔄 Progress callback received:', progress);
+          console.log('🔄 Setting progressInfo to:', progress);
           setProgressInfo(progress);
+          console.log('🔄 ProgressInfo state should now be:', progress);
         });
         console.log('✅ Processing completed:', result);
         
