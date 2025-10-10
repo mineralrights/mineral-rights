@@ -220,16 +220,6 @@ export default function Home() {
 
   return (
     <main className="flex justify-center py-16 px-4">
-      {/* Progress Display */}
-      <ProgressDisplay progress={progressInfo} isVisible={isRunning && processingMode === "page_by_page"} />
-      
-      {/* Debug: Show when ProgressDisplay should be visible */}
-      {isRunning && processingMode === "page_by_page" && (
-        <div className="fixed top-4 right-4 bg-red-500 text-white p-2 rounded z-50">
-          DEBUG: ProgressDisplay should be visible! progressInfo: {progressInfo ? 'SET' : 'NULL'}
-        </div>
-      )}
-      
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-10">
         <h1 className="text-4xl font-semibold mb-10 text-[color:var(--accent)]">
           Mineral-Rights&nbsp;Classifier
@@ -249,6 +239,9 @@ export default function Home() {
             Processing…
           </p>
         )}
+
+        {/* Progress Display - positioned in the middle of the screen below Processing text */}
+        <ProgressDisplay progress={progressInfo} isVisible={isRunning && processingMode === "page_by_page"} />
 
         <ResultsTable rows={rows} />
 
