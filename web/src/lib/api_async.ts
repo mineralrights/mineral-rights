@@ -110,11 +110,10 @@ export interface JobStatus {
 
 // Check if processing can be resumed
 export async function checkResumeCapability(jobId: string): Promise<any> {
-  const API_CONFIG = getApiConfig();
   const resumeUrl = `${API_CONFIG.baseUrl}/resume-processing/${jobId}`;
   
   try {
-    const response = await fetch(resumeUrl);
+    const response = await robustFetch(resumeUrl);
     if (!response.ok) {
       throw new Error(`Failed to check resume capability: ${response.status}`);
     }
