@@ -321,6 +321,24 @@ export default function Home() {
         <h1 className="text-4xl font-semibold mb-10 text-[color:var(--accent)]">
           Mineral-Rights&nbsp;Classifier
         </h1>
+        
+        {/* Technical Architecture Note */}
+        <div className="mb-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h2 className="text-lg font-semibold text-blue-800 mb-3">🔧 Technical Architecture</h2>
+          <div className="text-sm text-blue-700 space-y-2">
+            <p><strong>Frontend:</strong> Next.js on Vercel → <strong>Backend:</strong> Python FastAPI on Google Cloud Run → <strong>AI:</strong> Anthropic Claude API</p>
+            <p><strong>Processing:</strong> Large PDFs are processed page-by-page with real-time progress tracking and background threading.</p>
+            <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
+              <p className="text-yellow-800 font-medium mb-2">⚠️ Important: Long PDF Processing Scenarios</p>
+              <ul className="text-xs text-yellow-700 space-y-1">
+                <li>• <strong>Page refresh/computer off:</strong> Job continues in background, but you lose connection</li>
+                <li>• <strong>Internet disconnection:</strong> Job continues, but you can't see progress</li>
+                <li>• <strong>Cloud Run restart (after 15+ min):</strong> Job stops completely, need to restart</li>
+                <li>• <strong>Very large PDFs (100+ pages):</strong> May take 30-60+ minutes to process</li>
+              </ul>
+            </div>
+          </div>
+        </div>
 
         <ProcessingModeSelector
           processingMode={processingMode}
