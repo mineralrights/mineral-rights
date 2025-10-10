@@ -73,7 +73,7 @@ export function rowsToCSV(rows: PredictionRow[]): string {
           "Pages in Deed": `${totalPages} pages total`,
           "Boundary Confidence": "",
           "Has Reservations": pagesWithReservations > 0 ? "YES" : "NO",
-          Explanation: row.explanation || ""
+          Explanation: `Document summary: ${pagesWithReservations} out of ${totalPages} pages contain mineral rights reservations`
         });
       }
     } else {
