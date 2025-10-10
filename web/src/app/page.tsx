@@ -4,7 +4,7 @@ import PDFUpload from "@/components/PDFUpload";
 import ProcessingModeSelector from "@/components/ProcessingModeSelector";
 import ResultsTable from "@/components/ResultsTable";
 import ProgressDisplay from "@/components/ProgressDisplay";
-import { processDocument } from "@/lib/api_async";
+import { processDocument, checkResumeCapability } from "@/lib/api_async";
 import { rowsToCSV } from "@/lib/csv";
 import { useState, useEffect } from "react";
 import { PredictionRow, ProcessingMode, SplittingStrategy } from "@/lib/types";
@@ -15,11 +15,37 @@ export default function Home() {
   const [processingMode, setProcessingMode] = useState<ProcessingMode>("single_deed");
   const [splittingStrategy, setSplittingStrategy] = useState<SplittingStrategy>("document_ai");
   const [progressInfo, setProgressInfo] = useState<any>(null);
+  const [resumeJobId, setResumeJobId] = useState<string | null>(null);
+  const [showResumeOption, setShowResumeOption] = useState(false);
 
   // Debug progressInfo state changes
   useEffect(() => {
     console.log('🔄 progressInfo state changed:', progressInfo);
   }, [progressInfo]);
+
+  // Check for resume capability on page load
+  useEffect(() => {
+    const checkForResume = async () => {
+      // Check localStorage for recent job IDs
+      const recentJobIds = JSON.parse(localStorage.getItem('recentJobIds') || '[]');
+      
+      for (const jobId of recentJobIds.slice(-3)) { // Check last 3 jobs
+        try {
+          const resumeInfo = await checkResumeCapability(jobId);
+          if (resumeInfo.can_resume) {
+            setResumeJobId(jobId);
+            setShowResumeOption(true);
+            console.log('🔄 Found resumable job:', jobId, resumeInfo);
+            break;
+          }
+        } catch (error) {
+          console.log('No resume capability for job:', jobId);
+        }
+      }
+    };
+
+    checkForResume();
+  }, []);
 
   const convertJobResultToPredictionRows = (
     result: any,
@@ -150,11 +176,21 @@ export default function Home() {
         });
         console.log('✅ Processing completed:', result);
         
+        // Save job ID to localStorage for resume capability
+        if (result.jobId) {
+          const recentJobIds = JSON.parse(localStorage.getItem('recentJobIds') || '[]');
+          recentJobIds.push(result.jobId);
+          // Keep only last 5 job IDs
+          const updatedJobIds = recentJobIds.slice(-5);
+          localStorage.setItem('recentJobIds', JSON.stringify(updatedJobIds));
+          console.log('💾 Saved job ID to localStorage:', result.jobId);
+        }
+        
         // Clear progress info
         setProgressInfo(null);
         
         // Convert results to prediction rows
-        const results = convertJobResultToPredictionRows(result, processingMode);
+        const results = convertJobResultToPredictionRows(result.data, processingMode);
         console.log('🔍 DEBUG: Converted results length:', results.length);
         if (results.length > 0) {
           setRows(prevRows => {
@@ -218,6 +254,67 @@ export default function Home() {
     setRows([]);
   };
 
+  const handleResume = async () => {
+    if (!resumeJobId) return;
+    
+    setIsRunning(true);
+    setShowResumeOption(false);
+    
+    try {
+      // Resume processing by polling the job status
+      const maxAttempts = 720; // 60 minutes
+      let attempts = 0;
+      
+      while (attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        attempts++;
+        
+        const statusResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-api-1081023230228.us-central1.run.app'}/process-status/${resumeJobId}`);
+        
+        if (!statusResponse.ok) {
+          throw new Error(`Failed to check job status: ${statusResponse.status}`);
+        }
+        
+        const status = await statusResponse.json();
+        
+        if (status.status === 'processing' && status.progress) {
+          setProgressInfo(status.progress);
+        }
+        
+        if (status.status === 'completed') {
+          const result = status.result;
+          const formattedResult = {
+            filename: result.filename || 'resumed_document.pdf',
+            total_pages: result.total_pages,
+            pages_with_reservations: result.pages_with_reservations,
+            reservation_pages: result.reservation_pages || [],
+            page_results: result.results || result.page_results || [],
+            processing_method: result.processing_method || 'page_by_page',
+            has_reservation: result.pages_with_reservations > 0,
+            confidence: result.pages_with_reservations > 0 ? 1.0 : 0.0,
+            reasoning: `Found mineral rights reservations on ${result.pages_with_reservations} pages: ${(result.reservation_pages || []).join(', ')}`
+          };
+          
+          const results = convertJobResultToPredictionRows(formattedResult, 'page_by_page');
+          setRows(prevRows => [...prevRows, ...results]);
+          setProgressInfo(null);
+          break;
+        } else if (status.status === 'error') {
+          throw new Error(`Job failed: ${status.error}`);
+        }
+      }
+    } catch (error) {
+      console.error('Error resuming job:', error);
+    } finally {
+      setIsRunning(false);
+    }
+  };
+
+  const dismissResume = () => {
+    setShowResumeOption(false);
+    setResumeJobId(null);
+  };
+
   return (
     <main className="flex justify-center py-16 px-4">
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg p-10">
@@ -233,6 +330,33 @@ export default function Home() {
         />
 
         <PDFUpload onSelect={handleFiles} />
+
+        {/* Resume Option */}
+        {showResumeOption && resumeJobId && (
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-blue-800">Resume Processing</h3>
+                <p className="text-blue-600">Found a previous processing job that can be resumed.</p>
+                <p className="text-sm text-blue-500">Job ID: {resumeJobId}</p>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={handleResume}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Resume
+                </button>
+                <button
+                  onClick={dismissResume}
+                  className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {isRunning && (
           <p className="mt-4 text-[color:var(--accent)] animate-pulse">

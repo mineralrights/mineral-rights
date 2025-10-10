@@ -301,7 +301,11 @@ async function processVeryLargeFilePages(
           reasoning: `Found mineral rights reservations on ${result.pages_with_reservations} pages: ${(result.reservation_pages || []).join(', ')}`
         };
         
-        return formattedResult;
+        return {
+          success: true,
+          data: formattedResult,
+          jobId: jobResponse.job_id
+        };
       } else if (status.status === 'error') {
         throw new Error(`Job failed: ${status.error}`);
       }
