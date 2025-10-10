@@ -199,8 +199,8 @@ class LargePDFProcessor:
         """
         print(f"🔍 Processing large PDF locally: {pdf_path}")
         
-        # Process the local file
-        result = self.process_large_pdf(pdf_path, output_csv)
+        # Process the local file with progress tracking
+        result = self.process_large_pdf_with_progress(pdf_path, job_id, job_results)
         return result
     
     def process_large_pdf_with_progress(self, pdf_path: str, job_id: str, job_results: dict) -> Dict[str, Any]:

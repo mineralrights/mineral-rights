@@ -704,9 +704,14 @@ async def process_large_pdf_pages(
                     },
                     "timestamp": time.time()
                 }
+                print(f"✅ Job {job_id}: Initialized with progress tracking")
+                print(f"🔧 Job results before processing: {job_results[job_id]}")
                 
                 processor = LargePDFProcessor(api_key=api_key)
+                print(f"🔧 Calling process_large_pdf_from_gcs_with_progress...")
                 result = processor.process_large_pdf_from_gcs_with_progress(gcs_url, job_id, job_results)
+                print(f"🔧 Processing method returned, checking job results...")
+                print(f"🔧 Job results after processing: {job_results.get(job_id, 'NOT FOUND')}")
                 
                 # Store final result
                 job_results[job_id] = {
