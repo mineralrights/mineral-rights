@@ -592,12 +592,12 @@ export async function checkBackendHealth(): Promise<{status: string, details: an
       return { status: 'error', details: { status: response.status, statusText: response.statusText } };
     }
   } catch (error) {
-    if (error.name === 'TimeoutError') {
+    if (error instanceof Error && error.name === 'TimeoutError') {
       console.error('⏰ Backend is busy (timeout) - likely processing a large PDF');
       return { status: 'busy', details: { error: 'Backend timeout - likely processing large PDF' } };
     } else {
       console.error('❌ Backend health check error:', error);
-      return { status: 'error', details: { error: error.message } };
+      return { status: 'error', details: { error: error instanceof Error ? error.message : String(error) } };
     }
   }
 }
