@@ -17,7 +17,7 @@ interface GCSUploadResult {
   file_size_mb: number;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-processor-1081023230228.us-central1.run.app';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://mineral-rights-api-1081023230228.us-central1.run.app';
 
 export class DirectGCSUploader {
   private apiBaseUrl: string;

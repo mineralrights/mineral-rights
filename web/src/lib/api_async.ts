@@ -55,7 +55,28 @@ async function robustFetch(url: string, options: RequestInit = {}): Promise<Resp
           console.log(`✅ Fetch successful: ${response.status}`);
           return response;
         } else {
-          console.warn(`⚠️ Fetch failed with status ${response.status}: ${response.statusText}`);
+          // Enhanced error logging to distinguish between different failure types
+          const errorDetails = {
+            status: response.status,
+            statusText: response.statusText,
+            url: cacheBustUrl,
+            attempt: attempt,
+            isVercelProxy: cacheBustUrl.includes('/api/'),
+            isDirectBackend: cacheBustUrl.includes('mineral-rights-api-1081023230228.us-central1.run.app')
+          };
+          
+          if (response.status === 504) {
+            if (cacheBustUrl.includes('/api/')) {
+              console.error(`🚫 VERCEL PROXY TIMEOUT (504): The Vercel proxy is timing out. This usually means the backend is busy processing a large PDF.`, errorDetails);
+            } else {
+              console.error(`🚫 BACKEND TIMEOUT (504): The backend is timing out. This usually means it's busy processing a large PDF.`, errorDetails);
+            }
+          } else if (response.status === 500) {
+            console.error(`🚫 SERVER ERROR (500): Backend returned an error.`, errorDetails);
+          } else {
+            console.warn(`⚠️ Fetch failed with status ${response.status}: ${response.statusText}`, errorDetails);
+          }
+          
           if (attempt === maxRetries) {
             throw new Error(`HTTP ${response.status}: ${response.statusText}`);
           }
@@ -549,4 +570,40 @@ export async function testConnection(): Promise<{success: boolean, message: stri
       details: { error: error instanceof Error ? error.message : String(error) }
     };
   }
+}
+
+// Backend health check function for debugging
+export async function checkBackendHealth(): Promise<{status: string, details: any}> {
+  const backendUrl = 'https://mineral-rights-api-1081023230228.us-central1.run.app';
+  
+  try {
+    console.log('🔍 Checking backend health...');
+    const response = await fetch(`${backendUrl}/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout(10000) // 10 second timeout
+    });
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Backend is healthy:', data);
+      return { status: 'healthy', details: data };
+    } else {
+      console.error('❌ Backend health check failed:', response.status, response.statusText);
+      return { status: 'error', details: { status: response.status, statusText: response.statusText } };
+    }
+  } catch (error) {
+    if (error.name === 'TimeoutError') {
+      console.error('⏰ Backend is busy (timeout) - likely processing a large PDF');
+      return { status: 'busy', details: { error: 'Backend timeout - likely processing large PDF' } };
+    } else {
+      console.error('❌ Backend health check error:', error);
+      return { status: 'error', details: { error: error.message } };
+    }
+  }
+}
+
+// Make it available globally for console debugging
+if (typeof window !== 'undefined') {
+  (window as any).checkBackendHealth = checkBackendHealth;
+  console.log('🔧 Debug function available: checkBackendHealth()');
 }
