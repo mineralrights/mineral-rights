@@ -66,17 +66,19 @@ export default function Home() {
         });
       }
     } else if (processingMode === 'page_by_page') {
-      // Page-by-page result
+      // Page-by-page result - create individual rows for each page
       if (result.results && Array.isArray(result.results)) {
         result.results.forEach((page: any, index: number) => {
           const row: PredictionRow = {
-            filename: `page-${page.page_number || index + 1}.pdf`,
+            filename: result.filename || 'document.pdf',
             status: 'done',
             prediction: page.has_reservations ? 'has_reservation' : 'no_reservation',
             confidence: page.confidence || 0,
             explanation: page.reasoning || page.explanation || '',
             processingMode: 'page_by_page',
-            pageResults: [page]
+            pageResults: [page], // Single page in each row
+            totalPages: result.total_pages,
+            pagesWithReservations: result.reservation_pages || []
           };
           rows.push(row);
         });
