@@ -48,7 +48,7 @@ class LargePDFProcessor:
         # Use the existing process_document_page_by_page method
         result = self.processor.process_document_page_by_page(
             pdf_path=pdf_path,
-            max_samples=3,  # Reduced for speed
+            max_samples=1,  # Single sample for maximum speed
             confidence_threshold=0.6,
             max_tokens_per_page=8000,
             high_recall_mode=True
