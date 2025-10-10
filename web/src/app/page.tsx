@@ -62,8 +62,8 @@ export default function Home() {
       }
     } else if (processingMode === 'page_by_page') {
       // Page-by-page result
-      if (result.page_results && Array.isArray(result.page_results)) {
-        result.page_results.forEach((page: any, index: number) => {
+      if (result.results && Array.isArray(result.results)) {
+        result.results.forEach((page: any, index: number) => {
           const row: PredictionRow = {
             filename: `page-${page.page_number || index + 1}.pdf`,
             status: 'done',
@@ -80,9 +80,9 @@ export default function Home() {
         const row: PredictionRow = {
           filename: result.filename || 'document.pdf',
           status: 'done',
-          prediction: result.has_reservation ? 'has_reservation' : 'no_reservation',
-          confidence: result.confidence || 0,
-          explanation: result.reasoning || '',
+          prediction: result.pages_with_reservations > 0 ? 'has_reservation' : 'no_reservation',
+          confidence: result.pages_with_reservations > 0 ? 1.0 : 0.0,
+          explanation: result.reasoning || `Found mineral rights reservations on ${result.pages_with_reservations} pages: ${(result.reservation_pages || []).join(', ')}`,
           processingMode: 'page_by_page',
           totalPages: result.total_pages,
           pagesWithReservations: result.reservation_pages || []

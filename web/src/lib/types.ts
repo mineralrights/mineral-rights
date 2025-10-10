@@ -40,6 +40,7 @@ export interface PageResult {
   confidence: number;
   prediction: "has_reservation" | "no_reservation";
   explanation?: string;
+  reasoning?: string;  // Alternative field name from backend
   text_length?: number;
   processing_time?: number;
   has_reservations: boolean;

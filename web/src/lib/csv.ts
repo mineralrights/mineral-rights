@@ -38,6 +38,39 @@ export function rowsToCSV(rows: PredictionRow[]): string {
         "Has Reservations": deedsWithReservations > 0 ? "YES" : "NO",
         Explanation: row.explanation || ""
       });
+    } else if (row.processingMode === "page_by_page" && row.pageResults) {
+      // For page-by-page, create a row for each individual page
+      row.pageResults.forEach(page => {
+        data.push({
+          "Original File": row.filename,
+          "Deed Name": `page_${page.page_number}`,
+          "Deed Number": page.page_number,
+          Status: row.status,
+          Prediction: page.has_reservations ? "has_reservation" : "no_reservation",
+          Confidence: page.confidence ? (page.confidence * 100).toFixed(1) + "%" : "0%",
+          "Page Range": `Page ${page.page_number}`,
+          "Pages in Deed": 1,
+          "Boundary Confidence": "",
+          "Has Reservations": page.has_reservations ? "YES" : "NO",
+          Explanation: page.reasoning || page.explanation || ""
+        });
+      });
+      
+      // Also add a summary row for page-by-page
+      const pagesWithReservations = row.pageResults.filter(p => p.has_reservations).length;
+      data.push({
+        "Original File": row.filename + " (Summary)",
+        "Deed Name": "ALL_PAGES_SUMMARY",
+        "Deed Number": "SUMMARY",
+        Status: row.status,
+        Prediction: `${pagesWithReservations}/${row.pageResults.length} pages have reservations`,
+        Confidence: "",
+        "Page Range": `Pages ${row.pagesWithReservations?.join(', ') || 'None'}`,
+        "Pages in Deed": `${row.totalPages || row.pageResults.length} pages total`,
+        "Boundary Confidence": "",
+        "Has Reservations": pagesWithReservations > 0 ? "YES" : "NO",
+        Explanation: row.explanation || ""
+      });
     } else {
       // Single deed format
       data.push({
