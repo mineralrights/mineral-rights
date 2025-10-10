@@ -155,14 +155,23 @@ export default function Home() {
         
         // Convert results to prediction rows
         const results = convertJobResultToPredictionRows(result, processingMode);
+        console.log('🔍 DEBUG: Converted results length:', results.length);
         if (results.length > 0) {
           setRows(prevRows => {
-            return prevRows.map(row => {
-              if (row.filename === file.name) {
-                return results[0];
-              }
-              return row;
-            });
+            // For page_by_page, we need to handle multiple rows per file
+            if (processingMode === 'page_by_page') {
+              // Remove the old row for this file and add all new rows
+              const filteredRows = prevRows.filter(row => row.filename !== file.name);
+              return [...filteredRows, ...results];
+            } else {
+              // For other modes, replace the single row
+              return prevRows.map(row => {
+                if (row.filename === file.name) {
+                  return results[0];
+                }
+                return row;
+              });
+            }
           });
         }
         
