@@ -75,6 +75,13 @@ async function proxySignedUrlRequest(payload: { filename: string; content_type: 
     });
   } catch (error) {
     console.error('Proxy error:', error);
+    
+    // Check if this is a timeout (backend busy)
+    if (error instanceof Error && error.name === 'AbortError') {
+      console.error('⏰ Backend is busy (timeout) - likely processing a large PDF');
+      throw new Error('Backend is busy processing a large PDF. Please try again in a few minutes.');
+    }
+    
     throw error;
   } finally {
     clearTimeout(timeout);

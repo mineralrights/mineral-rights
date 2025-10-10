@@ -649,6 +649,11 @@ async def process_large_pdf_chunked(
         print(f"❌ Error processing large PDF: {e}")
         raise HTTPException(status_code=500, detail=f"Error processing large PDF: {str(e)}")
 
+@app.options("/process-large-pdf-pages")
+async def process_large_pdf_pages_options():
+    """Handle CORS preflight requests"""
+    return {"message": "CORS preflight"}
+
 @app.post("/process-large-pdf-pages")
 async def process_large_pdf_pages(
     gcs_url: str = Form(...)
@@ -662,7 +667,7 @@ async def process_large_pdf_pages(
         print(f"🔧 GCS URL: {gcs_url}")
         
         # Initialize large PDF processor
-        from mineral_rights.large_pdf_processor import LargePDFProcessor
+        from src.mineral_rights.large_pdf_processor import LargePDFProcessor
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")

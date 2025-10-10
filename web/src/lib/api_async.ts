@@ -213,7 +213,6 @@ async function processVeryLargeFilePages(
       ? `${API_CONFIG.baseUrl}/process-large-pdf-pages`
       : `/api/process-large-pdf-pages`;
     
-    console.log(`🔧 useDirectProcess: ${useDirectProcess}`);
     console.log(`🔧 processEndpoint: ${processEndpoint}`);
     let processResponse: Response;
     processResponse = await robustFetch(processEndpoint, {
