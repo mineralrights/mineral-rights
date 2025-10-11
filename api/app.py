@@ -792,6 +792,8 @@ async def resume_processing(job_id: str):
         
         # Check if job exists in GCS (saved progress)
         import os
+        import base64
+        import json
         from google.cloud import storage
         
         # Initialize GCS client

@@ -4,6 +4,7 @@ import PDFUpload from "@/components/PDFUpload";
 import ProcessingModeSelector from "@/components/ProcessingModeSelector";
 import ResultsTable from "@/components/ResultsTable";
 import ProgressDisplay from "@/components/ProgressDisplay";
+import ConsoleLog from "@/components/ConsoleLog";
 import { processDocument, checkResumeCapability } from "@/lib/api_async";
 import { rowsToCSV } from "@/lib/csv";
 import { useState, useEffect } from "react";
@@ -17,6 +18,7 @@ export default function Home() {
   const [progressInfo, setProgressInfo] = useState<any>(null);
   const [resumeJobId, setResumeJobId] = useState<string | null>(null);
   const [showResumeOption, setShowResumeOption] = useState(false);
+  const [showConsoleLog, setShowConsoleLog] = useState(false);
 
   // Debug progressInfo state changes
   useEffect(() => {
@@ -329,12 +331,12 @@ export default function Home() {
             <p><strong>Frontend:</strong> Next.js on Vercel → <strong>Backend:</strong> Python FastAPI on Google Cloud Run → <strong>AI:</strong> Anthropic Claude API</p>
             <p><strong>Processing:</strong> Large PDFs are processed page-by-page with real-time progress tracking and background threading.</p>
             <div className="mt-3 p-3 bg-yellow-50 border border-yellow-200 rounded">
-              <p className="text-yellow-800 font-medium mb-2">⚠️ Important: Long PDF Processing Scenarios</p>
+              <p className="text-yellow-800 font-medium mb-2">⚠️ Processing Large PDFs</p>
               <ul className="text-xs text-yellow-700 space-y-1">
-                <li>• <strong>Page refresh/computer off:</strong> Job continues in background, but you lose connection</li>
-                <li>• <strong>Internet disconnection:</strong> Job continues, but you can't see progress</li>
-                <li>• <strong>Cloud Run restart (after 15+ min):</strong> Job stops completely, need to restart</li>
-                <li>• <strong>Very large PDFs (100+ pages):</strong> May take 30-60+ minutes to process</li>
+                <li>• <strong>Stay connected:</strong> Keep your internet connection active during processing</li>
+                <li>• <strong>Keep your device on:</strong> Don't close your browser or turn off your computer</li>
+                <li>• <strong>Be patient:</strong> Large PDFs (100+ pages) may take 30-60+ minutes to process</li>
+                <li>• <strong>Don't refresh the page:</strong> This will interrupt the processing and you'll need to start over</li>
               </ul>
             </div>
           </div>
@@ -387,22 +389,41 @@ export default function Home() {
 
         <ResultsTable rows={rows} />
 
-        {rows.length > 0 && (
-          <div className="mt-6 flex gap-4">
-            <button
-              onClick={downloadCSV}
-              className="bg-[color:var(--accent)] text-white px-4 py-2 rounded hover:brightness-110"
-            >
-              Download CSV ({rows.length} files)
-            </button>
-            <button
-              onClick={clearAllResults}
-              className="bg-gray-500 text-white px-4 py-2 rounded hover:brightness-110"
-            >
-              Clear All Results
-            </button>
-          </div>
-        )}
+        {/* Console Log Toggle */}
+        <div className="mt-6 flex gap-4 items-center">
+          <button
+            onClick={() => setShowConsoleLog(!showConsoleLog)}
+            className={`px-4 py-2 rounded text-sm ${
+              showConsoleLog 
+                ? 'bg-gray-600 text-white' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {showConsoleLog ? 'Hide' : 'Show'} Console Log
+          </button>
+          
+          {rows.length > 0 && (
+            <>
+              <button
+                onClick={downloadCSV}
+                className="bg-[color:var(--accent)] text-white px-4 py-2 rounded hover:brightness-110"
+              >
+                Download CSV ({rows.length} files)
+              </button>
+              <button
+                onClick={clearAllResults}
+                className="bg-gray-500 text-white px-4 py-2 rounded hover:brightness-110"
+              >
+                Clear All Results
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Console Log Display */}
+        <div className="mt-6">
+          <ConsoleLog isVisible={showConsoleLog} />
+        </div>
       </div>
     </main>
   );
