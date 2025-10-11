@@ -249,7 +249,7 @@ async function processVeryLargeFilePages(
     // Poll for completion
     const jobId = jobResponse.job_id;
     let attempts = 0;
-    const maxAttempts = 720; // 60 minutes max (5 second intervals) - supports up to 300-page PDFs
+    const maxAttempts = 1440; // 120 minutes max (5 second intervals) - supports up to 600-page PDFs
     
     while (attempts < maxAttempts) {
       await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
@@ -312,7 +312,7 @@ async function processVeryLargeFilePages(
       // Continue polling if status is 'processing'
     }
     
-      throw new Error('Job timed out after 60 minutes');
+      throw new Error('Job timed out after 120 minutes');
 
   } catch (error) {
     console.error(`❌ Page-by-page processing workflow failed:`, error);
