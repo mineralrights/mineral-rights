@@ -320,16 +320,16 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 shadow-sm">
+      <header className="bg-blue-900 border-b border-blue-800 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-gray-900">Mineral Rights Classifier</h1>
+                <h1 className="text-2xl font-bold text-white">Mineral Rights Classifier</h1>
               </div>
             </div>
-            <div className="text-sm text-gray-500">
-              Professional Document Analysis
+            <div className="text-sm text-blue-100">
+              Inteligent Document Analysis
             </div>
           </div>
         </div>
