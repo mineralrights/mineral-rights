@@ -11,30 +11,47 @@ export default function ResultsTable({ rows }: Props) {
   };
 
   return (
-    <div className="mt-8">
-      {/* Export Button */}
-      <div className="mb-4 flex justify-between items-center">
-        <h3 className="text-lg font-semibold">Processing Results</h3>
-        <button
-          onClick={handleExportCSV}
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
-        >
-          📊 Export CSV
-        </button>
+    <div className="mt-8 bg-white border border-gray-200 rounded-lg shadow-sm">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-lg font-semibold text-gray-900">Processing Results</h3>
+              <p className="text-sm text-gray-600">{rows.length} document{rows.length !== 1 ? 's' : ''} processed</p>
+            </div>
+          </div>
+          <button
+            onClick={handleExportCSV}
+            className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center"
+          >
+            <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Export CSV
+          </button>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full border text-sm">
-          <thead className="bg-gray-100">
+        <table className="min-w-full">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="px-4 py-2 text-left">File</th>
-              <th className="px-4 py-2 text-left">Status</th>
-              <th className="px-4 py-2 text-left">Prediction</th>
-              <th className="px-4 py-2 text-left">Confidence</th>
-              <th className="px-4 py-2 text-left">Summary</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prediction</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Summary</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {rows.map(row => <Row key={row.filename} row={row} />)}
           </tbody>
         </table>
@@ -52,17 +69,44 @@ function Row({ row }: { row: PredictionRow }) {
 
   return (
     <>
-      <tr className="border-t odd:bg-gray-50">
-        <td className="px-4 py-2">{row.filename}</td>
-        <td className="px-4 py-2">
+      <tr className="hover:bg-gray-50 transition-colors">
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className="flex items-center">
+            <div className="flex-shrink-0">
+              <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <div className="ml-3">
+              <div className="text-sm font-medium text-gray-900">{row.filename}</div>
+            </div>
+          </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap">
           <StatusBadge status={row.status} />
         </td>
-        <td className="px-4 py-2">{row.prediction ?? "—"}</td>
-        <td className="px-4 py-2">{formatConfidence(row.confidence)}</td>
-        <td className="px-4 py-2 whitespace-pre-wrap">
+        <td className="px-6 py-4 whitespace-nowrap">
+          <div className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+            row.prediction === "has_reservation" 
+              ? "bg-red-100 text-red-800" 
+              : row.prediction === "no_reservation"
+              ? "bg-green-100 text-green-800"
+              : "bg-gray-100 text-gray-800"
+          }`}>
+            {row.prediction === "has_reservation" ? "Has Reservations" : 
+             row.prediction === "no_reservation" ? "No Reservations" : 
+             row.prediction ?? "—"}
+          </div>
+        </td>
+        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+          {formatConfidence(row.confidence)}
+        </td>
+        <td className="px-6 py-4">
           {row.processingMode === "multi_deed" && row.deedResults ? (
             <div className="text-sm">
-              <div className="font-medium">
+              <div className="font-medium text-gray-900">
                 {row.deedResults.length} deeds processed
               </div>
               <div className="text-xs text-gray-600 mt-1">
@@ -71,7 +115,7 @@ function Row({ row }: { row: PredictionRow }) {
             </div>
           ) : row.processingMode === "page_by_page" ? (
             <div className="text-sm">
-              <div className="font-medium">
+              <div className="font-medium text-gray-900">
                 {row.pagesWithReservations?.length || 0} of {row.totalPages || 0} pages
               </div>
               {row.pagesWithReservations && row.pagesWithReservations.length > 0 && (
@@ -81,7 +125,9 @@ function Row({ row }: { row: PredictionRow }) {
               )}
             </div>
           ) : (
-            row.explanation ?? "—"
+            <div className="text-sm text-gray-600">
+              {row.explanation ?? "—"}
+            </div>
           )}
         </td>
       </tr>
@@ -90,15 +136,54 @@ function Row({ row }: { row: PredictionRow }) {
 }
 
 function StatusBadge({ status }: { status: PredictionRow["status"] }) {
-  const map: Record<string, string> = {
-    waiting: "bg-gray-100 text-gray-600",
-    processing: "bg-yellow-100 text-yellow-800 animate-pulse",
-    done: "bg-green-100 text-green-800",
-    error: "bg-red-100 text-red-800",
+  const getStatusConfig = (status: string) => {
+    switch (status) {
+      case "waiting":
+        return {
+          bg: "bg-gray-100",
+          text: "text-gray-800",
+          icon: "⏳",
+          label: "Waiting"
+        };
+      case "processing":
+        return {
+          bg: "bg-blue-100",
+          text: "text-blue-800",
+          icon: "🔄",
+          label: "Processing"
+        };
+      case "done":
+        return {
+          bg: "bg-green-100",
+          text: "text-green-800",
+          icon: "✅",
+          label: "Complete"
+        };
+      case "error":
+        return {
+          bg: "bg-red-100",
+          text: "text-red-800",
+          icon: "❌",
+          label: "Error"
+        };
+      default:
+        return {
+          bg: "bg-gray-100",
+          text: "text-gray-800",
+          icon: "❓",
+          label: status
+        };
+    }
   };
+
+  const config = getStatusConfig(status);
+
   return (
-    <span className={`px-2 py-0.5 rounded text-xs font-medium ${map[status]}`}>
-      {status}
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${config.bg} ${config.text} ${
+      status === "processing" ? "animate-pulse" : ""
+    }`}>
+      <span className="mr-1">{config.icon}</span>
+      {config.label}
     </span>
   );
 }
