@@ -341,7 +341,7 @@ export default function Home() {
           <div className="px-8 py-8 border-b border-gray-200">
             <div className="text-center">
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Advanced Mineral Rights Document Analysis
+                Mineral Rights Document Analysis
               </h2>
               <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                AI-powered document intelligence to streamline the analysis of mineral rights documents, delivering enterprise-level accuracy, speed, and reliability.
