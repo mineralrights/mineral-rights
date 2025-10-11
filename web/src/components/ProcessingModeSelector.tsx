@@ -106,11 +106,11 @@ export default function ProcessingModeSelector({
               Perfect for long PDFs where you want to know exactly which pages contain reservations.
             </p>
             <div className="mt-2 text-xs text-green-600">
-              ✅ No Document AI required - works with any PDF<br/>
+              {/* ✅ No Document AI required - works with any PDF<br/> */}
               ✅ Reports exact page numbers with reservations<br/>
               ✅ Memory-efficient processing<br/>
-              ✅ Fast processing for large documents<br/>
-              ✅ Ideal for 300+ page documents
+              ✅ Fast processing for large documents - multi-deed PDFs<br/>
+              {/* ✅ Ideal for 100+ page documents */}
             </div>
           </div>
         </div>
