@@ -39,7 +39,7 @@ export default function ProgressDisplay({ progress, isVisible, inline = false }:
     <div className={containerClasses}>
       <div className="flex items-center mb-4">
         <div className="flex-shrink-0">
-          <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
+          <div className="w-8 h-8 bg-indigo-700 rounded-lg flex items-center justify-center">
             <svg className="w-5 h-5 text-white animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
             </svg>
@@ -50,7 +50,7 @@ export default function ProgressDisplay({ progress, isVisible, inline = false }:
           <p className="text-sm text-gray-600">Document analysis in progress</p>
         </div>
         <div className="ml-auto text-right">
-          <div className="text-2xl font-bold text-indigo-600">
+          <div className="text-2xl font-bold text-indigo-700">
             {progress.progress_percentage.toFixed(1)}%
           </div>
           <div className="text-xs text-gray-500">Complete</div>
@@ -60,7 +60,7 @@ export default function ProgressDisplay({ progress, isVisible, inline = false }:
       {/* Progress Bar */}
       <div className="w-full bg-gray-200 rounded-full h-3 mb-6">
         <div 
-          className="bg-indigo-600 h-3 rounded-full transition-all duration-500 ease-out"
+          className="bg-indigo-700 h-3 rounded-full transition-all duration-500 ease-out"
           style={{ width: `${progress.progress_percentage}%` }}
         />
       </div>
@@ -106,7 +106,7 @@ export default function ProgressDisplay({ progress, isVisible, inline = false }:
             </div>
           </div>
           <div className="text-sm text-gray-600 mb-2">
-            Confidence: <span className="font-semibold text-indigo-600">{(progress.current_page_result.confidence * 100).toFixed(1)}%</span>
+            Confidence: <span className="font-semibold text-indigo-700">{(progress.current_page_result.confidence * 100).toFixed(1)}%</span>
           </div>
           {progress.current_page_result.reasoning && (
             <div className="text-xs text-gray-500 bg-white p-2 rounded border">
