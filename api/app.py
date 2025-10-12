@@ -843,6 +843,68 @@ async def resume_processing_options(job_id: str):
         }
     )
 
+@app.post("/update-api-key")
+async def update_api_key(api_key: str = Form(...)):
+    """Update the Anthropic API key for the service"""
+    try:
+        # Validate the API key format
+        if not api_key.startswith("sk-ant-"):
+            raise HTTPException(status_code=400, detail="Invalid API key format. Must start with 'sk-ant-'")
+        
+        if len(api_key) < 50:
+            raise HTTPException(status_code=400, detail="Invalid API key format. Key appears too short.")
+        
+        # Test the API key by making a simple request to Anthropic
+        try:
+            import anthropic
+            client = anthropic.Anthropic(api_key=api_key)
+            # Make a simple test request to validate the key
+            response = client.messages.create(
+                model="claude-3-haiku-20240307",
+                max_tokens=10,
+                messages=[{"role": "user", "content": "test"}]
+            )
+            print(f"✅ API key validation successful: {response.id}")
+        except Exception as e:
+            print(f"❌ API key validation failed: {e}")
+            raise HTTPException(status_code=400, detail=f"API key validation failed: {str(e)}")
+        
+        # Update the global processor with the new API key
+        global processor
+        if processor:
+            processor.api_key = api_key
+            print("✅ Updated existing processor with new API key")
+        
+        # Update environment variable (this will persist for the current instance)
+        os.environ["ANTHROPIC_API_KEY"] = api_key
+        print("✅ Updated environment variable with new API key")
+        
+        return {
+            "status": "success",
+            "message": "API key updated successfully",
+            "api_key_validated": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error updating API key: {e}")
+        raise HTTPException(status_code=500, detail=f"Error updating API key: {str(e)}")
+
+@app.options("/update-api-key")
+async def update_api_key_options():
+    """Handle CORS preflight requests for API key update endpoint"""
+    from fastapi.responses import Response
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "86400"
+        }
+    )
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", 8080))

@@ -5,6 +5,7 @@ import ProcessingModeSelector from "@/components/ProcessingModeSelector";
 import ResultsTable from "@/components/ResultsTable";
 import ProgressDisplay from "@/components/ProgressDisplay";
 import ConsoleLog from "@/components/ConsoleLog";
+import ApiKeyManager from "@/components/ApiKeyManager";
 import { processDocument, checkResumeCapability } from "@/lib/api_async";
 import { rowsToCSV } from "@/lib/csv";
 import { useState, useEffect } from "react";
@@ -19,6 +20,7 @@ export default function Home() {
   const [resumeJobId, setResumeJobId] = useState<string | null>(null);
   const [showResumeOption, setShowResumeOption] = useState(false);
   const [showConsoleLog, setShowConsoleLog] = useState(false);
+  const [showApiKeyManager, setShowApiKeyManager] = useState(false);
 
   // Debug progressInfo state changes
   useEffect(() => {
@@ -451,7 +453,7 @@ export default function Home() {
             <ResultsTable rows={rows} />
 
             {/* Action Buttons */}
-            <div className="mt-8 flex gap-4 items-center">
+            <div className="mt-8 flex gap-4 items-center flex-wrap">
               <button
                 onClick={() => setShowConsoleLog(!showConsoleLog)}
                 className={`px-6 py-3 rounded-lg text-sm font-medium transition-colors ${
@@ -461,6 +463,16 @@ export default function Home() {
                 }`}
               >
                 {showConsoleLog ? 'Hide' : 'Show'} Console Log
+              </button>
+              
+              <button
+                onClick={() => setShowApiKeyManager(true)}
+                className="px-6 py-3 rounded-lg text-sm font-medium transition-colors bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-300 flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                </svg>
+                Update API Key
               </button>
               
               {rows.length > 0 && (
@@ -494,6 +506,12 @@ export default function Home() {
           </div>
         </div>
       </main>
+      
+      {/* API Key Manager Modal */}
+      <ApiKeyManager 
+        isVisible={showApiKeyManager} 
+        onClose={() => setShowApiKeyManager(false)} 
+      />
     </div>
   );
 }
