@@ -57,6 +57,12 @@ export default function Home() {
   ): PredictionRow[] => {
     const rows: PredictionRow[] = [];
 
+    // Safety check: ensure result is not null/undefined
+    if (!result) {
+      console.error('⚠️ convertJobResultToPredictionRows received null/undefined result');
+      return rows;
+    }
+
     if (processingMode === 'single_deed') {
       // Single deed result
       const row: PredictionRow = {
@@ -181,7 +187,7 @@ export default function Home() {
         console.log('✅ Processing completed:', result);
         
         // Save job ID to localStorage for resume capability
-        if (result.jobId) {
+        if (result && result.jobId) {
           const recentJobIds = JSON.parse(localStorage.getItem('recentJobIds') || '[]');
           recentJobIds.push(result.jobId);
           // Keep only last 5 job IDs
@@ -194,7 +200,14 @@ export default function Home() {
         setProgressInfo(null);
         
         // Convert results to prediction rows
-        const results = convertJobResultToPredictionRows(result.data, processingMode);
+        // Handle different response formats: some return {data: ...}, others return the data directly
+        if (!result) {
+          throw new Error('Processing completed but no result was returned');
+        }
+        
+        const resultData = result.data || result;
+        console.log('🔍 Processing result data:', resultData);
+        const results = convertJobResultToPredictionRows(resultData, processingMode);
         console.log('🔍 DEBUG: Converted results length:', results.length);
         if (results.length > 0) {
           setRows(prevRows => {
