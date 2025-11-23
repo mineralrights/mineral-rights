@@ -188,16 +188,29 @@ async def predict(
             
             # Process the document based on mode
             if processing_mode == "single_deed":
+                print(f"🔍 About to call process_document for: {file.filename}")
                 result = processor.process_document(tmp_file_path)
+                
+                # Debug: Log what we got back
+                print(f"🔍 Result keys: {list(result.keys())}")
+                print(f"🔍 samples_used: {result.get('samples_used', 'NOT FOUND')}")
+                print(f"🔍 classification: {result.get('classification', 'NOT FOUND')}")
+                print(f"🔍 confidence: {result.get('confidence', 'NOT FOUND')}")
                 
                 # Check if LLM processing actually succeeded
                 detailed_samples = result.get("detailed_samples", [])
                 samples_used = result.get("samples_used", 0)
                 
+                print(f"🔍 detailed_samples length: {len(detailed_samples)}")
+                if detailed_samples:
+                    print(f"🔍 First sample keys: {list(detailed_samples[0].keys()) if detailed_samples[0] else 'EMPTY'}")
+                    print(f"🔍 First sample reasoning length: {len(str(detailed_samples[0].get('reasoning', ''))) if detailed_samples[0] else 0}")
+                
                 # If no samples were successfully generated, this indicates an API error
                 if samples_used == 0 or len(detailed_samples) == 0:
                     error_msg = "LLM processing failed - no samples were generated. This may indicate an API key issue or API error."
                     print(f"❌ {error_msg}")
+                    print(f"❌ Debug: samples_used={samples_used}, detailed_samples={len(detailed_samples)}")
                     raise HTTPException(
                         status_code=500,
                         detail=error_msg
@@ -207,6 +220,15 @@ async def predict(
                 reasoning = "No reasoning provided"
                 if detailed_samples and len(detailed_samples) > 0:
                     reasoning = detailed_samples[0].get("reasoning", "No reasoning provided")
+                    # Also check if reasoning is actually meaningful (not empty)
+                    if not reasoning or reasoning.strip() == "":
+                        error_msg = "LLM processing failed - no reasoning was generated. This may indicate an API key issue or API error."
+                        print(f"❌ {error_msg}")
+                        print(f"❌ Debug: reasoning is empty, samples_used={samples_used}")
+                        raise HTTPException(
+                            status_code=500,
+                            detail=error_msg
+                        )
                 
                 # Convert result to expected format
                 return {
