@@ -245,13 +245,19 @@ async def predict(
                         )
                 
                 # Convert result to expected format
-                return {
+                response_data = {
                     "has_reservation": result.get("classification", 0) == 1,
                     "confidence": result.get("confidence", 0.0),
                     "reasoning": reasoning,
                     "processing_mode": processing_mode,
                     "filename": file.filename
                 }
+                
+                print(f"🔍 FINAL RESPONSE DATA: {response_data}")
+                print(f"🔍 Response reasoning length: {len(reasoning)}")
+                print(f"🔍 Response reasoning content: {reasoning[:200] if len(reasoning) > 200 else reasoning}")
+                
+                return response_data
                 
             elif processing_mode == "multi_deed":
                 # Use the proper multi-deed processing with Document AI splitting
@@ -303,8 +309,13 @@ async def predict(
             if os.path.exists(tmp_file_path):
                 os.unlink(tmp_file_path)
         
+    except HTTPException:
+        # Re-raise HTTPExceptions (like our LLM failure errors)
+        raise
     except Exception as e:
         print(f"❌ Failed to process document: {e}")
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Failed to process document: {str(e)}")
 
 @app.get("/stream/{job_id}")
