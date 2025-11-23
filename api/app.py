@@ -190,11 +190,29 @@ async def predict(
             if processing_mode == "single_deed":
                 result = processor.process_document(tmp_file_path)
                 
+                # Check if LLM processing actually succeeded
+                detailed_samples = result.get("detailed_samples", [])
+                samples_used = result.get("samples_used", 0)
+                
+                # If no samples were successfully generated, this indicates an API error
+                if samples_used == 0 or len(detailed_samples) == 0:
+                    error_msg = "LLM processing failed - no samples were generated. This may indicate an API key issue or API error."
+                    print(f"❌ {error_msg}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=error_msg
+                    )
+                
+                # Get reasoning from first sample if available
+                reasoning = "No reasoning provided"
+                if detailed_samples and len(detailed_samples) > 0:
+                    reasoning = detailed_samples[0].get("reasoning", "No reasoning provided")
+                
                 # Convert result to expected format
                 return {
                     "has_reservation": result.get("classification", 0) == 1,
                     "confidence": result.get("confidence", 0.0),
-                    "reasoning": result.get("detailed_samples", [{}])[0].get("reasoning", "No reasoning provided") if result.get("detailed_samples") else "No reasoning provided",
+                    "reasoning": reasoning,
                     "processing_mode": processing_mode,
                     "filename": file.filename
                 }
@@ -576,10 +594,28 @@ async def process_from_gcs(
                 high_recall_mode=True
             )
             
+            # Check if LLM processing actually succeeded
+            detailed_samples = result.get("detailed_samples", [])
+            samples_used = result.get("samples_used", 0)
+            
+            # If no samples were successfully generated, this indicates an API error
+            if samples_used == 0 or len(detailed_samples) == 0:
+                error_msg = "LLM processing failed - no samples were generated. This may indicate an API key issue or API error."
+                print(f"❌ {error_msg}")
+                raise HTTPException(
+                    status_code=500,
+                    detail=error_msg
+                )
+            
+            # Get reasoning from first sample if available
+            reasoning = result.get('reasoning', 'No reasoning provided')
+            if detailed_samples and len(detailed_samples) > 0:
+                reasoning = detailed_samples[0].get("reasoning", reasoning)
+            
             return {
                 "has_reservation": result.get('classification', 0) == 1,
                 "confidence": result.get('confidence', 0.0),
-                "reasoning": result.get('reasoning', 'No reasoning provided'),
+                "reasoning": reasoning,
                 "processing_mode": "single_deed",
                 "filename": blob_name.split('/')[-1],
                 "gcs_url": gcs_url,

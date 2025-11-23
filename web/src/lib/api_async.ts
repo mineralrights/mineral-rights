@@ -163,8 +163,15 @@ export async function processDocument(
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to process document: ${response.status} ${errorText}`);
+      let errorMessage = `Failed to process document: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || errorData.message || errorMessage;
+      } catch {
+        const errorText = await response.text();
+        errorMessage = errorText || errorMessage;
+      }
+      throw new Error(errorMessage);
     }
 
     return await response.json();

@@ -450,7 +450,11 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
                 )
                 
             except anthropic.APIError as e:
-                print(f"Anthropic API error (attempt {attempt + 1}): {e}")
+                error_msg = str(e)
+                print(f"❌ Anthropic API error (attempt {attempt + 1}): {error_msg}")
+                # Check for common API key errors
+                if "401" in error_msg or "authentication" in error_msg.lower() or "api key" in error_msg.lower():
+                    print("🔑 API KEY ERROR DETECTED - Authentication failed. Please check your ANTHROPIC_API_KEY.")
                 if attempt < max_retries - 1:
                     time.sleep(2 ** attempt)  # Exponential backoff
                     continue

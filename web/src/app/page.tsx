@@ -232,11 +232,23 @@ export default function Home() {
         console.error('Error processing file:', file.name, error);
         // Clear progress info on error
         setProgressInfo(null);
+        
+        // Extract error message from response if available
+        let errorMessage = String(error);
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        }
+        
+        // Check if it's an API error response
+        if (errorMessage.includes('LLM processing failed') || errorMessage.includes('API key')) {
+          errorMessage = `API Error: ${errorMessage}. Please check your API key configuration.`;
+        }
+        
         // Update the row with error status
         setRows(prevRows => {
           return prevRows.map(row => {
             if (row.filename === file.name) {
-              return { ...row, status: 'error', explanation: String(error) };
+              return { ...row, status: 'error', explanation: errorMessage };
             }
             return row;
           });
