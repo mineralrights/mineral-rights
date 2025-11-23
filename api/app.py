@@ -198,8 +198,12 @@ async def predict(
                 print(f"🔍 confidence: {result.get('confidence', 'NOT FOUND')}")
                 
                 # Check if LLM processing actually succeeded
-                detailed_samples = result.get("detailed_samples", [])
+                detailed_samples = result.get("detailed_samples", []) or []
                 samples_used = result.get("samples_used", 0)
+                
+                # Handle None case
+                if detailed_samples is None:
+                    detailed_samples = []
                 
                 print(f"🔍 detailed_samples length: {len(detailed_samples)}")
                 print(f"🔍 samples_used: {samples_used}")
