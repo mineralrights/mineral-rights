@@ -202,13 +202,27 @@ async def predict(
                 samples_used = result.get("samples_used", 0)
                 
                 print(f"🔍 detailed_samples length: {len(detailed_samples)}")
+                print(f"🔍 samples_used: {samples_used}")
                 if detailed_samples:
                     print(f"🔍 First sample keys: {list(detailed_samples[0].keys()) if detailed_samples[0] else 'EMPTY'}")
-                    print(f"🔍 First sample reasoning length: {len(str(detailed_samples[0].get('reasoning', ''))) if detailed_samples[0] else 0}")
+                    first_reasoning = detailed_samples[0].get("reasoning", "") if detailed_samples[0] else ""
+                    print(f"🔍 First sample reasoning length: {len(str(first_reasoning))}")
+                    print(f"🔍 First sample reasoning preview: {str(first_reasoning)[:100] if first_reasoning else 'EMPTY'}")
                 
-                # If no samples were successfully generated, this indicates an API error
-                if samples_used == 0 or len(detailed_samples) == 0:
-                    error_msg = "LLM processing failed - no samples were generated. This may indicate an API key issue or API error."
+                # CRITICAL CHECK: If no samples were successfully generated, this indicates an API error
+                # This should NEVER happen if LLM was called successfully
+                if samples_used == 0:
+                    error_msg = "LLM processing failed - no samples were generated (samples_used=0). This indicates the LLM was never called or all calls failed. Check API key and network connectivity."
+                    print(f"❌ {error_msg}")
+                    print(f"❌ Debug: samples_used={samples_used}, detailed_samples={len(detailed_samples)}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=error_msg
+                    )
+                
+                # Also check if detailed_samples is empty (shouldn't happen if samples_used > 0, but defensive)
+                if len(detailed_samples) == 0:
+                    error_msg = "LLM processing failed - no detailed samples returned despite samples_used > 0. This indicates a processing error."
                     print(f"❌ {error_msg}")
                     print(f"❌ Debug: samples_used={samples_used}, detailed_samples={len(detailed_samples)}")
                     raise HTTPException(
@@ -220,11 +234,11 @@ async def predict(
                 reasoning = "No reasoning provided"
                 if detailed_samples and len(detailed_samples) > 0:
                     reasoning = detailed_samples[0].get("reasoning", "No reasoning provided")
-                    # Also check if reasoning is actually meaningful (not empty)
-                    if not reasoning or reasoning.strip() == "":
-                        error_msg = "LLM processing failed - no reasoning was generated. This may indicate an API key issue or API error."
+                    # Also check if reasoning is actually meaningful (not empty or default)
+                    if not reasoning or reasoning.strip() == "" or reasoning == "No reasoning provided":
+                        error_msg = "LLM processing failed - no valid reasoning was generated. This may indicate an API key issue or API error."
                         print(f"❌ {error_msg}")
-                        print(f"❌ Debug: reasoning is empty, samples_used={samples_used}")
+                        print(f"❌ Debug: reasoning='{reasoning}', samples_used={samples_used}, detailed_samples={len(detailed_samples)}")
                         raise HTTPException(
                             status_code=500,
                             detail=error_msg
