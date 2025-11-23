@@ -1354,8 +1354,11 @@ class DocumentProcessor:
             'stopped_at_chunk': stopped_at_chunk,
             'total_pages_in_document': total_pages,
             'detailed_samples': [
-                { "predicted_class": 0, "reasoning": successful_chunks[-1]["reasoning"] }
-            ] if successful_chunks else [],
+                { 
+                    "predicted_class": 0, 
+                    "reasoning": successful_chunks[-1].get("reasoning", "") or "No reasoning provided"
+                }
+            ] if successful_chunks and successful_chunks[-1].get("reasoning") else [],
             'ocr_failed_pages': unread_pages,
             'requires_manual_review': len(unread_pages) > 0,
         }
