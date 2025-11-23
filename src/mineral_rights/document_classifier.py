@@ -412,7 +412,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
         for attempt in range(max_retries):
             try:
                 response = self.client.messages.create(
-                    model="claude-3-5-sonnet-20241022",
+                    model="claude-3-5-sonnet-20240620",  # Updated to correct model version
                     max_tokens=1000,
                     temperature=temperature,  # Keep temperature as provided (0.1)
                     messages=[{
@@ -945,7 +945,7 @@ class DocumentProcessor:
         for attempt in range(max_retries):
             try:
                 response = self.classifier.client.messages.create(
-                    model="claude-3-5-sonnet-20241022",
+                    model="claude-3-5-sonnet-20240620",  # Updated to correct model version
                     max_tokens=max_tokens,  # Configurable token limit
                     messages=[{
                         "role": "user",
