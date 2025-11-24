@@ -85,20 +85,20 @@ def initialize_processor():
     try:
         print("🔧 Initializing DocumentProcessor...")
         
-        # Get API key from environment
+        # Get API key from environment (REQUIRED)
         api_key = os.getenv("ANTHROPIC_API_KEY")
         if not api_key:
             print("❌ ANTHROPIC_API_KEY not found in environment")
             return False
             
-        # Get Document AI endpoint
+        # Get Document AI endpoint (OPTIONAL - only needed for multi-deed mode)
         document_ai_endpoint = os.getenv("DOCUMENT_AI_ENDPOINT")
         if not document_ai_endpoint:
-            print("❌ DOCUMENT_AI_ENDPOINT not found in environment")
-            return False
+            print("⚠️ DOCUMENT_AI_ENDPOINT not found in environment - will use fallback for multi-deed mode")
+            # This is OK - Document AI is only needed for multi-deed splitting
             
         print(f"API Key present: {'Yes' if api_key else 'No'}")
-        print(f"Document AI Endpoint: {document_ai_endpoint}")
+        print(f"Document AI Endpoint: {document_ai_endpoint or 'Not set (will use fallback)'}")
         
         # Handle Google credentials
         credentials_path = None
