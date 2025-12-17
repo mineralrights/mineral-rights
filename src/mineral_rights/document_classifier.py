@@ -234,6 +234,11 @@ class OilGasRightsClassifier:
         if not api_key:
             raise ValueError("Anthropic API key is required")
         
+        # Strip whitespace/newlines from API key (common issue with secrets)
+        api_key = api_key.strip()
+        if not api_key:
+            raise ValueError("Anthropic API key is empty after stripping whitespace")
+        
         print("Initializing Anthropic client...")
         try:
             # Initialize with increased timeout for Cloud Run environments
