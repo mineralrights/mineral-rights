@@ -90,6 +90,12 @@ def initialize_processor():
         if not api_key:
             print("❌ ANTHROPIC_API_KEY not found in environment")
             return False
+        
+        # Strip whitespace/newlines from API key (common issue with secrets)
+        api_key = api_key.strip()
+        if not api_key:
+            print("❌ ANTHROPIC_API_KEY is empty after stripping whitespace")
+            return False
             
         # Get Document AI endpoint (OPTIONAL - only needed for multi-deed mode)
         document_ai_endpoint = os.getenv("DOCUMENT_AI_ENDPOINT")
