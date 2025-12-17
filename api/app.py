@@ -396,20 +396,71 @@ async def test():
 
 @app.get("/test-anthropic")
 async def test_anthropic():
-    """Test Anthropic API connectivity"""
+    """Test Anthropic API connectivity with detailed diagnostics"""
     import anthropic
     import os
+    import httpx
+    import socket
     
     api_key = os.getenv("ANTHROPIC_API_KEY")
+    diagnostics = {
+        "api_key_present": bool(api_key),
+        "api_key_length": len(api_key) if api_key else 0,
+        "api_key_prefix": api_key[:10] + "..." if api_key else None,
+        "timestamp": time.time()
+    }
+    
     if not api_key:
         return {
             "status": "error",
             "message": "ANTHROPIC_API_KEY not found in environment",
-            "timestamp": time.time()
+            **diagnostics
         }
     
+    # Test 1: Basic network connectivity
     try:
-        client = anthropic.Anthropic(api_key=api_key)
+        import urllib.request
+        import urllib.error
+        test_url = "https://api.anthropic.com/v1/messages"
+        req = urllib.request.Request(test_url, method="GET")
+        with urllib.request.urlopen(req, timeout=10) as response:
+            diagnostics["network_test"] = {
+                "status": "success",
+                "http_code": response.getcode(),
+                "url": test_url
+            }
+    except Exception as e:
+        diagnostics["network_test"] = {
+            "status": "failed",
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+    
+    # Test 2: DNS resolution
+    try:
+        hostname = "api.anthropic.com"
+        ip = socket.gethostbyname(hostname)
+        diagnostics["dns_test"] = {
+            "status": "success",
+            "hostname": hostname,
+            "ip": ip
+        }
+    except Exception as e:
+        diagnostics["dns_test"] = {
+            "status": "failed",
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+    
+    # Test 3: Anthropic client with timeout
+    try:
+        timeout = httpx.Timeout(60.0, connect=30.0)
+        client = anthropic.Anthropic(
+            api_key=api_key,
+            timeout=timeout,
+            max_retries=0  # Disable retries for testing
+        )
+        diagnostics["client_init"] = {"status": "success"}
         
         # Try a simple API call
         response = client.messages.create(
@@ -423,14 +474,23 @@ async def test_anthropic():
             "message": "Anthropic API connection successful",
             "response": response.content[0].text,
             "model": "claude-3-5-haiku-20241022",
-            "timestamp": time.time()
+            **diagnostics
+        }
+    except anthropic.APIConnectionError as e:
+        import traceback
+        return {
+            "status": "connection_error",
+            "error_type": "APIConnectionError",
+            "error_message": str(e),
+            "traceback": traceback.format_exc(),
+            **diagnostics
         }
     except anthropic.APIError as e:
         return {
             "status": "api_error",
             "error_type": type(e).__name__,
             "error_message": str(e),
-            "timestamp": time.time()
+            **diagnostics
         }
     except Exception as e:
         import traceback
@@ -439,7 +499,7 @@ async def test_anthropic():
             "error_type": type(e).__name__,
             "error_message": str(e),
             "traceback": traceback.format_exc(),
-            "timestamp": time.time()
+            **diagnostics
         }
 
 @app.post("/get-signed-upload-url")
