@@ -19,8 +19,8 @@ from .document_classifier import DocumentProcessor
 class LargePDFProcessor:
     """Simple page-by-page processor for large PDFs using existing classification logic"""
     
-    def __init__(self, api_key: str):
-        self.processor = DocumentProcessor(api_key=api_key)
+    def __init__(self, api_key: str, model_name: str = None):
+        self.processor = DocumentProcessor(api_key=api_key, model_name=model_name)
         self.job_id = None
         self.job_results = None
     

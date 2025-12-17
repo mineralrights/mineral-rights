@@ -229,7 +229,7 @@ class ConfidenceScorer:
 class OilGasRightsClassifier:
     """Main classification agent with self-consistent sampling for oil and gas reservations"""
     
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model_name: str = None):
         """Initialize the oil and gas rights classifier with Anthropic API key."""
         if not api_key:
             raise ValueError("Anthropic API key is required")
@@ -238,6 +238,11 @@ class OilGasRightsClassifier:
         api_key = api_key.strip()
         if not api_key:
             raise ValueError("Anthropic API key is empty after stripping whitespace")
+        
+        # Get model name from parameter or environment variable, with fallback
+        import os
+        self.model_name = model_name or os.getenv("CLAUDE_MODEL_NAME", "claude-3-5-haiku-20241022")
+        print(f"🔧 Using Claude model: {self.model_name}")
         
         print("Initializing Anthropic client...")
         try:
@@ -424,7 +429,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
         for attempt in range(max_retries):
             try:
                 response = self.client.messages.create(
-                    model="claude-3-5-haiku-20241022",  # Updated to available model version
+                    model=self.model_name,  # Use configurable model name
                     max_tokens=1000,
                     temperature=temperature,  # Keep temperature as provided (0.1)
                     messages=[{
@@ -591,9 +596,9 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
 class DocumentProcessor:
     """Complete pipeline from PDF to classification"""
     
-    def __init__(self, api_key: str = None, document_ai_endpoint: str = None, document_ai_credentials: str = None):
+    def __init__(self, api_key: str = None, document_ai_endpoint: str = None, document_ai_credentials: str = None, model_name: str = None):
         try:
-            self.classifier = OilGasRightsClassifier(api_key)
+            self.classifier = OilGasRightsClassifier(api_key, model_name=model_name)
             
             # Initialize Document AI service if endpoint is provided
             self.document_ai_service = None
@@ -963,7 +968,7 @@ class DocumentProcessor:
         for attempt in range(max_retries):
             try:
                 response = self.classifier.client.messages.create(
-                    model="claude-3-5-haiku-20241022",  # Updated to available model version
+                    model=self.classifier.model_name,  # Use configurable model name
                     max_tokens=max_tokens,  # Configurable token limit
                     messages=[{
                         "role": "user",

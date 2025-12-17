@@ -6,6 +6,7 @@ import ResultsTable from "@/components/ResultsTable";
 import ProgressDisplay from "@/components/ProgressDisplay";
 import ConsoleLog from "@/components/ConsoleLog";
 import ApiKeyManager from "@/components/ApiKeyManager";
+import ModelManager from "@/components/ModelManager";
 import { processDocument, checkResumeCapability } from "@/lib/api_async";
 import { rowsToCSV } from "@/lib/csv";
 import { useState, useEffect } from "react";
@@ -21,6 +22,7 @@ export default function Home() {
   const [showResumeOption, setShowResumeOption] = useState(false);
   const [showConsoleLog, setShowConsoleLog] = useState(false);
   const [showApiKeyManager, setShowApiKeyManager] = useState(false);
+  const [showModelManager, setShowModelManager] = useState(false);
 
   // Debug progressInfo state changes
   useEffect(() => {
@@ -239,16 +241,31 @@ export default function Home() {
           errorMessage = error.message;
         }
         
+        // Check if it's a model-related error
+        const isModelError = errorMessage.includes('model') && (
+          errorMessage.includes('not found') || 
+          errorMessage.includes('404') || 
+          errorMessage.includes('not_found') ||
+          errorMessage.includes('Invalid model')
+        );
+        
         // Check if it's an API error response
         if (errorMessage.includes('LLM processing failed') || errorMessage.includes('API key')) {
           errorMessage = `API Error: ${errorMessage}. Please check your API key configuration.`;
+        } else if (isModelError) {
+          errorMessage = `Model Error: ${errorMessage}. The model may not be available. Try updating the model name.`;
         }
         
         // Update the row with error status
         setRows(prevRows => {
           return prevRows.map(row => {
             if (row.filename === file.name) {
-              return { ...row, status: 'error', explanation: errorMessage };
+              const updatedRow = { ...row, status: 'error', explanation: errorMessage };
+              // If it's a model error, show the model manager
+              if (isModelError) {
+                setTimeout(() => setShowModelManager(true), 500);
+              }
+              return updatedRow;
             }
             return row;
           });
@@ -500,6 +517,16 @@ export default function Home() {
                 Update API Key
               </button>
               
+              <button
+                onClick={() => setShowModelManager(true)}
+                className="px-6 py-3 rounded-lg text-sm font-medium transition-colors bg-purple-100 text-purple-800 hover:bg-purple-200 border border-purple-300 flex items-center"
+              >
+                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                Update Model
+              </button>
+              
               {rows.length > 0 && (
                 <>
                   <button
@@ -536,6 +563,15 @@ export default function Home() {
       <ApiKeyManager 
         isVisible={showApiKeyManager} 
         onClose={() => setShowApiKeyManager(false)} 
+      />
+      
+      {/* Model Manager Modal */}
+      <ModelManager 
+        isVisible={showModelManager} 
+        onClose={() => setShowModelManager(false)}
+        onModelChange={(modelName) => {
+          console.log('Model changed to:', modelName);
+        }}
       />
     </div>
   );

@@ -124,11 +124,15 @@ def initialize_processor():
             except Exception as e:
                 print(f"⚠️ Failed to decode base64 credentials: {e}")
         
+        # Get model name from environment (optional, defaults to claude-3-5-haiku-20241022)
+        model_name = os.getenv("CLAUDE_MODEL_NAME")
+        
         # Initialize processor with explicit parameters including credentials
         processor = DocumentProcessor(
             api_key=api_key,
             document_ai_endpoint=document_ai_endpoint,
-            document_ai_credentials=credentials_path
+            document_ai_credentials=credentials_path,
+            model_name=model_name
         )
         
         print("✅ DocumentProcessor initialized successfully")
@@ -831,7 +835,9 @@ async def process_large_pdf_chunked(
             if not api_key:
                 raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY is empty after stripping whitespace")
             
-            page_processor = LargePDFProcessor(api_key=api_key)
+            # Get model name from environment
+            model_name = os.getenv("CLAUDE_MODEL_NAME")
+            page_processor = LargePDFProcessor(api_key=api_key, model_name=model_name)
             
             # Check if it's a local file path (for testing) or GCS URL
             if gcs_url.startswith('file://'):
@@ -904,6 +910,9 @@ async def process_large_pdf_pages(
                     print(f"❌ Job {job_id}: ANTHROPIC_API_KEY is empty after stripping whitespace")
                     return
                 
+                # Get model name from environment
+                model_name = os.getenv("CLAUDE_MODEL_NAME")
+                
                 # Initialize progress tracking
                 job_results[job_id] = {
                     "status": "processing",
@@ -921,7 +930,7 @@ async def process_large_pdf_pages(
                 print(f"✅ Job {job_id}: Initialized with progress tracking")
                 print(f"🔧 Job results before processing: {job_results[job_id]}")
                 
-                processor = LargePDFProcessor(api_key=api_key)
+                processor = LargePDFProcessor(api_key=api_key, model_name=model_name)
                 print(f"🔧 Calling process_large_pdf_from_gcs_with_progress...")
                 result = processor.process_large_pdf_from_gcs_with_progress(gcs_url, job_id, job_results)
                 print(f"🔧 Processing method returned, checking job results...")
@@ -1103,6 +1112,32 @@ async def update_api_key(api_key: str = Form(...)):
     except Exception as e:
         print(f"❌ Error updating API key: {e}")
         raise HTTPException(status_code=500, detail=f"Error updating API key: {str(e)}")
+
+@app.options("/get-model-name")
+async def get_model_name_options():
+    """Handle CORS preflight requests for get model name endpoint"""
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "86400"
+        }
+    )
+
+@app.options("/update-model-name")
+async def update_model_name_options():
+    """Handle CORS preflight requests for update model name endpoint"""
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type",
+            "Access-Control-Max-Age": "86400"
+        }
+    )
 
 @app.options("/update-api-key")
 async def update_api_key_options():
