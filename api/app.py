@@ -394,6 +394,54 @@ async def test():
     """Simple test endpoint that doesn't require processor initialization"""
     return {"message": "Test endpoint working", "timestamp": time.time()}
 
+@app.get("/test-anthropic")
+async def test_anthropic():
+    """Test Anthropic API connectivity"""
+    import anthropic
+    import os
+    
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return {
+            "status": "error",
+            "message": "ANTHROPIC_API_KEY not found in environment",
+            "timestamp": time.time()
+        }
+    
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        
+        # Try a simple API call
+        response = client.messages.create(
+            model="claude-3-5-haiku-20241022",
+            max_tokens=10,
+            messages=[{"role": "user", "content": "Say 'test'"}]
+        )
+        
+        return {
+            "status": "success",
+            "message": "Anthropic API connection successful",
+            "response": response.content[0].text,
+            "model": "claude-3-5-haiku-20241022",
+            "timestamp": time.time()
+        }
+    except anthropic.APIError as e:
+        return {
+            "status": "api_error",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "timestamp": time.time()
+        }
+    except Exception as e:
+        import traceback
+        return {
+            "status": "error",
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "traceback": traceback.format_exc(),
+            "timestamp": time.time()
+        }
+
 @app.post("/get-signed-upload-url")
 async def get_signed_upload_url(request: dict):
     """Get a signed URL for direct GCS upload (bypasses Cloud Run size limits)"""

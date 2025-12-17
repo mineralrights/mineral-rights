@@ -451,7 +451,8 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
                 
             except anthropic.APIError as e:
                 error_msg = str(e)
-                print(f"❌ Anthropic API error (attempt {attempt + 1}): {error_msg}")
+                error_type = type(e).__name__
+                print(f"❌ Anthropic API error (attempt {attempt + 1}): {error_type}: {error_msg}")
                 # Check for common API key errors
                 if "401" in error_msg or "authentication" in error_msg.lower() or "api key" in error_msg.lower():
                     print("🔑 API KEY ERROR DETECTED - Authentication failed. Please check your ANTHROPIC_API_KEY.")
@@ -460,9 +461,14 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
                     continue
                 return None
             except Exception as e:
-                print(f"Unexpected error generating sample (attempt {attempt + 1}): {e}")
+                error_type = type(e).__name__
+                error_msg = str(e)
+                import traceback
+                print(f"❌ Unexpected error generating sample (attempt {attempt + 1}): {error_type}: {error_msg}")
+                print(f"📋 Full error details:")
+                traceback.print_exc()
                 if attempt < max_retries - 1:
-                    time.sleep(1)
+                    time.sleep(2 ** attempt)  # Exponential backoff
                     continue
                 return None
         
@@ -969,17 +975,27 @@ class DocumentProcessor:
                 return response.content[0].text
                 
             except anthropic.APIError as e:
-                print(f"Anthropic API error during OCR (attempt {attempt + 1}): {e}")
+                error_msg = str(e)
+                error_type = type(e).__name__
+                print(f"❌ Anthropic API error during OCR (attempt {attempt + 1}): {error_type}: {error_msg}")
+                # Check for common API key errors
+                if "401" in error_msg or "authentication" in error_msg.lower() or "api key" in error_msg.lower():
+                    print("🔑 API KEY ERROR DETECTED - Authentication failed. Please check your ANTHROPIC_API_KEY.")
                 if attempt < max_retries - 1:
                     time.sleep(2 ** attempt)  # Exponential backoff
                     continue
-                raise Exception(f"OCR failed after {max_retries} attempts: {e}")
+                raise Exception(f"OCR failed after {max_retries} attempts: {error_type}: {error_msg}")
             except Exception as e:
-                print(f"Unexpected error during OCR (attempt {attempt + 1}): {e}")
+                error_type = type(e).__name__
+                error_msg = str(e)
+                import traceback
+                print(f"❌ Unexpected error during OCR (attempt {attempt + 1}): {error_type}: {error_msg}")
+                print(f"📋 Full error details:")
+                traceback.print_exc()
                 if attempt < max_retries - 1:
-                    time.sleep(1)
+                    time.sleep(2 ** attempt)  # Exponential backoff
                     continue
-                raise Exception(f"OCR failed after {max_retries} attempts: {e}")
+                raise Exception(f"OCR failed after {max_retries} attempts: {error_type}: {error_msg}")
         
         raise Exception("OCR failed - should not reach here")
     
