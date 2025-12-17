@@ -189,7 +189,14 @@ async def predict(
             # Process the document based on mode
             if processing_mode == "single_deed":
                 print(f"🔍 About to call process_document for: {file.filename}")
-                result = processor.process_document(tmp_file_path)
+                # Enable high_recall_mode and use appropriate parameters for better detection
+                result = processor.process_document(
+                    tmp_file_path,
+                    max_samples=6,
+                    confidence_threshold=0.7,
+                    page_strategy="first_few",
+                    high_recall_mode=True  # Enable high recall mode to catch reservations
+                )
                 
                 # Debug: Log what we got back
                 print(f"🔍 Result keys: {list(result.keys())}")
@@ -207,6 +214,21 @@ async def predict(
                 
                 print(f"🔍 detailed_samples length: {len(detailed_samples)}")
                 print(f"🔍 samples_used: {samples_used}")
+                
+                # VALIDATION: Check if LLM calls actually succeeded
+                if samples_used == 0 or len(detailed_samples) == 0:
+                    error_msg = (
+                        f"LLM processing failed - no samples were generated. "
+                        f"This may indicate an API key issue, API error, or OCR failure. "
+                        f"Please check server logs for details. "
+                        f"(samples_used: {samples_used}, detailed_samples: {len(detailed_samples)})"
+                    )
+                    print(f"❌ {error_msg}")
+                    raise HTTPException(
+                        status_code=500,
+                        detail=error_msg
+                    )
+                
                 if detailed_samples:
                     print(f"🔍 First sample keys: {list(detailed_samples[0].keys()) if detailed_samples[0] else 'EMPTY'}")
                     first_reasoning = detailed_samples[0].get("reasoning", "") if detailed_samples[0] else ""
