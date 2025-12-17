@@ -423,6 +423,15 @@ async def test_anthropic():
             **diagnostics
         }
     
+    # Strip whitespace/newlines from API key (common issue with secrets)
+    api_key = api_key.strip()
+    if not api_key:
+        return {
+            "status": "error",
+            "message": "ANTHROPIC_API_KEY is empty after stripping whitespace",
+            **diagnostics
+        }
+    
     # Test 1: Basic network connectivity
     try:
         import urllib.request
@@ -817,6 +826,11 @@ async def process_large_pdf_chunked(
             if not api_key:
                 raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")
             
+            # Strip whitespace/newlines from API key
+            api_key = api_key.strip()
+            if not api_key:
+                raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY is empty after stripping whitespace")
+            
             page_processor = LargePDFProcessor(api_key=api_key)
             
             # Check if it's a local file path (for testing) or GCS URL
@@ -882,6 +896,12 @@ async def process_large_pdf_pages(
                 api_key = os.getenv("ANTHROPIC_API_KEY")
                 if not api_key:
                     print(f"❌ Job {job_id}: ANTHROPIC_API_KEY not found")
+                    return
+                
+                # Strip whitespace/newlines from API key
+                api_key = api_key.strip()
+                if not api_key:
+                    print(f"❌ Job {job_id}: ANTHROPIC_API_KEY is empty after stripping whitespace")
                     return
                 
                 # Initialize progress tracking
