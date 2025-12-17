@@ -236,9 +236,16 @@ class OilGasRightsClassifier:
         
         print("Initializing Anthropic client...")
         try:
-            # Simple, standard initialization that works with anthropic 0.40.0
-            self.client = anthropic.Anthropic(api_key=api_key)
-            print("✓ Anthropic client initialized successfully")
+            # Initialize with increased timeout for Cloud Run environments
+            # Default httpx timeout is 10s, increase to 60s for large image processing
+            import httpx
+            timeout = httpx.Timeout(60.0, connect=30.0)  # 60s total, 30s connect
+            self.client = anthropic.Anthropic(
+                api_key=api_key,
+                timeout=timeout,
+                max_retries=2  # Let our code handle retries
+            )
+            print("✓ Anthropic client initialized successfully with 60s timeout")
         except Exception as e:
             print(f"✗ Failed to initialize Anthropic client: {e}")
             raise ValueError(f"Failed to initialize Anthropic client: {e}")
