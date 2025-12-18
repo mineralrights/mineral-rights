@@ -14,10 +14,8 @@ export function rowsToCSV(rows: PredictionRow[]): string {
           "Deed Number": deed.deed_number,
           Status: row.status,
           Prediction: deed.prediction,
-          Confidence: (deed.confidence * 100).toFixed(1) + "%",
           "Page Range": deed.page_range || "",
           "Pages in Deed": deed.pages_in_deed || "",
-          "Boundary Confidence": deed.deed_boundary_info ? (deed.deed_boundary_info.confidence * 100).toFixed(1) + "%" : "",
           "Has Reservations": deed.prediction === "has_reservation" ? "YES" : "NO",
           Explanation: deed.explanation || ""
         });
@@ -31,10 +29,8 @@ export function rowsToCSV(rows: PredictionRow[]): string {
         "Deed Number": "SUMMARY",
         Status: row.status,
         Prediction: `${deedsWithReservations}/${row.deedResults.length} deeds have reservations`,
-        Confidence: "",
         "Page Range": "All pages",
         "Pages in Deed": row.totalDeeds + " deeds total",
-        "Boundary Confidence": "",
         "Has Reservations": deedsWithReservations > 0 ? "YES" : "NO",
         Explanation: row.explanation || ""
       });
@@ -47,10 +43,8 @@ export function rowsToCSV(rows: PredictionRow[]): string {
           "Deed Number": page.page_number,
           Status: row.status,
           Prediction: page.has_reservations ? "has_reservation" : "no_reservation",
-          Confidence: page.confidence ? (page.confidence * 100).toFixed(1) + "%" : "0%",
           "Page Range": `Page ${page.page_number}`,
           "Pages in Deed": 1,
-          "Boundary Confidence": "",
           "Has Reservations": page.has_reservations ? "YES" : "NO",
           Explanation: page.reasoning || page.explanation || ""
         });
@@ -68,10 +62,8 @@ export function rowsToCSV(rows: PredictionRow[]): string {
           "Deed Number": "SUMMARY",
           Status: row.status,
           Prediction: `${pagesWithReservations}/${totalPages} pages have reservations`,
-          Confidence: "",
           "Page Range": `Pages ${row.pagesWithReservations?.join(', ') || 'None'}`,
           "Pages in Deed": `${totalPages} pages total`,
-          "Boundary Confidence": "",
           "Has Reservations": pagesWithReservations > 0 ? "YES" : "NO",
           Explanation: `Document summary: ${pagesWithReservations} out of ${totalPages} pages contain mineral rights reservations`
         });
@@ -84,10 +76,8 @@ export function rowsToCSV(rows: PredictionRow[]): string {
         "Deed Number": 1,
         Status: row.status,
         Prediction: row.prediction ?? "",
-        Confidence: row.confidence ? (row.confidence * 100).toFixed(1) + "%" : "",
         "Page Range": "All pages",
         "Pages in Deed": "",
-        "Boundary Confidence": "",
         "Has Reservations": row.prediction === "has_reservation" ? "YES" : "NO",
         Explanation: row.explanation ?? ""
       });

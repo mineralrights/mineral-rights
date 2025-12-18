@@ -47,7 +47,6 @@ export default function ResultsTable({ rows }: Props) {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prediction</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Confidence</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Summary</th>
             </tr>
           </thead>
@@ -61,12 +60,6 @@ export default function ResultsTable({ rows }: Props) {
 }
 
 function Row({ row }: { row: PredictionRow }) {
-
-  const formatConfidence = (confidence?: number) => {
-    if (confidence === undefined) return "—";
-    return (confidence * 100).toFixed(0) + "%";
-  };
-
   return (
     <>
       <tr className="hover:bg-gray-50 transition-colors">
@@ -99,9 +92,6 @@ function Row({ row }: { row: PredictionRow }) {
              row.prediction === "no_reservation" ? "No Reservations" : 
              row.prediction ?? "—"}
           </div>
-        </td>
-        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-          {formatConfidence(row.confidence)}
         </td>
         <td className="px-6 py-4">
           {row.processingMode === "multi_deed" && row.deedResults ? (
@@ -211,15 +201,11 @@ function DeedResultCard({ deedResult }: { deedResult: DeedResult }) {
       </div>
       
       <div className="text-xs text-gray-600 space-y-1">
-        <div>Confidence: {(deedResult.confidence * 100).toFixed(0)}%</div>
         {deedResult.page_range && (
           <div>Pages: {deedResult.page_range}</div>
         )}
         {deedResult.pages_in_deed && (
           <div>Pages in deed: {deedResult.pages_in_deed}</div>
-        )}
-        {deedResult.deed_boundary_info && (
-          <div>Boundary confidence: {(deedResult.deed_boundary_info.confidence * 100).toFixed(0)}%</div>
         )}
       </div>
       
@@ -258,7 +244,6 @@ function PageResultCard({ pageResult }: { pageResult: PageResult }) {
       </div>
       
       <div className="text-xs text-gray-600 space-y-1">
-        <div>Confidence: {(pageResult.confidence * 100).toFixed(0)}%</div>
         {pageResult.text_length && (
           <div>Text: {pageResult.text_length} chars</div>
         )}
