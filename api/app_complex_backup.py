@@ -47,6 +47,9 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://localhost:3000", 
+        "https://mineral-rights-4o8gr9h79-lauragomezjurados-projects.vercel.app",
+        "https://mineral-rights-3n3mc6fj6-lauragomezjurados-projects.vercel.app",
+        "https://mineral-rights-lvgux6lc5-lauragomezjurados-projects.vercel.app",  # Current Vercel domain
         "https://*.vercel.app",  # Allow all Vercel domains
         "*"  # Allow all origins for debugging
     ],
