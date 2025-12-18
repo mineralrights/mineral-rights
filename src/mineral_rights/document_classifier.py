@@ -409,10 +409,13 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
             else:
                 return None, response
         
-        # Extract reasoning
-        reasoning_match = re.search(r'Reasoning:\s*(.*?)(?:\n\n|\Z)', response, re.IGNORECASE | re.DOTALL)
+        # Extract reasoning - capture everything after "Reasoning:" until end of response
+        # Use greedy match to capture full reasoning even if it contains semicolons, colons, or single newlines
+        reasoning_match = re.search(r'Reasoning:\s*(.*)', response, re.IGNORECASE | re.DOTALL)
         if reasoning_match:
             reasoning = reasoning_match.group(1).strip()
+            # Remove any trailing "Answer:" or "Classification:" sections that might appear after reasoning
+            reasoning = re.sub(r'\s*(?:Answer|Classification):\s*.*$', '', reasoning, flags=re.IGNORECASE | re.DOTALL).strip()
         else:
             reasoning = response
             
@@ -430,7 +433,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
             try:
                 response = self.client.messages.create(
                     model=self.model_name,  # Use configurable model name
-                    max_tokens=1000,
+                    max_tokens=4000,  # Increased from 1000 to allow full detailed explanations
                     temperature=temperature,  # Keep temperature as provided (0.1)
                     messages=[{
                         "role": "user", 
