@@ -5,18 +5,6 @@ ENV/
 .venv
 .venv/
 
-# Python API files - These should NOT be deployed as serverless functions
-# They are deployed separately to Cloud Run
-api/
-*.py
-!web/**/*.py
-
-# Python dependencies and config
-pyproject.toml
-requirements.txt
-requirements-*.txt
-uv.lock
-
 # Large data directories
 data/
 demo_tests/
@@ -40,7 +28,6 @@ test_*.csv
 docs/
 *.md
 !README.md
-!web/README.md
 
 # Build artifacts
 __pycache__/
@@ -85,7 +72,6 @@ tmp/
 scripts/
 tools/
 streamlit_app/
-src/
 
 # Configuration files that might be large
 *.pptm
@@ -95,11 +81,4 @@ src/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
-
-# Docker and deployment configs (not needed for Vercel)
-Dockerfile*
-cloudbuild.yaml
-cloudrun.yaml
-deploy*.sh
-*.sh
 
