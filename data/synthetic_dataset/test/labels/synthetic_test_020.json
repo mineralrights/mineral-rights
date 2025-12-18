@@ -1,0 +1,113 @@
+{
+  "doc_id": "synthetic_test_020",
+  "source_pdf": "test/pdfs/synthetic_test_020.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 9,
+    "total_pages": 27
+  },
+  "deed_count": 9,
+  "page_starts": [
+    1,
+    4,
+    5,
+    8,
+    14,
+    16,
+    19,
+    21,
+    24
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Armstrong DB 5269_327 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 4,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 3,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 8,
+      "page_end": 13,
+      "source_file": "DB 800_131.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 15,
+      "source_file": "Potter DB 197_879.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 16,
+      "page_end": 18,
+      "source_file": "OR 178_693.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 19,
+      "page_end": 20,
+      "source_file": "Washington DB 704_223.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 21,
+      "page_end": 23,
+      "source_file": "Belmont Co OH DB 189_408.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 24,
+      "page_end": 27,
+      "source_file": "Greene 677-726 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 9,
+    "n_starts_normalized": 9,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.197274",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "3c2bcb0ad341c4b410792f37d7c4c435982f40ef75cdbe4bd9cc40fd55fb3131"
+  }
+}

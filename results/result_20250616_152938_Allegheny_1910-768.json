@@ -1,0 +1,40 @@
+{
+  "original_result": {
+    "document_path": "uploads/20250616_152938_Allegheny_1910-768.pdf",
+    "pages_processed": 3,
+    "page_strategy": "sequential_early_stop",
+    "max_tokens_per_page": 8000,
+    "ocr_text": "=== PAGE 1 ===\n[ERROR: Could not extract text from page 1]\n\n=== PAGE 2 ===\n[ERROR: Could not extract text from page 2]\n\n=== PAGE 3 ===\n[ERROR: Could not extract text from page 3]",
+    "ocr_text_length": 0,
+    "classification": 0,
+    "confidence": 1.0,
+    "votes": {
+      "0": 1.0,
+      "1": 0.0
+    },
+    "samples_used": 0,
+    "early_stopped": false,
+    "chunk_analysis": [],
+    "stopped_at_chunk": null,
+    "total_pages_in_document": 3,
+    "detailed_samples": []
+  },
+  "user_friendly_response": {
+    "success": true,
+    "filename": "Allegheny_1910-768.pdf",
+    "classification": 0,
+    "confidence": 1.0,
+    "confidence_level": "High",
+    "explanation": {
+      "result": "No Mineral Rights Reservations Found",
+      "explanation": "Our AI analysis indicates this deed does not contain mineral rights reservations. The property transfer appears to include all rights, including mineral rights.",
+      "recommendation": "Based on this analysis, the mineral rights appear to transfer with the property. However, for complete certainty, consider having an attorney review the document."
+    },
+    "processing_details": {
+      "pages_processed": 3,
+      "samples_used": 0,
+      "early_stopped": false,
+      "text_length": 0
+    }
+  }
+}

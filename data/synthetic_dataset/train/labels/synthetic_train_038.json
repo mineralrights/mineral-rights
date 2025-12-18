@@ -1,0 +1,149 @@
+{
+  "doc_id": "synthetic_train_038",
+  "source_pdf": "train/pdfs/synthetic_train_038.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 7,
+    "total_deeds": 13,
+    "total_pages": 44
+  },
+  "deed_count": 13,
+  "page_starts": [
+    1,
+    4,
+    6,
+    9,
+    15,
+    17,
+    20,
+    22,
+    24,
+    28,
+    34,
+    36,
+    39
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "DB 257_85.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 5,
+      "source_file": "Indiana Co. PA DB 550_322.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 6,
+      "page_end": 8,
+      "source_file": "Washington DBV 604 Page 286 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 14,
+      "source_file": "OR 249_8.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 5,
+      "page_start": 15,
+      "page_end": 16,
+      "source_file": "Potter DB 197_879.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 17,
+      "page_end": 19,
+      "source_file": "OR 137_1211.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 20,
+      "page_end": 21,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 22,
+      "page_end": 23,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 9,
+      "page_start": 24,
+      "page_end": 27,
+      "source_file": "Greene 677-726 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 10,
+      "page_start": 28,
+      "page_end": 33,
+      "source_file": "DV 217_352.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 11,
+      "page_start": 34,
+      "page_end": 35,
+      "source_file": "Monroe Co OH DB 109_330.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 12,
+      "page_start": 36,
+      "page_end": 38,
+      "source_file": "DB 99-241.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 13,
+      "page_start": 39,
+      "page_end": 44,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 13,
+    "n_starts_normalized": 13,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.587827",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "10bbf49a8e6a8c471520e89febb8a0295bf6a3f67fdba4b660cb39a77555ab9f"
+  }
+}

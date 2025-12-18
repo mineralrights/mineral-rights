@@ -1,0 +1,13 @@
+{
+  "session_id": "session_1759347954_7494",
+  "original_filename": "test_small.pdf",
+  "total_pages": 3,
+  "splitting_strategy": "document_ai",
+  "document_ai_used": true,
+  "deed_boundaries": [],
+  "classification_results": [],
+  "processing_start_time": 1759347954.8554208,
+  "processing_end_time": null,
+  "total_processing_time": null,
+  "summary": null
+}

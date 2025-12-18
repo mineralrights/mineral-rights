@@ -1,0 +1,149 @@
+{
+  "doc_id": "synthetic_train_086",
+  "source_pdf": "train/pdfs/synthetic_train_086.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 6,
+    "total_deeds": 13,
+    "total_pages": 42
+  },
+  "deed_count": 13,
+  "page_starts": [
+    1,
+    4,
+    8,
+    10,
+    15,
+    17,
+    19,
+    22,
+    25,
+    28,
+    34,
+    38,
+    41
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Washington Co PA DV 596_69.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 7,
+      "source_file": "Greene DB 253_223 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 9,
+      "source_file": "OR 16_217.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 14,
+      "source_file": "Brooke DB 176_514.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 5,
+      "page_start": 15,
+      "page_end": 16,
+      "source_file": "Allegheny DB 41_66.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 17,
+      "page_end": 18,
+      "source_file": "OR 1388_76.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 19,
+      "page_end": 21,
+      "source_file": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 8,
+      "page_start": 22,
+      "page_end": 24,
+      "source_file": "Belmont Co OH DB 189_408.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 25,
+      "page_end": 27,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 10,
+      "page_start": 28,
+      "page_end": 33,
+      "source_file": "OR 274_678.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 11,
+      "page_start": 34,
+      "page_end": 37,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 12,
+      "page_start": 38,
+      "page_end": 40,
+      "source_file": "DB 257_85.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 13,
+      "page_start": 41,
+      "page_end": 42,
+      "source_file": "Washington DB 384_583.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 13,
+    "n_starts_normalized": 13,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.171426",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "a1b35225d696e4808fd7dbeb77a3b1ada84e8e7e25e80d05f193b5cad56c1ea8"
+  }
+}

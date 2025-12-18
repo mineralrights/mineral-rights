@@ -1,0 +1,86 @@
+{
+  "doc_id": "synthetic_train_023",
+  "source_pdf": "train/pdfs/synthetic_train_023.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 6,
+    "total_pages": 17
+  },
+  "deed_count": 6,
+  "page_starts": [
+    1,
+    6,
+    8,
+    9,
+    12,
+    15
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 5,
+      "source_file": "Wetzel Co WV DB 312_378.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    },
+    {
+      "index": 2,
+      "page_start": 6,
+      "page_end": 7,
+      "source_file": "OR 1388_76.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 8,
+      "source_file": "Guernsey DB 290_74.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 11,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 14,
+      "source_file": "OR 133-299.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 15,
+      "page_end": 17,
+      "source_file": "Washington DB 405_547.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 6,
+    "n_starts_normalized": 6,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.183981",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "9a5074534903bedcf4cac1df0b21b204153198fe5ea25a24ae544e5171c32bc1"
+  }
+}

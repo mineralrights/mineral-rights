@@ -1,0 +1,131 @@
+{
+  "doc_id": "synthetic_train_019",
+  "source_pdf": "train/pdfs/synthetic_train_019.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 11,
+    "total_pages": 30
+  },
+  "deed_count": 11,
+  "page_starts": [
+    1,
+    7,
+    10,
+    13,
+    14,
+    18,
+    21,
+    23,
+    24,
+    26,
+    29
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 6,
+      "source_file": "Westmoreland DV 2483_444.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 2,
+      "page_start": 7,
+      "page_end": 9,
+      "source_file": "OR 133-299.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 10,
+      "page_end": 12,
+      "source_file": "DB 99-241.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 13,
+      "page_end": 13,
+      "source_file": "Guernsey Co OH DV 118_352.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 1
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 17,
+      "source_file": "Washington 201408321 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 6,
+      "page_start": 18,
+      "page_end": 20,
+      "source_file": "Greene DB 280_311 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 21,
+      "page_end": 22,
+      "source_file": "Harrison DV 96_39.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 23,
+      "page_end": 23,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 9,
+      "page_start": 24,
+      "page_end": 25,
+      "source_file": "Washington DB 384_583.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 10,
+      "page_start": 26,
+      "page_end": 28,
+      "source_file": "OR 568_1267.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 29,
+      "page_end": 30,
+      "source_file": "DV 192_87.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 11,
+    "n_starts_normalized": 11,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.013779",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "07996ca41ad35b61a641181b5ec292eee5cfbe9971d062c61e3c7a076d7e77b3"
+  }
+}

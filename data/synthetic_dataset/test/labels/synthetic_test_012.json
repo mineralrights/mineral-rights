@@ -1,0 +1,158 @@
+{
+  "doc_id": "synthetic_test_012",
+  "source_pdf": "test/pdfs/synthetic_test_012.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 14,
+    "total_pages": 41
+  },
+  "deed_count": 14,
+  "page_starts": [
+    1,
+    4,
+    10,
+    12,
+    16,
+    20,
+    25,
+    27,
+    28,
+    31,
+    34,
+    36,
+    37,
+    40
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "OR 568_1267.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 9,
+      "source_file": "OR 274_678.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 10,
+      "page_end": 11,
+      "source_file": "DB 304_409.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 15,
+      "source_file": "Allegheny 8277_16 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 5,
+      "page_start": 16,
+      "page_end": 19,
+      "source_file": "Washington Co PA Inst# 201031651.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 6,
+      "page_start": 20,
+      "page_end": 24,
+      "source_file": "Brooke DB 176_514.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 7,
+      "page_start": 25,
+      "page_end": 26,
+      "source_file": "OR 1388_76.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 27,
+      "page_end": 27,
+      "source_file": "Carroll DB 130-50.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 9,
+      "page_start": 28,
+      "page_end": 30,
+      "source_file": "DB 593_316.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 10,
+      "page_start": 31,
+      "page_end": 33,
+      "source_file": "Allegheny 1910-768.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 34,
+      "page_end": 35,
+      "source_file": "Monroe Co OH DB 109_330.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 12,
+      "page_start": 36,
+      "page_end": 36,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 13,
+      "page_start": 37,
+      "page_end": 39,
+      "source_file": "DB 605_186.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 14,
+      "page_start": 40,
+      "page_end": 41,
+      "source_file": "Allegheny DB 41_66.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 14,
+    "n_starts_normalized": 14,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.943331",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "b277a8bc38c33a8f4cb2de772e0621fe7793e2f258858ccfead85700a8a1f5bd"
+  }
+}

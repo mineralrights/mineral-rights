@@ -1,0 +1,149 @@
+{
+  "doc_id": "synthetic_test_008",
+  "source_pdf": "test/pdfs/synthetic_test_008.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 6,
+    "total_deeds": 13,
+    "total_pages": 48
+  },
+  "deed_count": 13,
+  "page_starts": [
+    1,
+    4,
+    6,
+    14,
+    20,
+    25,
+    31,
+    34,
+    38,
+    39,
+    42,
+    43,
+    47
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 5,
+      "source_file": "DB 304_409.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 6,
+      "page_end": 13,
+      "source_file": "Somerset DB 2570_102.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 8
+    },
+    {
+      "index": 4,
+      "page_start": 14,
+      "page_end": 19,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 5,
+      "page_start": 20,
+      "page_end": 24,
+      "source_file": "Brooke DB 176_514.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 6,
+      "page_start": 25,
+      "page_end": 30,
+      "source_file": "OR 249_8.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 7,
+      "page_start": 31,
+      "page_end": 33,
+      "source_file": "OR 11_761.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 8,
+      "page_start": 34,
+      "page_end": 37,
+      "source_file": "OR 601_3875.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 9,
+      "page_start": 38,
+      "page_end": 38,
+      "source_file": "Carroll DB 130-50.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 10,
+      "page_start": 39,
+      "page_end": 41,
+      "source_file": "DB 557_938.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 42,
+      "page_end": 42,
+      "source_file": "Guernsey DB 290_74.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 12,
+      "page_start": 43,
+      "page_end": 46,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 13,
+      "page_start": 47,
+      "page_end": 48,
+      "source_file": "DV 192_87.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 13,
+    "n_starts_normalized": 13,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.806962",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "3647e648c4389fa45e448b5457050aa1f3b74e539192c524983ec5d950bb542f"
+  }
+}

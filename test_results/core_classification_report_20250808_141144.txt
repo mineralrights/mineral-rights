@@ -1,0 +1,67 @@
+COMPREHENSIVE OIL & GAS CLASSIFICATION TEST REPORT
+============================================================
+Test Date: 2025-08-08 14:11:44
+Total Documents Tested: 90
+
+🎯 PERFORMANCE SUMMARY
+------------------------------
+Overall Accuracy:     86.5%
+Specificity (TNR):    85.7% ⭐ KEY METRIC
+Sensitivity (Recall): 87.5%
+Precision:            83.3%
+F1-Score:            85.4%
+
+🚨 ERROR ANALYSIS (Focus: No-Reservations)
+----------------------------------------
+False Positive Rate:  14.3% (wrongly flagged as reservations)
+False Negative Rate:  12.5% (missed actual reservations)
+Misclassification:    13.5%
+
+📊 CONFUSION MATRIX
+--------------------
+                    Predicted
+                No-Res  Reserv
+Actual  No-Res     42       7
+        Reserv      5      35
+
+⚡ PROCESSING STATISTICS
+-------------------------
+Total Processing Time:    7329.7 seconds
+Average Time per Doc:     82.4 seconds
+Average Confidence:       0.427
+Average Samples Used:     2.8
+
+❌ PROCESSING ERRORS
+------------------
+• Greene DB 280_311 - 4.23.2025.pdf: BadRequestError: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Output blocked by content filtering policy'}}
+
+🔍 FALSE POSITIVES (Critical - No-reservs wrongly flagged)
+-------------------------------------------------------
+• DB 110_36.pdf (confidence: 0.950)
+• Somerset DB 2163_624.pdf (confidence: 0.950)
+• Jefferson DB 397_111.pdf (confidence: 0.950)
+• Potter DB 197_879.pdf (confidence: 0.641)
+• OR 274_678.pdf (confidence: 0.950)
+• OR 276_4740.pdf (confidence: 0.620)
+• Washington DB 384_583.pdf (confidence: 0.950)
+
+🔍 FALSE NEGATIVES (Missed actual reservations)
+---------------------------------------------
+• Guernsey OR 392_292 - 4.23.2025.pdf (confidence: 0.000)
+• Marshall Co WV DB 82_173.pdf (confidence: 0.000)
+• DB 557_938.pdf (confidence: 0.000)
+• DB 257_85.pdf (confidence: 0.000)
+• Guernsey Co OH DV 118_352.pdf (confidence: 0.000)
+
+📈 BENCHMARK COMPARISON
+-----------------------
+Target Metrics for Production:
+  • Specificity (TNR):  ≥95% [Current: 85.7%]
+  • Overall Accuracy:   ≥90% [Current: 86.5%]
+  • False Positive Rate: ≤5% [Current: 14.3%]
+
+💡 RECOMMENDATIONS
+-----------------
+⚠️  Specificity below target - tune confidence threshold higher
+⚠️  Too many false positives - review conservative prompt
+⚠️  Overall accuracy below target - investigate feature engineering

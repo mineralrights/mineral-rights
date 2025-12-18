@@ -1,0 +1,59 @@
+{
+  "doc_id": "synthetic_train_037",
+  "source_pdf": "train/pdfs/synthetic_train_037.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 3,
+    "total_pages": 7
+  },
+  "deed_count": 3,
+  "page_starts": [
+    1,
+    3,
+    5
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "Washington DB 704_223.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 4,
+      "source_file": "Washington DV 677_46.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 3,
+    "n_starts_normalized": 3,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.544576",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "79a0e836a5b1973d8e08ceb89d1b684468b0ff43a41dc82daee91be419914cc6"
+  }
+}

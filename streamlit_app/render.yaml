@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: mineral-rights-analyzer
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ANTHROPIC_API_KEY
+        sync: false
+    healthCheckPath: / 

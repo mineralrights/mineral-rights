@@ -1,0 +1,86 @@
+{
+  "doc_id": "synthetic_train_011",
+  "source_pdf": "train/pdfs/synthetic_train_011.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 1,
+    "total_deeds": 6,
+    "total_pages": 34
+  },
+  "deed_count": 6,
+  "page_starts": [
+    1,
+    8,
+    12,
+    15,
+    21,
+    29
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 7,
+      "source_file": "DB 536_306.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 7
+    },
+    {
+      "index": 2,
+      "page_start": 8,
+      "page_end": 11,
+      "source_file": "OR 601_3875.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 12,
+      "page_end": 14,
+      "source_file": "Washington DB 405_547.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 15,
+      "page_end": 20,
+      "source_file": "Greene OR 534_885 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 5,
+      "page_start": 21,
+      "page_end": 28,
+      "source_file": "Somerset DB 2570_102.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 8
+    },
+    {
+      "index": 6,
+      "page_start": 29,
+      "page_end": 34,
+      "source_file": "OR 249_8.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 6,
+    "n_starts_normalized": 6,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.768875",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "180ab917cd6b4249d367a1b1900c6fe06644ed1cffeeeadd3b1f420ef3f7aee8"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "doc_id": "synthetic_train_082",
+  "source_pdf": "train/pdfs/synthetic_train_082.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 7,
+    "total_pages": 19
+  },
+  "deed_count": 7,
+  "page_starts": [
+    1,
+    5,
+    8,
+    11,
+    13,
+    17,
+    19
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Greene DB 253_223 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 10,
+      "source_file": "DB 593_316.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 11,
+      "page_end": 12,
+      "source_file": "Indiana Co. PA DB 550_322.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 13,
+      "page_end": 16,
+      "source_file": "Westmoreland 753-247 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 6,
+      "page_start": 17,
+      "page_end": 18,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 19,
+      "page_end": 19,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 7,
+    "n_starts_normalized": 7,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.006893",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "87d3017e20dedf54e25efcb23450f4b4babccf8b34fcf54fc833bf527df745dc"
+  }
+}

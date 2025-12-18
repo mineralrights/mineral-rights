@@ -1,0 +1,131 @@
+{
+  "doc_id": "synthetic_train_096",
+  "source_pdf": "train/pdfs/synthetic_train_096.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 8,
+    "total_deeds": 11,
+    "total_pages": 33
+  },
+  "deed_count": 11,
+  "page_starts": [
+    1,
+    4,
+    7,
+    10,
+    12,
+    14,
+    17,
+    18,
+    22,
+    26,
+    29
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 6,
+      "source_file": "Greene DB 280_311 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 9,
+      "source_file": "Guernsey Co OH DV 145_283.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 11,
+      "source_file": "Washington DB 704_223.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 13,
+      "source_file": "OR 1388_76.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 14,
+      "page_end": 16,
+      "source_file": "Washington DBV 604 Page 286 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 17,
+      "page_end": 17,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 8,
+      "page_start": 18,
+      "page_end": 21,
+      "source_file": "Greene DB 253_223 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 9,
+      "page_start": 22,
+      "page_end": 25,
+      "source_file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 10,
+      "page_start": 26,
+      "page_end": 28,
+      "source_file": "DB 99-241.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 11,
+      "page_start": 29,
+      "page_end": 33,
+      "source_file": "Wetzel Co WV DB 312_378.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 11,
+    "n_starts_normalized": 11,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.390506",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "a8aa85c229b3c070c0df401243e61eb0721cca668875ef138afe7847727f0371"
+  }
+}

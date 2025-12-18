@@ -1,0 +1,20 @@
+
+⇣ Classification report
+              precision    recall  f1-score   support
+
+           0      0.936     0.898     0.917        49
+           1      0.884     0.927     0.905        41
+
+    accuracy                          0.911        90
+   macro avg      0.910     0.912     0.911        90
+weighted avg      0.912     0.911     0.911        90
+
+
+⇣ Confusion matrix (TN FP / FN TP)
+[[44  5]
+ [ 3 38]]
+
+Accuracy : 0.911
+Precision: 0.884
+Recall   : 0.927
+F1-score : 0.905

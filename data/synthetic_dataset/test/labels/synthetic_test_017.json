@@ -1,0 +1,104 @@
+{
+  "doc_id": "synthetic_test_017",
+  "source_pdf": "test/pdfs/synthetic_test_017.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 8,
+    "total_pages": 28
+  },
+  "deed_count": 8,
+  "page_starts": [
+    1,
+    7,
+    8,
+    10,
+    14,
+    17,
+    18,
+    21
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 6,
+      "source_file": "DB 800_131.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 2,
+      "page_start": 7,
+      "page_end": 7,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 9,
+      "source_file": "Westmoreland DV 1434_603 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 13,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 16,
+      "source_file": "Armstrong DB 5269_327 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 17,
+      "page_end": 17,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 7,
+      "page_start": 18,
+      "page_end": 20,
+      "source_file": "DB 605_186.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 8,
+      "page_start": 21,
+      "page_end": 28,
+      "source_file": "Somerset DB 2570_102.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 8
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 8,
+    "n_starts_normalized": 8,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.127336",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "815fcbcc1840d32daa257c8acee21e1ec0bc7ef1850c56108455e5f4528142ee"
+  }
+}

@@ -1,0 +1,131 @@
+{
+  "doc_id": "synthetic_test_013",
+  "source_pdf": "test/pdfs/synthetic_test_013.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 7,
+    "total_deeds": 11,
+    "total_pages": 46
+  },
+  "deed_count": 11,
+  "page_starts": [
+    1,
+    10,
+    13,
+    17,
+    23,
+    26,
+    32,
+    34,
+    40,
+    42,
+    44
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 9,
+      "source_file": "OR 239_2451.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 9
+    },
+    {
+      "index": 2,
+      "page_start": 10,
+      "page_end": 12,
+      "source_file": "Guernsey OR 392_292 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 13,
+      "page_end": 16,
+      "source_file": "Potter DB 234_1012.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 17,
+      "page_end": 22,
+      "source_file": "DB 800_131.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 5,
+      "page_start": 23,
+      "page_end": 25,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 26,
+      "page_end": 31,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 7,
+      "page_start": 32,
+      "page_end": 33,
+      "source_file": "DB 304_409.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 34,
+      "page_end": 39,
+      "source_file": "Somerset DB 1820_349.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 9,
+      "page_start": 40,
+      "page_end": 41,
+      "source_file": "Westmoreland DV 1434_603 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 10,
+      "page_start": 42,
+      "page_end": 43,
+      "source_file": "OR 55_190.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 11,
+      "page_start": 44,
+      "page_end": 46,
+      "source_file": "Guernsey Co OH DV 145_283.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 11,
+    "n_starts_normalized": 11,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.001686",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "354c5d94ba120e1bb8831d02ce8690dcb213a6a5e90a7af512d4e3b1535259d9"
+  }
+}

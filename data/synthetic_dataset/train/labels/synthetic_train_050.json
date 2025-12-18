@@ -1,0 +1,59 @@
+{
+  "doc_id": "synthetic_train_050",
+  "source_pdf": "train/pdfs/synthetic_train_050.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 2,
+    "total_deeds": 3,
+    "total_pages": 9
+  },
+  "deed_count": 3,
+  "page_starts": [
+    1,
+    5,
+    7
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 6,
+      "source_file": "OR 55_190.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 9,
+      "source_file": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 3,
+    "n_starts_normalized": 3,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.955915",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "2e2f0ce26028b36f220f47c3379dec5b369b3936c8d64a9dcaf7d158523cacb6"
+  }
+}

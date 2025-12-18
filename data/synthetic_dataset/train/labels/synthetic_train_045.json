@@ -1,0 +1,104 @@
+{
+  "doc_id": "synthetic_train_045",
+  "source_pdf": "train/pdfs/synthetic_train_045.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 8,
+    "total_pages": 36
+  },
+  "deed_count": 8,
+  "page_starts": [
+    1,
+    4,
+    6,
+    12,
+    15,
+    21,
+    25,
+    31
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "DB 257_85.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 5,
+      "source_file": "DB 304_409.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 3,
+      "page_start": 6,
+      "page_end": 11,
+      "source_file": "Somerset DB 1820_349.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 14,
+      "source_file": "DB 347_434.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 15,
+      "page_end": 20,
+      "source_file": "DV 217_352.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 6,
+      "page_start": 21,
+      "page_end": 24,
+      "source_file": "Allegheny DB 92_389.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 7,
+      "page_start": 25,
+      "page_end": 30,
+      "source_file": "OR 274_678.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 8,
+      "page_start": 31,
+      "page_end": 36,
+      "source_file": "OR 276_4740.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 8,
+    "n_starts_normalized": 8,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.849280",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "0de995bcbcb4fdfc76a423f6a3c0fe17c9ed672744e16b8960e44b2a7b7cc01d"
+  }
+}

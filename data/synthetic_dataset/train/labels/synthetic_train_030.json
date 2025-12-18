@@ -1,0 +1,95 @@
+{
+  "doc_id": "synthetic_train_030",
+  "source_pdf": "train/pdfs/synthetic_train_030.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 3,
+    "total_deeds": 7,
+    "total_pages": 19
+  },
+  "deed_count": 7,
+  "page_starts": [
+    1,
+    4,
+    7,
+    10,
+    14,
+    16,
+    18
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "DB 593_316.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 6,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 9,
+      "source_file": "OR 272_5846.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 13,
+      "source_file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 15,
+      "source_file": "DB 304_409.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 16,
+      "page_end": 17,
+      "source_file": "OR 55_194.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 7,
+      "page_start": 18,
+      "page_end": 19,
+      "source_file": "Allegheny 3387-275 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 7,
+    "n_starts_normalized": 7,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.337482",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "091f3237012218097948ead7c8de3592e31daa172cd1a720153c27e86d358b6a"
+  }
+}

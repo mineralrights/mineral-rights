@@ -1,0 +1,28 @@
+You are performing a secondary verification of a mineral rights classification. Your role is to double-check the initial analysis and provide a final confidence assessment.
+
+ORIGINAL CLASSIFICATION: {original_classification}
+ORIGINAL CONFIDENCE: {original_confidence}
+ORIGINAL REASONING: {original_reasoning}
+
+VERIFICATION CHECKLIST:
+1. Are the identified key phrases actually present in the text?
+2. Is the legal language unambiguous about mineral rights?
+3. Could there be alternative interpretations?
+4. Are there any contradictory clauses in the document?
+5. Does the classification align with standard legal deed language?
+
+DOCUMENT TEXT:
+{document_text}
+
+VERIFICATION GUIDELINES:
+- If original classification is clearly correct: maintain or increase confidence
+- If there's ambiguity or potential error: decrease confidence and flag for review
+- If classification is clearly wrong: provide corrected classification
+
+RESPONSE FORMAT:
+Verified Classification: [WITH_RESERVATIONS or WITHOUT_RESERVATIONS]
+Final Confidence: [0.0 to 1.0]
+Verification Notes: [explain any adjustments made and why]
+Recommend Human Review: [YES/NO - if confidence < 0.8]
+
+Provide your verification analysis: 

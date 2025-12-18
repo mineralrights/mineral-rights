@@ -1,0 +1,122 @@
+{
+  "doc_id": "synthetic_train_063",
+  "source_pdf": "train/pdfs/synthetic_train_063.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 8,
+    "total_deeds": 10,
+    "total_pages": 34
+  },
+  "deed_count": 10,
+  "page_starts": [
+    1,
+    2,
+    5,
+    7,
+    12,
+    14,
+    17,
+    23,
+    27,
+    31
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 1,
+      "source_file": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 2,
+      "page_start": 2,
+      "page_end": 4,
+      "source_file": "DB 593_316.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 5,
+      "page_end": 6,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 7,
+      "page_end": 11,
+      "source_file": "Harrison DV 202-635.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 13,
+      "source_file": "Allegheny DB 2470_179 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 14,
+      "page_end": 16,
+      "source_file": "Guernsey Co OH DV 145_283.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 17,
+      "page_end": 22,
+      "source_file": "OR 249_8.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 8,
+      "page_start": 23,
+      "page_end": 26,
+      "source_file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 9,
+      "page_start": 27,
+      "page_end": 30,
+      "source_file": "Westmoreland 753-247 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 10,
+      "page_start": 31,
+      "page_end": 34,
+      "source_file": "Washington 201408321 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 10,
+    "n_starts_normalized": 10,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.424268",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "d474d159f4f03790624509a0f830c4c37d3c997c73accd665892a509886de86b"
+  }
+}

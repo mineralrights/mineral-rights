@@ -1,0 +1,64 @@
+COMPREHENSIVE OIL & GAS CLASSIFICATION TEST REPORT
+============================================================
+Test Date: 2025-08-09 11:59:58
+Total Documents Tested: 90
+
+🎯 PERFORMANCE SUMMARY
+------------------------------
+Overall Accuracy:     85.6%
+Specificity (TNR):    91.8% ⭐ KEY METRIC
+Sensitivity (Recall): 78.0%
+Precision:            88.9%
+F1-Score:            83.1%
+
+🚨 ERROR ANALYSIS (Focus: No-Reservations)
+----------------------------------------
+False Positive Rate:  8.2% (wrongly flagged as reservations)
+False Negative Rate:  22.0% (missed actual reservations)
+Misclassification:    14.4%
+
+📊 CONFUSION MATRIX
+--------------------
+                    Predicted
+                No-Res  Reserv
+Actual  No-Res     45       4
+        Reserv      9      32
+
+⚡ PROCESSING STATISTICS
+-------------------------
+Total Processing Time:    6358.6 seconds
+Average Time per Doc:     70.7 seconds
+Average Confidence:       0.918
+Average Samples Used:     2.9
+
+🔍 FALSE POSITIVES (Critical - No-reservs wrongly flagged)
+-------------------------------------------------------
+• DB 110_36.pdf (confidence: 0.950)
+• Somerset DB 2163_624.pdf (confidence: 0.950)
+• Potter DB 197_879.pdf (confidence: 0.950)
+• Washington DB 384_583.pdf (confidence: 0.950)
+
+🔍 FALSE NEGATIVES (Missed actual reservations)
+---------------------------------------------
+• Guernsey OR 392_292 - 4.23.2025.pdf (confidence: 0.950)
+• Marshall Co WV DB 82_173.pdf (confidence: 0.950)
+• Potter DB 234_1012.pdf (confidence: 0.950)
+• Washington 201408321 - 4.23.2025.pdf (confidence: 0.950)
+• DB 557_938.pdf (confidence: 0.950)
+• Harrison DV 202-635.pdf (confidence: 0.950)
+• DB 257_85.pdf (confidence: 0.802)
+• Greene DB 280_311 - 4.23.2025.pdf (confidence: 0.950)
+• Guernsey Co OH DV 118_352.pdf (confidence: 0.950)
+
+📈 BENCHMARK COMPARISON
+-----------------------
+Target Metrics for Production:
+  • Specificity (TNR):  ≥95% [Current: 91.8%]
+  • Overall Accuracy:   ≥90% [Current: 85.6%]
+  • False Positive Rate: ≤5% [Current: 8.2%]
+
+💡 RECOMMENDATIONS
+-----------------
+⚠️  Specificity below target - tune confidence threshold higher
+⚠️  Too many false positives - review conservative prompt
+⚠️  Overall accuracy below target - investigate feature engineering

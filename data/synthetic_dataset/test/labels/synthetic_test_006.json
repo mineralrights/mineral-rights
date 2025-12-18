@@ -1,0 +1,131 @@
+{
+  "doc_id": "synthetic_test_006",
+  "source_pdf": "test/pdfs/synthetic_test_006.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 7,
+    "total_deeds": 11,
+    "total_pages": 41
+  },
+  "deed_count": 11,
+  "page_starts": [
+    1,
+    4,
+    8,
+    12,
+    19,
+    22,
+    25,
+    26,
+    29,
+    34,
+    40
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Armstrong DB 5269_327 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 7,
+      "source_file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 11,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 18,
+      "source_file": "Somerset DB 2163_624.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 7
+    },
+    {
+      "index": 5,
+      "page_start": 19,
+      "page_end": 21,
+      "source_file": "DB 257_85.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 22,
+      "page_end": 24,
+      "source_file": "DB 347_434.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 25,
+      "page_end": 25,
+      "source_file": "Guernsey Co OH DV 118_352.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 1
+    },
+    {
+      "index": 8,
+      "page_start": 26,
+      "page_end": 28,
+      "source_file": "Washington Co PA DV 596_69.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 29,
+      "page_end": 33,
+      "source_file": "Brooke DB 176_514.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 10,
+      "page_start": 34,
+      "page_end": 39,
+      "source_file": "DB 800_131.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 11,
+      "page_start": 40,
+      "page_end": 41,
+      "source_file": "DV 226_593.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 11,
+    "n_starts_normalized": 11,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.747349",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "39676933712daca9f295018e53e4fe13d12f5ed79a50a4e96a4474142ce4add6"
+  }
+}

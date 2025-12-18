@@ -1,0 +1,149 @@
+{
+  "doc_id": "synthetic_test_025",
+  "source_pdf": "test/pdfs/synthetic_test_025.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 7,
+    "total_deeds": 13,
+    "total_pages": 47
+  },
+  "deed_count": 13,
+  "page_starts": [
+    1,
+    3,
+    6,
+    9,
+    15,
+    21,
+    24,
+    25,
+    28,
+    34,
+    36,
+    40,
+    45
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 5,
+      "source_file": "DB 605_186.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 6,
+      "page_end": 8,
+      "source_file": "DB 257_85.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 14,
+      "source_file": "Somerset DB 1820_349.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 5,
+      "page_start": 15,
+      "page_end": 20,
+      "source_file": "Greene OR 534_885 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 6,
+      "page_start": 21,
+      "page_end": 23,
+      "source_file": "DB 593_316.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 24,
+      "page_end": 24,
+      "source_file": "Guernsey Co OH DV 118_352.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 1
+    },
+    {
+      "index": 8,
+      "page_start": 25,
+      "page_end": 27,
+      "source_file": "OR 11_761.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 28,
+      "page_end": 33,
+      "source_file": "OR 267_3245.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 10,
+      "page_start": 34,
+      "page_end": 35,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 11,
+      "page_start": 36,
+      "page_end": 39,
+      "source_file": "Allegheny 8277_16 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 12,
+      "page_start": 40,
+      "page_end": 44,
+      "source_file": "OR 178_1073.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 13,
+      "page_start": 45,
+      "page_end": 47,
+      "source_file": "DB 360_239.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 13,
+    "n_starts_normalized": 13,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.422583",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "670fb1e79c481dfd8f16ce5dec4a0d0843ef5b2e1597c7dff3dc6c354cc71f36"
+  }
+}

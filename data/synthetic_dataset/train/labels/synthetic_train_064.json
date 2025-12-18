@@ -1,0 +1,113 @@
+{
+  "doc_id": "synthetic_train_064",
+  "source_pdf": "train/pdfs/synthetic_train_064.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 9,
+    "total_pages": 28
+  },
+  "deed_count": 9,
+  "page_starts": [
+    1,
+    3,
+    7,
+    10,
+    16,
+    18,
+    21,
+    22,
+    26
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "DB 304_409.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 6,
+      "source_file": "Greene DB 253_223 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 9,
+      "source_file": "OR 568_1267.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 15,
+      "source_file": "DB 800_131.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 5,
+      "page_start": 16,
+      "page_end": 17,
+      "source_file": "Potter DB 197_879.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 18,
+      "page_end": 20,
+      "source_file": "OR 267_4753.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 21,
+      "page_end": 21,
+      "source_file": "Guernsey Co OH DV 118_352.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 1
+    },
+    {
+      "index": 8,
+      "page_start": 22,
+      "page_end": 25,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 9,
+      "page_start": 26,
+      "page_end": 28,
+      "source_file": "Washington DBV 604 Page 286 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 9,
+    "n_starts_normalized": 9,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.461494",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "7c884c778e7a8e6c22ad663697ec527614a72b4d685ff19413b0179f979519e8"
+  }
+}

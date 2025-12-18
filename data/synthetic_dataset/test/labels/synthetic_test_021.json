@@ -1,0 +1,149 @@
+{
+  "doc_id": "synthetic_test_021",
+  "source_pdf": "test/pdfs/synthetic_test_021.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 6,
+    "total_deeds": 13,
+    "total_pages": 41
+  },
+  "deed_count": 13,
+  "page_starts": [
+    1,
+    3,
+    7,
+    10,
+    12,
+    13,
+    19,
+    22,
+    25,
+    27,
+    35,
+    37,
+    40
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "Washington DV 677_46.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 6,
+      "source_file": "Butler DB 1895_80 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 9,
+      "source_file": "DB 360_239.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 11,
+      "source_file": "DB 107_12.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 12,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 6,
+      "page_start": 13,
+      "page_end": 18,
+      "source_file": "OR 249_8.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 7,
+      "page_start": 19,
+      "page_end": 21,
+      "source_file": "OR 133-299.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 8,
+      "page_start": 22,
+      "page_end": 24,
+      "source_file": "Washington Co PA DV 596_69.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 9,
+      "page_start": 25,
+      "page_end": 26,
+      "source_file": "DV 192_87.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 10,
+      "page_start": 27,
+      "page_end": 34,
+      "source_file": "Somerset DB 2570_102.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 8
+    },
+    {
+      "index": 11,
+      "page_start": 35,
+      "page_end": 36,
+      "source_file": "Washington DB 704_223.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 12,
+      "page_start": 37,
+      "page_end": 39,
+      "source_file": "Harrison DV 234_357.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 13,
+      "page_start": 40,
+      "page_end": 41,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 13,
+    "n_starts_normalized": 13,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.244073",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "296b3ec53d729ac97e8f2a36b6da66c9f1b4bf80822f22397906c87ee04dc5f0"
+  }
+}

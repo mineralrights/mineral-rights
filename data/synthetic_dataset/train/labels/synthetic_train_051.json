@@ -1,0 +1,104 @@
+{
+  "doc_id": "synthetic_train_051",
+  "source_pdf": "train/pdfs/synthetic_train_051.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 8,
+    "total_pages": 22
+  },
+  "deed_count": 8,
+  "page_starts": [
+    1,
+    5,
+    8,
+    10,
+    12,
+    15,
+    18,
+    21
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "Harrison DV 234_357.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 9,
+      "source_file": "DV 226_593.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 10,
+      "page_end": 11,
+      "source_file": "Monroe Co OH DB 109_330.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 14,
+      "source_file": "DB 557_938.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 6,
+      "page_start": 15,
+      "page_end": 17,
+      "source_file": "Brooke DB 75_88 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 18,
+      "page_end": 20,
+      "source_file": "DB 360_239.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 8,
+      "page_start": 21,
+      "page_end": 22,
+      "source_file": "DB 107_12.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 8,
+    "n_starts_normalized": 8,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.977794",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "df2ac907935bd2be9734ca722a48b5f7a07eaacbbd769c0b2e10c81353711b28"
+  }
+}

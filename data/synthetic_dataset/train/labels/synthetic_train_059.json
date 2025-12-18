@@ -1,0 +1,122 @@
+{
+  "doc_id": "synthetic_train_059",
+  "source_pdf": "train/pdfs/synthetic_train_059.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 6,
+    "total_deeds": 10,
+    "total_pages": 32
+  },
+  "deed_count": 10,
+  "page_starts": [
+    1,
+    5,
+    8,
+    11,
+    14,
+    20,
+    21,
+    25,
+    27,
+    32
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Washington DB 475_646 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "DB 360_239.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 10,
+      "source_file": "Jefferson DB 397_111.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 4,
+      "page_start": 11,
+      "page_end": 13,
+      "source_file": "DB 557_938.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 19,
+      "source_file": "DB 800_131.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 6
+    },
+    {
+      "index": 6,
+      "page_start": 20,
+      "page_end": 20,
+      "source_file": "DB 110_36.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 7,
+      "page_start": 21,
+      "page_end": 24,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 8,
+      "page_start": 25,
+      "page_end": 26,
+      "source_file": "Washington DV 677_46.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 9,
+      "page_start": 27,
+      "page_end": 31,
+      "source_file": "OR 178_1073.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 10,
+      "page_start": 32,
+      "page_end": 32,
+      "source_file": "Guernsey Co OH DV 118_352.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 1
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 10,
+    "n_starts_normalized": 10,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:10.230223",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "3b989a6656fe47b74944109545f859e214f27eb51e35ac4b82764880c33de6ad"
+  }
+}

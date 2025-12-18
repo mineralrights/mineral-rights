@@ -1,0 +1,59 @@
+{
+  "doc_id": "synthetic_train_091",
+  "source_pdf": "train/pdfs/synthetic_train_091.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 1,
+    "total_deeds": 3,
+    "total_pages": 12
+  },
+  "deed_count": 3,
+  "page_starts": [
+    1,
+    3,
+    9
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "DB 107_12.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 8,
+      "source_file": "DV 217_352.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 9,
+      "page_end": 12,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 3,
+    "n_starts_normalized": 3,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.258181",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "08b313d3bf5288aea274d61fdd83e3c1e85053578b9d37e891cdf51a2e0716ff"
+  }
+}

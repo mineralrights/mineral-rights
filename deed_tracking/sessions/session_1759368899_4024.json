@@ -1,0 +1,13 @@
+{
+  "session_id": "session_1759368899_4024",
+  "original_filename": "synthetic_test_001.pdf",
+  "total_pages": 38,
+  "splitting_strategy": "document_ai",
+  "document_ai_used": true,
+  "deed_boundaries": [],
+  "classification_results": [],
+  "processing_start_time": 1759368899.559434,
+  "processing_end_time": null,
+  "total_processing_time": null,
+  "summary": null
+}

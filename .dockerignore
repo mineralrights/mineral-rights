@@ -1,0 +1,15 @@
+# Byte-code / caches
+__pycache__
+*.py[cod]
+
+# Virtual envs
+.venv
+venv
+env
+
+# Front-end (not needed in the backend image)
+web/
+
+# Git
+.git
+.gitignore 

@@ -1,0 +1,38 @@
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: mineral-rights-processor
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/execution-environment: gen2
+spec:
+  template:
+    metadata:
+      annotations:
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+        autoscaling.knative.dev/maxScale: "10"
+        autoscaling.knative.dev/minScale: "1"
+        run.googleapis.com/max-request-size: "100MB"
+    spec:
+      containerConcurrency: 1
+      timeoutSeconds: 3600
+      containers:
+      - image: gcr.io/mineral-rights-app/mineral-rights-processor:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: ANTHROPIC_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: anthropic-api-key
+              key: api-key
+        - name: GOOGLE_APPLICATION_CREDENTIALS
+          value: /app/service-account.json
+        resources:
+          limits:
+            cpu: "8"
+            memory: "32Gi"
+          requests:
+            cpu: "2"
+            memory: "6Gi"

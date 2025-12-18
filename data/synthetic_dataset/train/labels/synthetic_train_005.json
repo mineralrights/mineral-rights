@@ -1,0 +1,86 @@
+{
+  "doc_id": "synthetic_train_005",
+  "source_pdf": "train/pdfs/synthetic_train_005.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": false,
+    "reservation_count": 0,
+    "total_deeds": 6,
+    "total_pages": 23
+  },
+  "deed_count": 6,
+  "page_starts": [
+    1,
+    4,
+    10,
+    15,
+    16,
+    18
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "OR 178_693.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 9,
+      "source_file": "Westmoreland DV 2483_444.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 3,
+      "page_start": 10,
+      "page_end": 14,
+      "source_file": "Brooke DB 176_514.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 5
+    },
+    {
+      "index": 4,
+      "page_start": 15,
+      "page_end": 15,
+      "source_file": "Allegheny DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 5,
+      "page_start": 16,
+      "page_end": 17,
+      "source_file": "OR 55_194.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 18,
+      "page_end": 23,
+      "source_file": "Allegheny 16920-254 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 6,
+    "n_starts_normalized": 6,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:08.513395",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "e555745d9171dcfeed4df5d1e4255e7e051e151b44fd6673935c6a3a00b0ae93"
+  }
+}

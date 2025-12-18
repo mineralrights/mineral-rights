@@ -1,0 +1,140 @@
+{
+  "doc_id": "synthetic_train_041",
+  "source_pdf": "train/pdfs/synthetic_train_041.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 5,
+    "total_deeds": 12,
+    "total_pages": 34
+  },
+  "deed_count": 12,
+  "page_starts": [
+    1,
+    4,
+    9,
+    13,
+    15,
+    17,
+    20,
+    24,
+    30,
+    31,
+    33,
+    34
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 3,
+      "source_file": "Armstrong DB 5269_327 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 2,
+      "page_start": 4,
+      "page_end": 8,
+      "source_file": "Harrison DV 202-635.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 5
+    },
+    {
+      "index": 3,
+      "page_start": 9,
+      "page_end": 12,
+      "source_file": "Allegheny 8277_16 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 13,
+      "page_end": 14,
+      "source_file": "Brooke DB 74_249.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 15,
+      "page_end": 16,
+      "source_file": "DB 304_409.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 17,
+      "page_end": 19,
+      "source_file": "DB 99-241.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 20,
+      "page_end": 23,
+      "source_file": "Marion Deed Book 280-449 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 8,
+      "page_start": 24,
+      "page_end": 29,
+      "source_file": "Westmoreland DV 2483_444.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 9,
+      "page_start": 30,
+      "page_end": 30,
+      "source_file": "Allegheny County DB 2759_637 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 10,
+      "page_start": 31,
+      "page_end": 32,
+      "source_file": "Potter DB 197_879.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 11,
+      "page_start": 33,
+      "page_end": 33,
+      "source_file": "Carroll DB 130-50.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    },
+    {
+      "index": 12,
+      "page_start": 34,
+      "page_end": 34,
+      "source_file": "Tuscawaras DV 539_793.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 1
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 12,
+    "n_starts_normalized": 12,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:09.686563",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "39bbdf10b780d4a0b412ae66daef1561a719908e7a3ca690f98732219a7140fb"
+  }
+}

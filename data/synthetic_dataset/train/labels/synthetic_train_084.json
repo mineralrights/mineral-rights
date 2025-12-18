@@ -1,0 +1,104 @@
+{
+  "doc_id": "synthetic_train_084",
+  "source_pdf": "train/pdfs/synthetic_train_084.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 4,
+    "total_deeds": 8,
+    "total_pages": 24
+  },
+  "deed_count": 8,
+  "page_starts": [
+    1,
+    5,
+    8,
+    12,
+    14,
+    18,
+    21,
+    23
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 4,
+      "source_file": "Brooke DB 320_798 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 2,
+      "page_start": 5,
+      "page_end": 7,
+      "source_file": "Guernsey Co OH DV 145_283.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 3,
+      "page_start": 8,
+      "page_end": 11,
+      "source_file": "OR 133-302.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 4,
+      "page_start": 12,
+      "page_end": 13,
+      "source_file": "Allegheny DB 2470_179 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 5,
+      "page_start": 14,
+      "page_end": 17,
+      "source_file": "Allegheny 8277_16 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    },
+    {
+      "index": 6,
+      "page_start": 18,
+      "page_end": 20,
+      "source_file": "Washington DBV 604 Page 286 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 7,
+      "page_start": 21,
+      "page_end": 22,
+      "source_file": "OR 55_190.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 8,
+      "page_start": 23,
+      "page_end": 24,
+      "source_file": "Washington DV 677_46.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 8,
+    "n_starts_normalized": 8,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:11.074567",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "bb726cfea26e7de9dde3a021e9982f3020a1e8d81fbac3154a58c66857348052"
+  }
+}

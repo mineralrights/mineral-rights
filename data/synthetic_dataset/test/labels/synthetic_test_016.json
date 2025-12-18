@@ -1,0 +1,104 @@
+{
+  "doc_id": "synthetic_test_016",
+  "source_pdf": "test/pdfs/synthetic_test_016.pdf",
+  "attributes": {
+    "has_oil_gas_reservations": true,
+    "reservation_count": 4,
+    "total_deeds": 8,
+    "total_pages": 27
+  },
+  "deed_count": 8,
+  "page_starts": [
+    1,
+    3,
+    7,
+    9,
+    12,
+    14,
+    20,
+    24
+  ],
+  "deeds": [
+    {
+      "index": 1,
+      "page_start": 1,
+      "page_end": 2,
+      "source_file": "OR 55_190.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 2,
+      "page_start": 3,
+      "page_end": 6,
+      "source_file": "OR 133-302.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 3,
+      "page_start": 7,
+      "page_end": 8,
+      "source_file": "DB 187-594.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 2
+    },
+    {
+      "index": 4,
+      "page_start": 9,
+      "page_end": 11,
+      "source_file": "OR 267_4756.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 3
+    },
+    {
+      "index": 5,
+      "page_start": 12,
+      "page_end": 13,
+      "source_file": "Westmoreland DV 1434_603 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 2
+    },
+    {
+      "index": 6,
+      "page_start": 14,
+      "page_end": 19,
+      "source_file": "Greene OR 534_885 - 4.23.2025.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 6
+    },
+    {
+      "index": 7,
+      "page_start": 20,
+      "page_end": 23,
+      "source_file": "Washington Co PA Inst# 201031651.pdf",
+      "has_oil_gas_reservations": true,
+      "page_count": 4
+    },
+    {
+      "index": 8,
+      "page_start": 24,
+      "page_end": 27,
+      "source_file": "Allegheny DB 92_389.pdf",
+      "has_oil_gas_reservations": false,
+      "page_count": 4
+    }
+  ],
+  "validation": {
+    "status": "synthetic",
+    "issues": [],
+    "n_starts_raw": 8,
+    "n_starts_normalized": 8,
+    "duplicates": {}
+  },
+  "qc": {
+    "status": "synthetic",
+    "issues": []
+  },
+  "metadata": {
+    "generated_at": "2025-09-08T16:59:12.103873",
+    "generator": "synthetic_dataset_generator",
+    "seed": 42,
+    "pdf_hash": "97880ce86cef3da41cbeb55b005b35888c827fd9d73a8399c7e0d1ec9fe5f460"
+  }
+}
