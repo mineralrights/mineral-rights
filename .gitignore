@@ -73,4 +73,8 @@ clean-service-account*
 *.tmp
 *.temp
 temp/
-tmp/ 
+tmp/
+
+# Migration files (contains sensitive account info)
+migration_config.env
+backups/ 

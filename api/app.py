@@ -90,7 +90,7 @@ def initialize_processor():
         if not api_key:
             print("❌ ANTHROPIC_API_KEY not found in environment")
             return False
-        
+            
         # Strip whitespace/newlines from API key (common issue with secrets)
         api_key = api_key.strip()
         if not api_key:
@@ -271,7 +271,31 @@ async def predict(
                 
                 # Convert to expected format
                 deed_results = []
-                for deed_result in result:
+                for idx, deed_result in enumerate(result):
+                    # #region agent log
+                    import json
+                    import time
+                    with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+                        detailed_samples = deed_result.get("detailed_samples", [])
+                        extracted_reasoning = detailed_samples[0].get("reasoning", "No reasoning provided") if detailed_samples else "No reasoning provided"
+                        f.write(json.dumps({
+                            'sessionId': 'debug-session',
+                            'runId': 'run1',
+                            'hypothesisId': 'D',
+                            'location': 'api/app.py:274',
+                            'message': 'Extracting reasoning from deed_result',
+                            'data': {
+                                'deed_index': idx,
+                                'deed_number': deed_result.get("deed_number", 0),
+                                'has_detailed_samples': 'detailed_samples' in deed_result,
+                                'detailed_samples_count': len(detailed_samples),
+                                'extracted_reasoning_preview': extracted_reasoning[:150],
+                                'all_reasoning_previews': [s.get('reasoning', '')[:100] for s in detailed_samples[:3]] if detailed_samples else []
+                            },
+                            'timestamp': int(time.time() * 1000)
+                        }) + '\n')
+                    # #endregion
+                    
                     deed_results.append({
                         "deed_number": deed_result.get("deed_number", 0),
                         "has_reservations": deed_result.get("classification", 0) == 1,

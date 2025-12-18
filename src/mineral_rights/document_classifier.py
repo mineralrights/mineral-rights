@@ -839,6 +839,23 @@ class DocumentProcessor:
             for i, deed_pdf_path in enumerate(deed_pdfs):
                 print(f"Processing deed {i+1}/{len(deed_pdfs)}...")
                 try:
+                    # #region agent log
+                    with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+                        f.write(json.dumps({
+                            'sessionId': 'debug-session',
+                            'runId': 'run1',
+                            'hypothesisId': 'B',
+                            'location': 'document_classifier.py:842',
+                            'message': 'Starting deed processing - logging input file',
+                            'data': {
+                                'deed_number': i + 1,
+                                'deed_pdf_path': deed_pdf_path,
+                                'deed_pdf_exists': os.path.exists(deed_pdf_path)
+                            },
+                            'timestamp': int(time.time() * 1000)
+                        }) + '\n')
+                    # #endregion
+                    
                     # Use regular single-deed processing for each deed
                     result = self.process_document(
                         deed_pdf_path,
@@ -855,6 +872,26 @@ class DocumentProcessor:
                     if i < len(deed_boundaries):
                         result['deed_boundary_info'] = deed_boundaries[i]
                         result['splitting_confidence'] = deed_boundaries[i]['confidence']
+                    
+                    # #region agent log
+                    with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+                        f.write(json.dumps({
+                            'sessionId': 'debug-session',
+                            'runId': 'run1',
+                            'hypothesisId': 'A',
+                            'location': 'document_classifier.py:859',
+                            'message': 'Deed processing completed - checking detailed_samples',
+                            'data': {
+                                'deed_number': i + 1,
+                                'has_detailed_samples': 'detailed_samples' in result,
+                                'detailed_samples_count': len(result.get('detailed_samples', [])),
+                                'first_sample_reasoning_preview': result.get('detailed_samples', [{}])[0].get('reasoning', '')[:100] if result.get('detailed_samples') else 'N/A',
+                                'classification': result.get('classification'),
+                                'confidence': result.get('confidence')
+                            },
+                            'timestamp': int(time.time() * 1000)
+                        }) + '\n')
+                    # #endregion
                     
                     results.append(result)
                     print(f"✅ Deed {i+1} completed: {result['classification']} (confidence: {result['confidence']:.3f})")
@@ -1139,6 +1176,26 @@ class DocumentProcessor:
         
         # Step 3: Classify with self-consistent sampling (always high recall)
         print("Classifying document...")
+        
+        # #region agent log
+        import json
+        import time
+        with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+            f.write(json.dumps({
+                'sessionId': 'debug-session',
+                'runId': 'run1',
+                'hypothesisId': 'E',
+                'location': 'document_classifier.py:1142',
+                'message': 'About to classify document - logging OCR text preview',
+                'data': {
+                    'ocr_text_length': len(ocr_text),
+                    'ocr_text_preview': ocr_text[:300],
+                    'ocr_text_hash': hash(ocr_text[:1000])  # Hash to detect duplicates
+                },
+                'timestamp': int(time.time() * 1000)
+            }) + '\n')
+        # #endregion
+        
         classification_result = self.classifier.classify_document(
             ocr_text, max_samples, confidence_threshold, high_recall_mode=high_recall_mode
         )
@@ -1168,6 +1225,27 @@ class DocumentProcessor:
                 for s in classification_result.all_samples
             ]
         }
+        
+        # #region agent log
+        import json
+        import time
+        with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+            reasoning_previews = [s.reasoning[:100] for s in classification_result.all_samples[:3]]
+            f.write(json.dumps({
+                'sessionId': 'debug-session',
+                'runId': 'run1',
+                'hypothesisId': 'C',
+                'location': 'document_classifier.py:1169',
+                'message': 'process_document returning - logging reasoning samples',
+                'data': {
+                    'samples_count': len(classification_result.all_samples),
+                    'first_3_reasoning_previews': reasoning_previews,
+                    'ocr_text_length': len(ocr_text),
+                    'ocr_text_preview': ocr_text[:200]
+                },
+                'timestamp': int(time.time() * 1000)
+            }) + '\n')
+        # #endregion
     
     def _process_with_early_stopping(self, pdf_path: str, max_samples: int, 
                                    confidence_threshold: float, max_tokens_per_page: int, 
@@ -1302,6 +1380,15 @@ class DocumentProcessor:
                 'page_text': page_text,
                 'high_recall_mode': high_recall_mode,
                 'reasoning': first_reasoning,              #  ← new
+                'all_samples': [                          #  ← NEW: Store all samples for detailed_samples
+                    {
+                        'predicted_class': s.predicted_class,
+                        'reasoning': s.reasoning,
+                        'confidence_score': s.confidence_score,
+                        'features': s.features
+                    }
+                    for s in classification_result.all_samples
+                ]
             }
 
     
@@ -1361,6 +1448,17 @@ class DocumentProcessor:
         successful_chunks = [c for c in chunk_analysis if 'classification' in c]
         if successful_chunks:
             final_result = successful_chunks[-1]
+            # Get detailed_samples from the last chunk's stored all_samples
+            last_chunk = successful_chunks[-1]
+            detailed_samples_list = last_chunk.get('all_samples', [])
+            # Fallback: if all_samples not stored, create from reasoning
+            if not detailed_samples_list:
+                detailed_samples_list = [{
+                    'predicted_class': last_chunk.get('classification', 0),
+                    'reasoning': last_chunk.get('reasoning', '') or "No reasoning provided",
+                    'confidence_score': last_chunk.get('confidence', 0.0),
+                    'features': {}
+                }]
         else:                          # every page failed OCR
             final_result = {
                 'classification': 0,
@@ -1369,6 +1467,7 @@ class DocumentProcessor:
                 'samples_used': 0,
                 'early_stopped': False
             }
+            detailed_samples_list = []
         
         return {
             'document_path': pdf_path,
@@ -1386,12 +1485,7 @@ class DocumentProcessor:
             'chunk_analysis': chunk_analysis,
             'stopped_at_chunk': stopped_at_chunk,
             'total_pages_in_document': total_pages,
-            'detailed_samples': [
-                { 
-                    "predicted_class": 0, 
-                    "reasoning": successful_chunks[-1].get("reasoning", "") or "No reasoning provided"
-                }
-            ] if successful_chunks and successful_chunks[-1].get("reasoning") else [],
+            'detailed_samples': detailed_samples_list,
             'ocr_failed_pages': unread_pages,
             'requires_manual_review': len(unread_pages) > 0,
         }
