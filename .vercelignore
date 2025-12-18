@@ -5,6 +5,16 @@ ENV/
 .venv
 .venv/
 
+# Python API files - exclude from Vercel serverless functions
+api/
+*.py
+!web/**/*.py
+pyproject.toml
+requirements.txt
+requirements-*.txt
+uv.lock
+src/
+
 # Large data directories
 data/
 demo_tests/
