@@ -1,0 +1,14 @@
+{
+  "name": "mineral-rights-root",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Root package.json for Vercel detection - actual app is in web/",
+  "scripts": {
+    "build": "cd web && npm install && npm run build"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
