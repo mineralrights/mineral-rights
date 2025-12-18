@@ -1,0 +1,84 @@
+# Virtual environments (VERY LARGE - 539MB)
+venv/
+env/
+ENV/
+.venv
+.venv/
+
+# Large data directories
+data/
+demo_tests/
+evaluation_results/
+test_results/
+results/
+deed_tracking/
+test_imports/
+test_tracking/
+visualization_output/
+visualisation_output/
+
+# Test files
+test_*.py
+*_test.py
+test_*.txt
+test_*.js
+test_*.csv
+
+# Documentation and examples
+docs/
+*.md
+!README.md
+
+# Build artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Logs and temporary files
+*.log
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Large media files
+*.pdf
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.mp4
+*.mov
+
+# Service account files
+*service-account*.json
+*service-account*.txt
+*service-account*.base64
+
+# Scripts and tools (not needed for deployment)
+scripts/
+tools/
+streamlit_app/
+
+# Configuration files that might be large
+*.pptm
+*.pptx
+
+# Python cache
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
