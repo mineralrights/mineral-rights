@@ -260,7 +260,7 @@ export default function Home() {
         setRows(prevRows => {
           return prevRows.map(row => {
             if (row.filename === file.name) {
-              const updatedRow = { ...row, status: 'error', explanation: errorMessage };
+              const updatedRow: PredictionRow = { ...row, status: 'error' as const, explanation: errorMessage };
               // If it's a model error, show the model manager
               if (isModelError) {
                 setTimeout(() => setShowModelManager(true), 500);
