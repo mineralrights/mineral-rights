@@ -6,13 +6,16 @@ interface ModelManagerProps {
   onModelChange?: (modelName: string) => void;
 }
 
-// Common Claude model names
+// Common Claude model names - Latest Claude 4.5 models (as of 2025)
+// See: https://platform.claude.com/docs/en/about-claude/models/overview
 const COMMON_MODELS = [
-  'claude-3-5-haiku-20241022',
-  'claude-3-5-sonnet-20241022',
-  'claude-3-opus-20240229',
-  'claude-3-sonnet-20240229',
-  'claude-3-haiku-20240307',
+  'claude-haiku-4-5-20251001',      // Claude Haiku 4.5 - Fastest, cheapest
+  'claude-sonnet-4-5-20250929',     // Claude Sonnet 4.5 - Best balance (recommended)
+  'claude-opus-4-5-20251101',       // Claude Opus 4.5 - Most capable
+  // Legacy models (still available)
+  'claude-3-5-haiku-20241022',      // Claude Haiku 3.5
+  'claude-3-5-sonnet-20241022',     // Claude Sonnet 3.5
+  'claude-opus-4-1-20250805',       // Claude Opus 4.1
 ];
 
 export default function ModelManager({ isVisible, onClose, onModelChange }: ModelManagerProps) {
@@ -151,12 +154,15 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
                   <div className="text-sm text-blue-800">
                     <p className="font-medium mb-1">Current Model:</p>
                     <p className="text-xs font-mono bg-white px-2 py-1 rounded border">{currentModel || 'Not loaded'}</p>
-                    <p className="font-medium mt-3 mb-1">Common Models:</p>
+                    <p className="font-medium mt-3 mb-1">Recommended Models:</p>
                     <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li>claude-3-5-haiku-20241022 (fastest, cheapest)</li>
-                      <li>claude-3-5-sonnet-20241022 (balanced)</li>
-                      <li>claude-3-opus-20240229 (most capable)</li>
+                      <li><strong>claude-sonnet-4-5-20250929</strong> - Best balance (recommended)</li>
+                      <li>claude-haiku-4-5-20251001 - Fastest, cheapest</li>
+                      <li>claude-opus-4-5-20251101 - Most capable</li>
                     </ul>
+                    <p className="text-xs text-gray-600 mt-2">
+                      <a href="https://platform.claude.com/docs/en/about-claude/models/overview" target="_blank" rel="noopener noreferrer" className="underline">View all available models</a>
+                    </p>
                   </div>
                 </div>
               </div>
@@ -170,20 +176,33 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
             
             {/* Quick select buttons for common models */}
             <div className="grid grid-cols-2 gap-2 mb-3">
-              {COMMON_MODELS.map((model) => (
-                <button
-                  key={model}
-                  onClick={() => handleModelSelect(model)}
-                  className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
-                    modelName === model
-                      ? 'bg-indigo-100 border-indigo-500 text-indigo-800'
-                      : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
-                  }`}
-                  disabled={isUpdating}
-                >
-                  {model.split('-')[2]} {/* Show just the model type, e.g., "haiku" */}
-                </button>
-              ))}
+              {COMMON_MODELS.slice(0, 6).map((model) => {
+                // Extract model type for display (e.g., "haiku-4-5" or "3-5-haiku")
+                const parts = model.split('-');
+                let displayName = '';
+                if (parts.includes('4')) {
+                  // Claude 4.5 models: claude-haiku-4-5-20251001
+                  displayName = `${parts[1]}-${parts[2]}-${parts[3]}`;
+                } else {
+                  // Legacy models: claude-3-5-haiku-20241022
+                  displayName = parts.slice(2, 4).join('-');
+                }
+                return (
+                  <button
+                    key={model}
+                    onClick={() => handleModelSelect(model)}
+                    className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
+                      modelName === model
+                        ? 'bg-indigo-100 border-indigo-500 text-indigo-800'
+                        : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
+                    }`}
+                    disabled={isUpdating}
+                    title={model}
+                  >
+                    {displayName}
+                  </button>
+                );
+              })}
             </div>
             
             <input
