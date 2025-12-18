@@ -1065,6 +1065,86 @@ async def resume_processing_options(job_id: str):
         }
     )
 
+@app.get("/get-model-name")
+async def get_model_name():
+    """Get the current Claude model name being used"""
+    try:
+        model_name = os.getenv("CLAUDE_MODEL_NAME", "claude-3-5-haiku-20241022")
+        global processor
+        if processor and hasattr(processor, 'classifier') and hasattr(processor.classifier, 'model_name'):
+            model_name = processor.classifier.model_name
+        
+        return {
+            "status": "success",
+            "model_name": model_name
+        }
+    except Exception as e:
+        print(f"❌ Error getting model name: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting model name: {str(e)}")
+
+@app.post("/update-model-name")
+async def update_model_name(model_name: str = Form(...)):
+    """Update the Claude model name for the service"""
+    try:
+        # Validate the model name format
+        if not model_name or not model_name.strip():
+            raise HTTPException(status_code=400, detail="Model name cannot be empty")
+        
+        model_name = model_name.strip()
+        
+        # Validate it's a Claude model name
+        if not model_name.startswith("claude-"):
+            raise HTTPException(status_code=400, detail="Invalid model name format. Must start with 'claude-'")
+        
+        # Test the model by making a simple request to Anthropic
+        try:
+            import anthropic
+            api_key = os.getenv("ANTHROPIC_API_KEY")
+            if not api_key:
+                raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not found")
+            
+            api_key = api_key.strip()
+            client = anthropic.Anthropic(api_key=api_key)
+            # Make a simple test request to validate the model
+            response = client.messages.create(
+                model=model_name,
+                max_tokens=10,
+                messages=[{"role": "user", "content": "test"}]
+            )
+            print(f"✅ Model validation successful: {model_name} (response ID: {response.id})")
+        except anthropic.APIError as e:
+            error_msg = str(e)
+            if "not_found" in error_msg.lower() or "404" in error_msg:
+                raise HTTPException(status_code=400, detail=f"Model '{model_name}' not found. Please check the model name and try again.")
+            else:
+                raise HTTPException(status_code=400, detail=f"Model validation failed: {error_msg}")
+        except Exception as e:
+            print(f"❌ Model validation failed: {e}")
+            raise HTTPException(status_code=400, detail=f"Model validation failed: {str(e)}")
+        
+        # Update the global processor with the new model name
+        global processor
+        if processor and hasattr(processor, 'classifier'):
+            processor.classifier.model_name = model_name
+            print(f"✅ Updated existing processor with new model: {model_name}")
+        
+        # Update environment variable (this will persist for the current instance)
+        os.environ["CLAUDE_MODEL_NAME"] = model_name
+        print(f"✅ Updated environment variable with new model: {model_name}")
+        
+        return {
+            "status": "success",
+            "message": f"Model name updated successfully to {model_name}",
+            "model_name": model_name,
+            "model_validated": True
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Error updating model name: {e}")
+        raise HTTPException(status_code=500, detail=f"Error updating model name: {str(e)}")
+
 @app.post("/update-api-key")
 async def update_api_key(api_key: str = Form(...)):
     """Update the Anthropic API key for the service"""
