@@ -329,12 +329,13 @@ KEY PRINCIPLE:
 RESPONSE FORMAT:
 Answer: [0 or 1]
 Reasoning: [Explain your analysis. If you found mineral rights language, explain whether it's general (includes oil/gas) or coal-only. If classifying as 0, explain why there are no mineral reservations or why they're explicitly limited to coal only.]
+Quoted Text: [IF you classified as 1 (HAS reservations), you MUST quote the exact text from the document where the reservations are stated. Include the full sentence or clause that contains the reservation language. If you classified as 0, you can leave this blank or write "N/A".]
 
 Where:
 - 0 = NO mineral rights reservations that include oil and gas
 - 1 = HAS mineral rights reservations that include oil and gas
 
-Goal: Properly classify mineral rights reservations, understanding that general mineral language includes oil and gas unless specifically limited to coal only."""
+Goal: Properly classify mineral rights reservations, understanding that general mineral language includes oil and gas unless specifically limited to coal only. If reservations are found, you must explicitly quote WHERE they appear in the document."""
 
         else:
             # STANDARD PROMPT (conservative) - keeping this for potential future use
@@ -385,12 +386,13 @@ Be especially skeptical of language that appears to be standard legal boilerplat
 RESPONSE FORMAT:
 Answer: [0 or 1]
 Reasoning: [Explain your analysis step by step. If you found oil/gas keywords, explain why they are/aren't substantive OIL AND GAS reservations. Be specific about whether the language mentions oil and gas specifically or just general minerals/coal. If you suspect boilerplate, explain why.]
+Quoted Text: [IF you classified as 1 (HAS reservations), you MUST quote the exact text from the document where the oil and gas reservations are stated. Include the full sentence or clause that contains the reservation language. If you classified as 0, you can leave this blank or write "N/A".]
 
 Where:
 - 0 = NO substantive oil and gas reservations (default assumption)
 - 1 = CLEAR, substantive oil and gas reservations present
 
-Remember: Your goal is to confidently identify documents WITHOUT oil and gas reservations. Only classify as 1 when you're certain there's a substantive reservation that specifically mentions oil, gas, petroleum, or hydrocarbons."""
+Remember: Your goal is to confidently identify documents WITHOUT oil and gas reservations. Only classify as 1 when you're certain there's a substantive reservation that specifically mentions oil, gas, petroleum, or hydrocarbons. If reservations are found, you must explicitly quote WHERE they appear in the document."""
 
         return prompt
     
