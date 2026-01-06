@@ -413,10 +413,12 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
         
         # Extract reasoning - capture everything after "Reasoning:" until end of response
         # Use greedy match to capture full reasoning even if it contains semicolons, colons, or single newlines
+        # This includes the "Quoted Text:" section which contains important reservation quotes
         reasoning_match = re.search(r'Reasoning:\s*(.*)', response, re.IGNORECASE | re.DOTALL)
         if reasoning_match:
             reasoning = reasoning_match.group(1).strip()
             # Remove any trailing "Answer:" or "Classification:" sections that might appear after reasoning
+            # But keep "Quoted Text:" as it's part of the reasoning
             reasoning = re.sub(r'\s*(?:Answer|Classification):\s*.*$', '', reasoning, flags=re.IGNORECASE | re.DOTALL).strip()
         else:
             reasoning = response
