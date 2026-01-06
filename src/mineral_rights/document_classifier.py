@@ -437,7 +437,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
             try:
                 response = self.client.messages.create(
                     model=self.model_name,  # Use configurable model name
-                    max_tokens=4000,  # Increased from 1000 to allow full detailed explanations
+                    max_tokens=8000,  # Increased to 8000 to ensure full explanations are not truncated
                     temperature=temperature,  # Keep temperature as provided (0.1)
                     messages=[{
                         "role": "user", 
@@ -445,8 +445,28 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
                     }]
                 )
                 
+                # Check if response was truncated
+                stop_reason = getattr(response, 'stop_reason', None)
+                if stop_reason == 'max_tokens':
+                    print(f"⚠️ WARNING: LLM response was truncated due to max_tokens limit. Consider increasing max_tokens.")
+                
                 raw_response = response.content[0].text
+                
+                # Check if response appears truncated (ends with colon or incomplete sentence)
+                response_ends_with_colon = raw_response.rstrip().endswith(':')
+                if stop_reason == 'max_tokens' or response_ends_with_colon:
+                    print(f"⚠️ WARNING: LLM response may be truncated. Stop reason: {stop_reason}, Ends with colon: {response_ends_with_colon}")
+                    print(f"🔍 Response length: {len(raw_response)} characters")
+                    print(f"🔍 Response ends with: ...{raw_response[-150:]}")
+                    # If truncated, we still extract what we have, but log the issue
+                
                 predicted_class, reasoning = self.extract_classification(raw_response)
+                
+                # Additional check: if reasoning ends with colon, it's likely truncated
+                if reasoning.rstrip().endswith(':'):
+                    print(f"⚠️ WARNING: Extracted reasoning ends with colon - likely truncated!")
+                    print(f"🔍 Reasoning length: {len(reasoning)} characters")
+                    print(f"🔍 Reasoning ends with: ...{reasoning[-100:]}")
                 
                 if predicted_class is None:
                     print(f"Warning: Could not extract classification from response (attempt {attempt + 1})")
