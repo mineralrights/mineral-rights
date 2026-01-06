@@ -212,7 +212,7 @@ function DeedResultCard({ deedResult }: { deedResult: DeedResult }) {
       {deedResult.explanation && (
         <div className="mt-2 text-xs text-gray-700 bg-white p-2 rounded border">
           <div className="font-medium mb-1">Reasoning:</div>
-          <div className="whitespace-pre-wrap max-h-20 overflow-y-auto">
+          <div className="whitespace-pre-wrap">
             {deedResult.explanation}
           </div>
         </div>
@@ -255,7 +255,7 @@ function PageResultCard({ pageResult }: { pageResult: PageResult }) {
       {pageResult.explanation && (
         <div className="mt-2 text-xs text-gray-700 bg-white p-2 rounded border">
           <div className="font-medium mb-1">Reasoning:</div>
-          <div className="whitespace-pre-wrap max-h-20 overflow-y-auto">
+          <div className="whitespace-pre-wrap">
             {pageResult.explanation}
           </div>
         </div>
