@@ -304,6 +304,13 @@ RESERVATION PATTERNS THAT INCLUDE OIL/GAS:
 
 CLASSIFY AS 0 (NO mineral rights reservations that include oil/gas) if:
 
+CONVEYANCES/GRANTS (grantor transferring rights to another party - NOT reservations):
+- "Grantor does hereby grant, sell, convey, assign and transfer unto Grantee... all of the oil, gas, coal and other minerals"
+- "Grantor does hereby grant, sell, convey, assign and transfer unto Grantee, its successors and assigns... 100% of Grantor's right, title and interest in and to all of the oil, gas, coal and other minerals"
+- Any language where grantor is TRANSFERRING/GIVING mineral rights TO another party (grantee, buyer, etc.)
+- These are CONVEYANCES where grantor gives rights away, not RESERVATIONS where grantor keeps them
+- Even if the conveyance mentions "oil, gas, coal and other minerals", classify as 0 because it's a transfer, not a reservation
+
 EXPLICIT EXCLUSIONS:
 - "excepting oil and gas" or "excluding oil and gas"
 - "reserving all minerals EXCEPT oil and gas"
@@ -451,8 +458,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
                     print(f"⚠️ WARNING: LLM response was truncated due to max_tokens limit. Consider increasing max_tokens.")
                 
                 raw_response = response.content[0].text
-                
-                # Check if response appears truncated (ends with colon or incomplete sentence)
+                                # Check if response appears truncated (ends with colon or incomplete sentence)
                 response_ends_with_colon = raw_response.rstrip().endswith(':')
                 if stop_reason == 'max_tokens' or response_ends_with_colon:
                     print(f"⚠️ WARNING: LLM response may be truncated. Stop reason: {stop_reason}, Ends with colon: {response_ends_with_colon}")
