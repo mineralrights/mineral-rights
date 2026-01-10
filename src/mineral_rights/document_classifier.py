@@ -481,7 +481,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
             try:
                 response = self.client.messages.create(
                     model=self.model_name,  # Use configurable model name
-                    max_tokens=8000,  # Increased to 8000 to ensure full explanations are not truncated
+                    max_tokens=16000,  # Increased to 16000 to ensure full explanations and quotes are not truncated
                     temperature=temperature,  # Keep temperature as provided (0.1)
                     messages=[{
                         "role": "user", 

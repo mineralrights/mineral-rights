@@ -28,16 +28,6 @@ const COMMON_MODELS = [
     name: 'claude-haiku-4-5-20251001',
     display: 'Haiku 4.5',
     description: 'Fastest, cheapest'
-  },
-  {
-    name: 'claude-opus-4-5-20251101',
-    display: 'Opus 4.5',
-    description: 'Most capable'
-  },
-  {
-    name: 'claude-opus-4-1-20250805',
-    display: 'Opus 4.1',
-    description: 'Most capable'
   }
 ];
 
