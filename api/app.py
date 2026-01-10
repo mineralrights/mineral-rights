@@ -124,7 +124,7 @@ def initialize_processor():
             except Exception as e:
                 print(f"⚠️ Failed to decode base64 credentials: {e}")
         
-        # Get model name from environment (optional, defaults to claude-3-5-haiku-20241022)
+        # Get model name from environment (optional, defaults to claude-sonnet-4-5-20250929)
         model_name = os.getenv("CLAUDE_MODEL_NAME")
         
         # Initialize processor with explicit parameters including credentials
@@ -507,7 +507,7 @@ async def test_anthropic():
         
         # Try a simple API call
         response = client.messages.create(
-            model="claude-3-5-sonnet-20241022",
+            model="claude-sonnet-4-5-20250929",
             max_tokens=10,
             messages=[{"role": "user", "content": "Say 'test'"}]
         )
@@ -1093,7 +1093,7 @@ async def resume_processing_options(job_id: str):
 async def get_model_name():
     """Get the current Claude model name being used"""
     try:
-        model_name = os.getenv("CLAUDE_MODEL_NAME", "claude-3-5-sonnet-20241022")
+        model_name = os.getenv("CLAUDE_MODEL_NAME", "claude-sonnet-4-5-20250929")
         global processor
         if processor and hasattr(processor, 'classifier') and hasattr(processor.classifier, 'model_name'):
             model_name = processor.classifier.model_name
