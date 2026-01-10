@@ -41,13 +41,13 @@ export default function ResultsTable({ rows }: Props) {
       </div>
 
       <div className="overflow-x-auto">
-        <table className="min-w-full">
+        <table className="min-w-full table-auto">
           <thead className="bg-gray-50">
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prediction</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Summary</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Summary</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -115,7 +115,7 @@ function Row({ row }: { row: PredictionRow }) {
               )}
             </div>
           ) : (
-            <div className="text-sm text-gray-600 max-w-2xl">
+            <div className="text-sm text-gray-600 min-w-[500px] max-w-none">
               <div className="whitespace-pre-wrap break-words">
                 {row.explanation ?? "—"}
               </div>
