@@ -1287,9 +1287,10 @@ class DocumentProcessor:
             'detailed_samples': [
                 {
                     'predicted_class': s.predicted_class,
-                    'reasoning': s.reasoning,
+                    'reasoning': s.raw_response if hasattr(s, 'raw_response') else s.reasoning,  # Use full raw response
                     'confidence_score': s.confidence_score,
-                    'features': s.features
+                    'features': s.features,
+                    'raw_response': s.raw_response if hasattr(s, 'raw_response') else s.reasoning  # Also include raw_response
                 }
                 for s in classification_result.all_samples
             ]
@@ -1497,9 +1498,10 @@ class DocumentProcessor:
                     'detailed_samples': [
                         {
                             'predicted_class': s.predicted_class,
-                            'reasoning': s.reasoning,
+                            'reasoning': s.raw_response if hasattr(s, 'raw_response') else s.reasoning,  # Use full raw response
                             'confidence_score': s.confidence_score,
-                            'features': s.features
+                            'features': s.features,
+                            'raw_response': s.raw_response if hasattr(s, 'raw_response') else s.reasoning  # Also include raw_response
                         }
                         for s in classification_result.all_samples
                     ],
