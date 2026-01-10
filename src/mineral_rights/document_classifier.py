@@ -372,8 +372,8 @@ KEY PRINCIPLE:
 
 RESPONSE FORMAT:
 Answer: [0 or 1]
-Reasoning: [Explain your analysis. If you found mineral rights language, explain whether it's general (includes oil/gas) or coal-only. If classifying as 0, explain why there are no mineral reservations or why they're explicitly limited to coal only.]
-Quoted Text: [IF you classified as 1 (HAS reservations), you MUST quote the exact text from the document where the reservations are stated. Include the full sentence or clause that contains the reservation language. If you classified as 0, you can leave this blank or write "N/A".]
+Reasoning: [Explain your analysis. If you found mineral rights language, explain whether it's general (includes oil/gas) or coal-only. If classifying as 0, explain why there are no mineral reservations or why they're explicitly limited to coal only. IMPORTANT: Complete all sentences - do not end with colons or incomplete thoughts.]
+Quoted Text: [IF you classified as 1 (HAS reservations), you MUST quote the exact text from the document where the reservations are stated. Include the full sentence or clause that contains the reservation language. If you classified as 0, you can leave this blank or write "N/A". IMPORTANT: Always complete your response - finish all sentences and do not end with colons.]
 
 Where:
 - 0 = NO mineral rights reservations that include oil and gas
@@ -429,8 +429,8 @@ Be especially skeptical of language that appears to be standard legal boilerplat
 
 RESPONSE FORMAT:
 Answer: [0 or 1]
-Reasoning: [Explain your analysis step by step. If you found oil/gas keywords, explain why they are/aren't substantive OIL AND GAS reservations. Be specific about whether the language mentions oil and gas specifically or just general minerals/coal. If you suspect boilerplate, explain why.]
-Quoted Text: [IF you classified as 1 (HAS reservations), you MUST quote the exact text from the document where the oil and gas reservations are stated. Include the full sentence or clause that contains the reservation language. If you classified as 0, you can leave this blank or write "N/A".]
+Reasoning: [Explain your analysis step by step. If you found oil/gas keywords, explain why they are/aren't substantive OIL AND GAS reservations. Be specific about whether the language mentions oil and gas specifically or just general minerals/coal. If you suspect boilerplate, explain why. IMPORTANT: Complete all sentences - do not end with colons or incomplete thoughts.]
+Quoted Text: [IF you classified as 1 (HAS reservations), you MUST quote the exact text from the document where the oil and gas reservations are stated. Include the full sentence or clause that contains the reservation language. If you classified as 0, you can leave this blank or write "N/A". IMPORTANT: Always complete your response - finish all sentences and do not end with colons.]
 
 Where:
 - 0 = NO substantive oil and gas reservations (default assumption)
@@ -505,11 +505,10 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
                 
                 predicted_class, reasoning = self.extract_classification(raw_response)
                 
-                # Additional check: if reasoning ends with colon, it's likely truncated
-                if reasoning.rstrip().endswith(':'):
-                    print(f"⚠️ WARNING: Extracted reasoning ends with colon - likely truncated!")
-                    print(f"🔍 Reasoning length: {len(reasoning)} characters")
-                    print(f"🔍 Reasoning ends with: ...{reasoning[-100:]}")
+                # Store the FULL raw response as reasoning to preserve all quoted evidence
+                # The extracted reasoning is used for classification, but we want to show the full response
+                # This ensures quoted text and complete explanations are preserved
+                full_reasoning = raw_response  # Use full raw response instead of extracted reasoning
                 
                 if predicted_class is None:
                     print(f"Warning: Could not extract classification from response (attempt {attempt + 1})")
@@ -530,7 +529,7 @@ Remember: Your goal is to confidently identify documents WITHOUT oil and gas res
                 
                 return ClassificationSample(
                     predicted_class=predicted_class,
-                    reasoning=reasoning,
+                    reasoning=full_reasoning,  # Store full raw response as reasoning to preserve all content
                     confidence_score=confidence_score,
                     features=features,
                     raw_response=raw_response
@@ -1434,9 +1433,11 @@ class DocumentProcessor:
             print(f"Page {current_page} processed in {page_time:.1f} seconds")
 
             # ADD reasoning to chunk_info  🚀
+            # Use full raw response to preserve all quoted evidence
             first_reasoning = (
-                classification_result.all_samples[0].reasoning
-                if classification_result.all_samples else ""
+                classification_result.all_samples[0].raw_response
+                if classification_result.all_samples and hasattr(classification_result.all_samples[0], 'raw_response')
+                else (classification_result.all_samples[0].reasoning if classification_result.all_samples else "")
             )
 
             chunk_info = {
@@ -1453,9 +1454,10 @@ class DocumentProcessor:
                 'all_samples': [                          #  ← NEW: Store all samples for detailed_samples
                     {
                         'predicted_class': s.predicted_class,
-                        'reasoning': s.reasoning,
+                        'reasoning': s.raw_response if hasattr(s, 'raw_response') else s.reasoning,  # Store full raw response
                         'confidence_score': s.confidence_score,
-                        'features': s.features
+                        'features': s.features,
+                        'raw_response': s.raw_response if hasattr(s, 'raw_response') else s.reasoning  # Also include raw_response field
                     }
                     for s in classification_result.all_samples
                 ]
@@ -1631,10 +1633,11 @@ class DocumentProcessor:
                 # Track page processing time
                 page_time = time.time() - page_start_time
                 
-                # Get reasoning from first sample
+                # Get reasoning from first sample - use full raw response to preserve all quoted evidence
                 first_reasoning = (
-                    classification_result.all_samples[0].reasoning
-                    if classification_result.all_samples else "No reasoning available"
+                    classification_result.all_samples[0].raw_response
+                    if classification_result.all_samples and hasattr(classification_result.all_samples[0], 'raw_response')
+                    else (classification_result.all_samples[0].reasoning if classification_result.all_samples else "No reasoning available")
                 )
                 
                 page_result = {
