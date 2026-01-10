@@ -278,6 +278,23 @@ DOCUMENT TEXT (from OCR):
 
 CLASSIFICATION GUIDELINES:
 
+CRITICAL: Check these exceptions FIRST before classifying as 1. If any of these apply, classify as 0:
+
+1. CONVEYANCES/GRANTS (grantor transferring rights - NOT reservations):
+   - If you see "Grantor does hereby grant, sell, convey, assign and transfer unto Grantee..." with mineral rights
+   - This is a TRANSFER where grantor gives rights away, NOT a reservation where grantor keeps them
+   - Classify as 0 even if it mentions "oil, gas, coal and other minerals"
+   - EXCEPTION: Only if there's ALSO actual reservation language elsewhere (e.g., "Grantor reserves..."), then classify based on the reservation
+
+2. "SUBJECT TO... OF RECORD" CLAUSES (acknowledging existing reservations - NOT creating new ones):
+   - If you see "Subject to... reservations... of record" or "Subject to... exceptions... of record"
+   - The phrase "of record" means it's referring to things ALREADY recorded in PRIOR deeds
+   - This is NOT creating a new reservation, just acknowledging what may exist from prior conveyances
+   - Classify as 0 if this is the ONLY reservation-related language
+   - EXCEPTION: Only if there's ALSO actual reservation language elsewhere (e.g., "Grantor reserves..."), then classify based on the actual reservation
+
+ONLY IF NONE OF THE ABOVE EXCEPTIONS APPLY, THEN:
+
 CLASSIFY AS 1 (HAS mineral rights reservations that include oil/gas) if you find:
 
 EXPLICIT OIL AND GAS LANGUAGE:
@@ -309,7 +326,18 @@ CONVEYANCES/GRANTS (grantor transferring rights to another party - NOT reservati
 - "Grantor does hereby grant, sell, convey, assign and transfer unto Grantee, its successors and assigns... 100% of Grantor's right, title and interest in and to all of the oil, gas, coal and other minerals"
 - Any language where grantor is TRANSFERRING/GIVING mineral rights TO another party (grantee, buyer, etc.)
 - These are CONVEYANCES where grantor gives rights away, not RESERVATIONS where grantor keeps them
-- Even if the conveyance mentions "oil, gas, coal and other minerals", classify as 0 because it's a transfer, not a reservation
+- IMPORTANT: Classify as 0 ONLY if this conveyance language is the ONLY evidence of mineral rights. If the document ALSO contains actual reservation language (e.g., "Grantor reserves..." or "Excepting and reserving..."), then classify based on the actual reservation, not the conveyance.
+- If the ONLY mineral rights language is a conveyance (grantor giving rights away), classify as 0 because it's a transfer, not a reservation
+
+"SUBJECT TO" CLAUSES (acknowledging existing reservations from prior deeds - NOT creating new reservations):
+- "Subject to all encumbrances, reservations and exceptions, including but not limited to coal, minerals, oil and gas, right of ways, easements and leases, if any, of record"
+- "Subject to... reservations... of record" - This acknowledges existing reservations from PRIOR deeds in the chain of title
+- "Subject to... exceptions... of record" - This acknowledges existing exceptions from PRIOR deeds
+- "Subject to... reservations and exceptions... of record" - This is NOT creating a new reservation, just acknowledging what may already exist
+- Key indicator: "of record" or similar language showing it refers to things already recorded in prior deeds
+- These clauses make the buyer aware of potential existing reservations but do NOT create new ones in this document
+- IMPORTANT: Classify as 0 ONLY if this "subject to... of record" language is the ONLY evidence of reservations. If the document ALSO contains actual reservation language (e.g., "Grantor reserves..." or "Excepting and reserving unto grantor..."), then classify based on the actual reservation, not the "subject to" clause.
+- If the ONLY reservation-related language is a "subject to... of record" clause, classify as 0 because this document is not reserving anything - it's just acknowledging what might exist from prior conveyances
 
 EXPLICIT EXCLUSIONS:
 - "excepting oil and gas" or "excluding oil and gas"
