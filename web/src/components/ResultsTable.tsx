@@ -47,7 +47,7 @@ export default function ResultsTable({ rows }: Props) {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">File</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prediction</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Summary</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/2">Summary</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -115,8 +115,10 @@ function Row({ row }: { row: PredictionRow }) {
               )}
             </div>
           ) : (
-            <div className="text-sm text-gray-600">
-              {row.explanation ?? "—"}
+            <div className="text-sm text-gray-600 max-w-2xl">
+              <div className="whitespace-pre-wrap break-words">
+                {row.explanation ?? "—"}
+              </div>
             </div>
           )}
         </td>
