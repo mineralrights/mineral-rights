@@ -9,13 +9,36 @@ interface ModelManagerProps {
 // Common Claude model names - Latest Claude 4.5 models (as of 2025)
 // See: https://platform.claude.com/docs/en/about-claude/models/overview
 const COMMON_MODELS = [
-  'claude-haiku-4-5-20251001',      // Claude Haiku 4.5 - Fastest, cheapest
-  'claude-sonnet-4-5-20250929',     // Claude Sonnet 4.5 - Best balance (recommended)
-  'claude-opus-4-5-20251101',       // Claude Opus 4.5 - Most capable
-  // Legacy models (still available)
-  'claude-3-5-haiku-20241022',      // Claude Haiku 3.5
-  'claude-3-5-sonnet-20241022',     // Claude Sonnet 3.5
-  'claude-opus-4-1-20250805',       // Claude Opus 4.1
+  {
+    name: 'claude-3-5-sonnet-20241022',
+    display: 'Sonnet 3.5',
+    description: 'Smartest (recommended)'
+  },
+  {
+    name: 'claude-sonnet-4-5-20250929',
+    display: 'Sonnet 4.5',
+    description: 'Best balance'
+  },
+  {
+    name: 'claude-haiku-4-5-20251001',
+    display: 'Haiku 4.5',
+    description: 'Fastest, cheapest'
+  },
+  {
+    name: 'claude-3-5-haiku-20241022',
+    display: 'Haiku 3.5',
+    description: 'Fastest, cheapest'
+  },
+  {
+    name: 'claude-opus-4-5-20251101',
+    display: 'Opus 4.5',
+    description: 'Most capable'
+  },
+  {
+    name: 'claude-opus-4-1-20250805',
+    display: 'Opus 4.1',
+    description: 'Most capable'
+  }
 ];
 
 export default function ModelManager({ isVisible, onClose, onModelChange }: ModelManagerProps) {
@@ -45,14 +68,14 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
         setModelName(result.model_name || '');
       } else {
         // Default fallback
-        setCurrentModel('claude-3-5-haiku-20241022');
-        setModelName('claude-3-5-haiku-20241022');
+        setCurrentModel('claude-3-5-sonnet-20241022');
+        setModelName('claude-3-5-sonnet-20241022');
       }
     } catch (error) {
       console.error('Error loading current model:', error);
       // Default fallback
-      setCurrentModel('claude-3-5-haiku-20241022');
-      setModelName('claude-3-5-haiku-20241022');
+      setCurrentModel('claude-3-5-sonnet-20241022');
+      setModelName('claude-3-5-sonnet-20241022');
     } finally {
       setIsLoading(false);
     }
@@ -156,7 +179,8 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
                     <p className="text-xs font-mono bg-white px-2 py-1 rounded border">{currentModel || 'Not loaded'}</p>
                     <p className="font-medium mt-3 mb-1">Recommended Models:</p>
                     <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li><strong>claude-sonnet-4-5-20250929</strong> - Best balance (recommended)</li>
+                      <li><strong>claude-3-5-sonnet-20241022</strong> - Smartest (default, recommended)</li>
+                      <li>claude-sonnet-4-5-20250929 - Best balance</li>
                       <li>claude-haiku-4-5-20251001 - Fastest, cheapest</li>
                       <li>claude-opus-4-5-20251101 - Most capable</li>
                     </ul>
@@ -176,30 +200,21 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
             
             {/* Quick select buttons for common models */}
             <div className="grid grid-cols-2 gap-2 mb-3">
-              {COMMON_MODELS.slice(0, 6).map((model) => {
-                // Extract model type for display (e.g., "haiku-4-5" or "3-5-haiku")
-                const parts = model.split('-');
-                let displayName = '';
-                if (parts.includes('4')) {
-                  // Claude 4.5 models: claude-haiku-4-5-20251001
-                  displayName = `${parts[1]}-${parts[2]}-${parts[3]}`;
-                } else {
-                  // Legacy models: claude-3-5-haiku-20241022
-                  displayName = parts.slice(2, 4).join('-');
-                }
+              {COMMON_MODELS.map((model) => {
                 return (
                   <button
-                    key={model}
-                    onClick={() => handleModelSelect(model)}
-                    className={`px-3 py-2 text-xs rounded-lg border transition-colors ${
-                      modelName === model
+                    key={model.name}
+                    onClick={() => handleModelSelect(model.name)}
+                    className={`px-3 py-2 text-xs rounded-lg border transition-colors text-left ${
+                      modelName === model.name
                         ? 'bg-indigo-100 border-indigo-500 text-indigo-800'
                         : 'bg-gray-50 border-gray-300 text-gray-700 hover:bg-gray-100'
                     }`}
                     disabled={isUpdating}
-                    title={model}
+                    title={model.name}
                   >
-                    {displayName}
+                    <div className="font-medium">{model.display}</div>
+                    <div className="text-xs text-gray-600 mt-0.5">{model.description}</div>
                   </button>
                 );
               })}
@@ -210,7 +225,7 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
               type="text"
               value={modelName}
               onChange={(e) => setModelName(e.target.value)}
-              placeholder="claude-3-5-haiku-20241022"
+              placeholder="claude-3-5-sonnet-20241022"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
               disabled={isUpdating}
             />

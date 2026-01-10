@@ -507,7 +507,7 @@ async def test_anthropic():
         
         # Try a simple API call
         response = client.messages.create(
-            model="claude-3-5-haiku-20241022",
+            model="claude-3-5-sonnet-20241022",
             max_tokens=10,
             messages=[{"role": "user", "content": "Say 'test'"}]
         )
@@ -516,7 +516,7 @@ async def test_anthropic():
             "status": "success",
             "message": "Anthropic API connection successful",
             "response": response.content[0].text,
-            "model": "claude-3-5-haiku-20241022",
+            "model": "claude-3-5-sonnet-20241022",
             **diagnostics
         }
     except anthropic.APIConnectionError as e:
@@ -1093,7 +1093,7 @@ async def resume_processing_options(job_id: str):
 async def get_model_name():
     """Get the current Claude model name being used"""
     try:
-        model_name = os.getenv("CLAUDE_MODEL_NAME", "claude-3-5-haiku-20241022")
+        model_name = os.getenv("CLAUDE_MODEL_NAME", "claude-3-5-sonnet-20241022")
         global processor
         if processor and hasattr(processor, 'classifier') and hasattr(processor.classifier, 'model_name'):
             model_name = processor.classifier.model_name

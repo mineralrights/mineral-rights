@@ -241,7 +241,7 @@ class OilGasRightsClassifier:
         
         # Get model name from parameter or environment variable, with fallback
         import os
-        self.model_name = model_name or os.getenv("CLAUDE_MODEL_NAME", "claude-3-5-haiku-20241022")
+        self.model_name = model_name or os.getenv("CLAUDE_MODEL_NAME", "claude-3-5-sonnet-20241022")
         print(f"🔧 Using Claude model: {self.model_name}")
         
         print("Initializing Anthropic client...")
@@ -302,6 +302,8 @@ EXPLICIT OIL AND GAS LANGUAGE:
 - "oil and gas rights", "oil and gas interests", "petroleum interests"
 - "oil and gas lease", "oil and gas royalty", "gas lease", "oil lease"
 - "hydrocarbon rights", "petroleum rights"
+- "rentals" (when associated with oil/gas/mineral reservations)
+- "royalty" or "royalties" (when associated with oil/gas/mineral reservations)
 
 GENERAL MINERAL RIGHTS LANGUAGE (includes oil/gas unless coal-only):
 - "mineral rights" (general - includes oil and gas)
@@ -315,6 +317,13 @@ GENERAL MINERAL RIGHTS LANGUAGE (includes oil/gas unless coal-only):
 
 RESERVATION PATTERNS THAT INCLUDE OIL/GAS:
 - "Grantor reserves..." + any mineral language (unless coal-only)
+- "Reserves" + "oil," "gas," "oil and gas," "petroleum," "natural gas," "minerals," "rentals," "royalty," or "royalties"
+- "Excepting and reserving" + "oil," "gas," "oil and gas," "petroleum," "natural gas," "minerals," "rentals," "royalty," or "royalties"
+- "Excepts and reserves" + "oil," "gas," "oil and gas," "petroleum," "natural gas," "minerals," "rentals," "royalty," or "royalties"
+- "Reserving" + "oil," "gas," "oil and gas," "petroleum," "natural gas," "minerals," "rentals," "royalty," or "royalties"
+- "Excepting" + "oil," "gas," "oil and gas," "petroleum," "natural gas," "minerals," "rentals," "royalty," or "royalties"
+- "There is reserved from" + "oil," "gas," "oil and gas," "petroleum," "natural gas," "minerals," "rentals," "royalty," or "royalties"
+- "There is excepted from" + "oil," "gas," "oil and gas," "petroleum," "natural gas," "minerals," "rentals," "royalty," or "royalties"
 - "Excepting and reserving..." + mineral/mining rights
 - "Subject to mineral lease to [company]" (unless coal-only)
 - "Reserving unto grantor mineral rights"
