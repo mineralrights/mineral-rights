@@ -10,9 +10,14 @@ interface ModelManagerProps {
 // See: https://platform.claude.com/docs/en/about-claude/models/overview
 const COMMON_MODELS = [
   {
+    name: 'claude-opus-4-5-20251101',
+    display: 'Opus 4.5',
+    description: 'Most capable (default)'
+  },
+  {
     name: 'claude-sonnet-4-5-20250929',
     display: 'Sonnet 4.5',
-    description: 'Best balance (recommended)'
+    description: 'Best balance'
   },
   {
     name: 'claude-3-5-haiku-20241022',
@@ -63,8 +68,8 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
         setModelName(result.model_name || '');
       } else {
         // Default fallback
-        setCurrentModel('claude-sonnet-4-5-20250929');
-        setModelName('claude-sonnet-4-5-20250929');
+        setCurrentModel('claude-opus-4-5-20251101');
+        setModelName('claude-opus-4-5-20251101');
       }
     } catch (error) {
       console.error('Error loading current model:', error);
@@ -174,7 +179,7 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
                     <p className="text-xs font-mono bg-white px-2 py-1 rounded border">{currentModel || 'Not loaded'}</p>
                     <p className="font-medium mt-3 mb-1">Recommended Models:</p>
                     <ul className="list-disc list-inside space-y-1 text-xs">
-                      <li><strong>claude-sonnet-4-5-20250929</strong> - Best balance (default, recommended)</li>
+                      <li><strong>claude-opus-4-5-20251101</strong> - Most capable (default, recommended)</li>
                       <li>claude-sonnet-4-5-20250929 - Best balance</li>
                       <li>claude-haiku-4-5-20251001 - Fastest, cheapest</li>
                       <li>claude-opus-4-5-20251101 - Most capable</li>
@@ -220,7 +225,7 @@ export default function ModelManager({ isVisible, onClose, onModelChange }: Mode
               type="text"
               value={modelName}
               onChange={(e) => setModelName(e.target.value)}
-              placeholder="claude-sonnet-4-5-20250929"
+              placeholder="claude-opus-4-5-20251101"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 font-mono text-sm"
               disabled={isUpdating}
             />

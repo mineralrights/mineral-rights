@@ -241,7 +241,7 @@ class OilGasRightsClassifier:
         
         # Get model name from parameter or environment variable, with fallback
         import os
-        self.model_name = model_name or os.getenv("CLAUDE_MODEL_NAME", "claude-sonnet-4-5-20250929")
+        self.model_name = model_name or os.getenv("CLAUDE_MODEL_NAME", "claude-opus-4-5-20251101")
         print(f"🔧 Using Claude model: {self.model_name}")
         
         print("Initializing Anthropic client...")
