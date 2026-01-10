@@ -245,10 +245,15 @@ async def predict(
                     print(f"🔍 First sample reasoning length: {len(str(first_reasoning))}")
                     print(f"🔍 First sample reasoning preview: {str(first_reasoning)[:100] if first_reasoning else 'EMPTY'}")
                 
-                # Get reasoning from first sample if available
+                # Get reasoning from first sample - ALWAYS use detailed_samples for full response
+                # detailed_samples contains the full raw_response, not truncated reasoning
                 reasoning = "No reasoning provided"
                 if detailed_samples and len(detailed_samples) > 0:
-                    reasoning = detailed_samples[0].get("reasoning", "No reasoning provided")
+                    # Try raw_response first (full response), fallback to reasoning
+                    reasoning = detailed_samples[0].get("raw_response") or detailed_samples[0].get("reasoning", "No reasoning provided")
+                    # If still empty or very short, use reasoning field
+                    if not reasoning or len(str(reasoning)) < 50:
+                        reasoning = detailed_samples[0].get("reasoning", "No reasoning provided")
                 
                 # Convert result to expected format
                 response_data = {
@@ -801,10 +806,14 @@ async def process_from_gcs(
                     detail=error_msg
                 )
             
-            # Get reasoning from first sample if available
-            reasoning = result.get('reasoning', 'No reasoning provided')
+            # Get reasoning from first sample - ALWAYS use detailed_samples, never result.reasoning
+            # result.reasoning might be truncated, detailed_samples has the full raw_response
+            reasoning = "No reasoning provided"
             if detailed_samples and len(detailed_samples) > 0:
-                reasoning = detailed_samples[0].get("reasoning", reasoning)
+                reasoning = detailed_samples[0].get("reasoning", "No reasoning provided")
+                # Also try raw_response field if reasoning is still truncated
+                if len(str(reasoning)) < 100 and detailed_samples[0].get("raw_response"):
+                    reasoning = detailed_samples[0].get("raw_response", reasoning)
             
             return {
                 "has_reservation": result.get('classification', 0) == 1,
