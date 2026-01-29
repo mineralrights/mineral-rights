@@ -13,12 +13,31 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Configuration
-PROJECT_ID=${PROJECT_ID:-"mineral-rights-app"}
+PROJECT_ID=${PROJECT_ID:-"mineral-rights"}
 REGION=${REGION:-"us-central1"}
 BUCKET_NAME="mineral-rights-storage-${PROJECT_ID}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SETUP_SCRIPT="${SCRIPT_DIR}/scripts/setup_mineral_rights_static_vars.sh"
 
 echo -e "${BLUE}🚀 Google Cloud Deployment Script${NC}"
 echo -e "${BLUE}================================${NC}"
+
+# Run setup script first (buckets, SA, Secret Manager credentials) if it exists
+if [ -f "${SETUP_SCRIPT}" ]; then
+    echo -e "${BLUE}📋 Running setup for static variables (buckets, service account, secrets)...${NC}"
+    PROJECT_ID="${PROJECT_ID}" REGION="${REGION}" bash "${SETUP_SCRIPT}"
+    echo ""
+else
+    echo -e "${YELLOW}⚠️  Setup script not found: ${SETUP_SCRIPT}${NC}"
+    echo -e "${YELLOW}   Run once: PROJECT_ID=${PROJECT_ID} ./scripts/setup_mineral_rights_static_vars.sh${NC}"
+    echo -e "${YELLOW}   Then re-run this deploy script.${NC}"
+    read -p "Continue without setup? (y/N): " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        exit 1
+    fi
+    echo ""
+fi
 
 # Check if gcloud is installed
 if ! command -v gcloud &> /dev/null; then

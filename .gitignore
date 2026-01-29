@@ -63,6 +63,7 @@ Thumbs.db
 
 # Google Cloud Service Account files
 *service-account*.json
+.tmp-sa-key-*.json
 *service-account*.txt
 *service-account*.base64
 real-service-account*

@@ -277,28 +277,28 @@ async def predict(
                 # Convert to expected format
                 deed_results = []
                 for idx, deed_result in enumerate(result):
-                    # #region agent log
-                    import json
-                    import time
-                    with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
-                        detailed_samples = deed_result.get("detailed_samples", [])
-                        extracted_reasoning = detailed_samples[0].get("reasoning", "No reasoning provided") if detailed_samples else "No reasoning provided"
-                        f.write(json.dumps({
-                            'sessionId': 'debug-session',
-                            'runId': 'run1',
-                            'hypothesisId': 'D',
-                            'location': 'api/app.py:274',
-                            'message': 'Extracting reasoning from deed_result',
-                            'data': {
-                                'deed_index': idx,
-                                'deed_number': deed_result.get("deed_number", 0),
-                                'has_detailed_samples': 'detailed_samples' in deed_result,
-                                'detailed_samples_count': len(detailed_samples),
-                                'extracted_reasoning_preview': extracted_reasoning[:150],
-                                'all_reasoning_previews': [s.get('reasoning', '')[:100] for s in detailed_samples[:3]] if detailed_samples else []
-                            },
-                            'timestamp': int(time.time() * 1000)
-                        }) + '\n')
+                    # #region agent log (commented out - hardcoded path breaks on Cloud Run)
+                    # import json
+                    # import time
+                    # with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+                    #     detailed_samples = deed_result.get("detailed_samples", [])
+                    #     extracted_reasoning = detailed_samples[0].get("reasoning", "No reasoning provided") if detailed_samples else "No reasoning provided"
+                    #     f.write(json.dumps({
+                    #         'sessionId': 'debug-session',
+                    #         'runId': 'run1',
+                    #         'hypothesisId': 'D',
+                    #         'location': 'api/app.py:274',
+                    #         'message': 'Extracting reasoning from deed_result',
+                    #         'data': {
+                    #             'deed_index': idx,
+                    #             'deed_number': deed_result.get("deed_number", 0),
+                    #             'has_detailed_samples': 'detailed_samples' in deed_result,
+                    #             'detailed_samples_count': len(detailed_samples),
+                    #             'extracted_reasoning_preview': extracted_reasoning[:150],
+                    #             'all_reasoning_previews': [s.get('reasoning', '')[:100] for s in detailed_samples[:3]] if detailed_samples else []
+                    #         },
+                    #         'timestamp': int(time.time() * 1000)
+                    #     }) + '\n')
                     # #endregion
                     
                     deed_results.append({
@@ -1051,10 +1051,14 @@ async def resume_processing(job_id: str):
         import json
         from google.cloud import storage
         
-        # Initialize GCS client
-        credentials_json = base64.b64decode(os.getenv("GOOGLE_CREDENTIALS_BASE64", "")).decode('utf-8')
-        credentials = json.loads(credentials_json)
-        client = storage.Client.from_service_account_info(credentials)
+        # Initialize GCS client (use ADC when GOOGLE_CREDENTIALS_BASE64 not set)
+        credentials_b64 = os.getenv("GOOGLE_CREDENTIALS_BASE64", "")
+        if credentials_b64:
+            credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+            credentials = json.loads(credentials_json)
+            client = storage.Client.from_service_account_info(credentials)
+        else:
+            client = storage.Client()
         bucket_name = os.getenv("GCS_BUCKET_NAME", "mineral-rights-pdfs-1759435410")
         bucket = client.bucket(bucket_name)
         

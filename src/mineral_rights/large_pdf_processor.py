@@ -304,10 +304,14 @@ class LargePDFProcessor:
                 "status": "processing"
             }
             
-            # Initialize GCS client
-            credentials_json = base64.b64decode(os.getenv("GOOGLE_CREDENTIALS_BASE64", "")).decode('utf-8')
-            credentials = json.loads(credentials_json)
-            client = storage.Client.from_service_account_info(credentials)
+            # Initialize GCS client (use ADC when GOOGLE_CREDENTIALS_BASE64 not set)
+            credentials_b64 = os.getenv("GOOGLE_CREDENTIALS_BASE64", "")
+            if credentials_b64:
+                credentials_json = base64.b64decode(credentials_b64).decode('utf-8')
+                credentials = json.loads(credentials_json)
+                client = storage.Client.from_service_account_info(credentials)
+            else:
+                client = storage.Client()
             bucket_name = os.getenv("GCS_BUCKET_NAME", "mineral-rights-pdfs-1759435410")
             bucket = client.bucket(bucket_name)
             

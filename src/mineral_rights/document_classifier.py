@@ -908,21 +908,21 @@ class DocumentProcessor:
             for i, deed_pdf_path in enumerate(deed_pdfs):
                 print(f"Processing deed {i+1}/{len(deed_pdfs)}...")
                 try:
-                    # #region agent log
-                    with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
-                        f.write(json.dumps({
-                            'sessionId': 'debug-session',
-                            'runId': 'run1',
-                            'hypothesisId': 'B',
-                            'location': 'document_classifier.py:842',
-                            'message': 'Starting deed processing - logging input file',
-                            'data': {
-                                'deed_number': i + 1,
-                                'deed_pdf_path': deed_pdf_path,
-                                'deed_pdf_exists': os.path.exists(deed_pdf_path)
-                            },
-                            'timestamp': int(time.time() * 1000)
-                        }) + '\n')
+                    # #region agent log (commented out - hardcoded path breaks on Cloud Run)
+                    # with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+                    #     f.write(json.dumps({
+                    #         'sessionId': 'debug-session',
+                    #         'runId': 'run1',
+                    #         'hypothesisId': 'B',
+                    #         'location': 'document_classifier.py:842',
+                    #         'message': 'Starting deed processing - logging input file',
+                    #         'data': {
+                    #             'deed_number': i + 1,
+                    #             'deed_pdf_path': deed_pdf_path,
+                    #             'deed_pdf_exists': os.path.exists(deed_pdf_path)
+                    #         },
+                    #         'timestamp': int(time.time() * 1000)
+                    #     }) + '\n')
                     # #endregion
                     
                     # Use regular single-deed processing for each deed
@@ -942,24 +942,24 @@ class DocumentProcessor:
                         result['deed_boundary_info'] = deed_boundaries[i]
                         result['splitting_confidence'] = deed_boundaries[i]['confidence']
                     
-                    # #region agent log
-                    with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
-                        f.write(json.dumps({
-                            'sessionId': 'debug-session',
-                            'runId': 'run1',
-                            'hypothesisId': 'A',
-                            'location': 'document_classifier.py:859',
-                            'message': 'Deed processing completed - checking detailed_samples',
-                            'data': {
-                                'deed_number': i + 1,
-                                'has_detailed_samples': 'detailed_samples' in result,
-                                'detailed_samples_count': len(result.get('detailed_samples', [])),
-                                'first_sample_reasoning_preview': result.get('detailed_samples', [{}])[0].get('reasoning', '')[:100] if result.get('detailed_samples') else 'N/A',
-                                'classification': result.get('classification'),
-                                'confidence': result.get('confidence')
-                            },
-                            'timestamp': int(time.time() * 1000)
-                        }) + '\n')
+                    # #region agent log (commented out - hardcoded path breaks on Cloud Run)
+                    # with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+                    #     f.write(json.dumps({
+                    #         'sessionId': 'debug-session',
+                    #         'runId': 'run1',
+                    #         'hypothesisId': 'A',
+                    #         'location': 'document_classifier.py:859',
+                    #         'message': 'Deed processing completed - checking detailed_samples',
+                    #         'data': {
+                    #             'deed_number': i + 1,
+                    #             'has_detailed_samples': 'detailed_samples' in result,
+                    #             'detailed_samples_count': len(result.get('detailed_samples', [])),
+                    #             'first_sample_reasoning_preview': result.get('detailed_samples', [{}])[0].get('reasoning', '')[:100] if result.get('detailed_samples') else 'N/A',
+                    #             'classification': result.get('classification'),
+                    #             'confidence': result.get('confidence')
+                    #         },
+                    #         'timestamp': int(time.time() * 1000)
+                    #     }) + '\n')
                     # #endregion
                     
                     results.append(result)
@@ -1246,23 +1246,23 @@ class DocumentProcessor:
         # Step 3: Classify with self-consistent sampling (always high recall)
         print("Classifying document...")
         
-        # #region agent log
-        import json
-        import time
-        with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
-            f.write(json.dumps({
-                'sessionId': 'debug-session',
-                'runId': 'run1',
-                'hypothesisId': 'E',
-                'location': 'document_classifier.py:1142',
-                'message': 'About to classify document - logging OCR text preview',
-                'data': {
-                    'ocr_text_length': len(ocr_text),
-                    'ocr_text_preview': ocr_text[:300],
-                    'ocr_text_hash': hash(ocr_text[:1000])  # Hash to detect duplicates
-                },
-                'timestamp': int(time.time() * 1000)
-            }) + '\n')
+        # #region agent log (commented out - hardcoded path breaks on Cloud Run)
+        # import json
+        # import time
+        # with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+        #     f.write(json.dumps({
+        #         'sessionId': 'debug-session',
+        #         'runId': 'run1',
+        #         'hypothesisId': 'E',
+        #         'location': 'document_classifier.py:1142',
+        #         'message': 'About to classify document - logging OCR text preview',
+        #         'data': {
+        #             'ocr_text_length': len(ocr_text),
+        #             'ocr_text_preview': ocr_text[:300],
+        #             'ocr_text_hash': hash(ocr_text[:1000])  # Hash to detect duplicates
+        #         },
+        #         'timestamp': int(time.time() * 1000)
+        #     }) + '\n')
         # #endregion
         
         classification_result = self.classifier.classify_document(
@@ -1296,25 +1296,25 @@ class DocumentProcessor:
             ]
         }
         
-        # #region agent log
-        import json
-        import time
-        with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
-            reasoning_previews = [s.reasoning[:100] for s in classification_result.all_samples[:3]]
-            f.write(json.dumps({
-                'sessionId': 'debug-session',
-                'runId': 'run1',
-                'hypothesisId': 'C',
-                'location': 'document_classifier.py:1169',
-                'message': 'process_document returning - logging reasoning samples',
-                'data': {
-                    'samples_count': len(classification_result.all_samples),
-                    'first_3_reasoning_previews': reasoning_previews,
-                    'ocr_text_length': len(ocr_text),
-                    'ocr_text_preview': ocr_text[:200]
-                },
-                'timestamp': int(time.time() * 1000)
-            }) + '\n')
+        # #region agent log (commented out - hardcoded path breaks on Cloud Run)
+        # import json
+        # import time
+        # with open('/Users/lauragomez/Desktop/mineral-rights/.cursor/debug.log', 'a') as f:
+        #     reasoning_previews = [s.reasoning[:100] for s in classification_result.all_samples[:3]]
+        #     f.write(json.dumps({
+        #         'sessionId': 'debug-session',
+        #         'runId': 'run1',
+        #         'hypothesisId': 'C',
+        #         'location': 'document_classifier.py:1169',
+        #         'message': 'process_document returning - logging reasoning samples',
+        #         'data': {
+        #             'samples_count': len(classification_result.all_samples),
+        #             'first_3_reasoning_previews': reasoning_previews,
+        #             'ocr_text_length': len(ocr_text),
+        #             'ocr_text_preview': ocr_text[:200]
+        #         },
+        #         'timestamp': int(time.time() * 1000)
+        #     }) + '\n')
         # #endregion
     
     def _process_with_early_stopping(self, pdf_path: str, max_samples: int, 
